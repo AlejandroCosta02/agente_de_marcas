@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 
-if (!process.env.NEON_DATABASE_URL) {
-  throw new Error('Please define the NEON_DATABASE_URL environment variable');
+if (!process.env.POSTGRES_URL) {
+  throw new Error('Please define the POSTGRES_URL environment variable');
 }
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const sql = neon(process.env.POSTGRES_URL);
 
 export async function POST(req: Request) {
   try {
