@@ -42,4 +42,22 @@ CREATE TABLE IF NOT EXISTS accounts (
   session_state TEXT,
   token_type VARCHAR(255),
   UNIQUE(provider, provider_account_id)
+);
+
+-- Create marcas table
+CREATE TABLE IF NOT EXISTS marcas (
+  id SERIAL PRIMARY KEY,
+  marca VARCHAR(255) NOT NULL,
+  acta INTEGER NOT NULL,
+  resolucion INTEGER NOT NULL,
+  renovar DATE NOT NULL,
+  vencimiento DATE NOT NULL,
+  titular_nombre VARCHAR(255) NOT NULL,
+  titular_email VARCHAR(255) NOT NULL,
+  titular_telefono VARCHAR(255) NOT NULL,
+  anotaciones TEXT[] DEFAULT ARRAY[]::TEXT[],
+  oposicion TEXT,
+  user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 ); 

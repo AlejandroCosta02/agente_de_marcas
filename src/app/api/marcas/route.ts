@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await getServerSession(authOptions);
 
@@ -25,6 +25,98 @@ export async function GET(request: Request) {
   }
 }
 
+export async function DELETE(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de marca no proporcionado' }, { status: 400 });
+    }
+
+    // First verify the marca belongs to the user
+    const verifyResult = await sql`
+      SELECT user_email FROM marcas WHERE id = ${id}
+    `;
+
+    if (verifyResult.rows.length === 0) {
+      return NextResponse.json({ message: 'Marca no encontrada' }, { status: 404 });
+    }
+
+    if (verifyResult.rows[0].user_email !== session.user.email) {
+      return NextResponse.json({ message: 'No autorizado para eliminar esta marca' }, { status: 403 });
+    }
+
+    // Delete the marca
+    await sql`
+      DELETE FROM marcas WHERE id = ${id} AND user_email = ${session.user.email}
+    `;
+
+    return NextResponse.json({ message: 'Marca eliminada exitosamente' });
+  } catch (error) {
+    console.error('Error deleting marca:', error);
+    const message = error instanceof Error ? error.message : 'Error interno del servidor';
+    return NextResponse.json({ message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session || !session.user?.email) {
+      return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ message: 'ID de marca no proporcionado' }, { status: 400 });
+    }
+
+    const data = await request.json();
+    const { nombre, numero, anotaciones, oposiciones } = data;
+
+    // Verify the marca belongs to the user
+    const verifyResult = await sql`
+      SELECT user_email FROM marcas WHERE id = ${id}
+    `;
+
+    if (verifyResult.rows.length === 0) {
+      return NextResponse.json({ message: 'Marca no encontrada' }, { status: 404 });
+    }
+
+    if (verifyResult.rows[0].user_email !== session.user.email) {
+      return NextResponse.json({ message: 'No autorizado para editar esta marca' }, { status: 403 });
+    }
+
+    // Update the marca
+    await sql`
+      UPDATE marcas 
+      SET 
+        nombre = ${nombre},
+        numero = ${numero},
+        anotaciones = ${anotaciones},
+        oposiciones = ${oposiciones},
+        updated_at = NOW()
+      WHERE id = ${id} AND user_email = ${session.user.email}
+    `;
+
+    return NextResponse.json({ message: 'Marca actualizada exitosamente' });
+  } catch (error) {
+    console.error('Error updating marca:', error);
+    const message = error instanceof Error ? error.message : 'Error interno del servidor';
+    return NextResponse.json({ message }, { status: 500 });
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -41,8 +133,8 @@ export async function POST(request: Request) {
       renovar,
       vencimiento,
       titular,
-      anotaciones,
-      oposicion
+      anotaciones = [],
+      oposicion = ''
     } = body;
 
     // Validate required fields
@@ -50,14 +142,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    if (!process.env.POSTGRES_URL) {
-      return NextResponse.json(
-        { message: 'Error de configuración: Falta la conexión a la base de datos' },
-        { status: 500 }
-      );
-    }
+    // Ensure anotaciones is an array
+    const anotacionesArray = Array.isArray(anotaciones) ? anotaciones : [];
 
-    // Create the marca
+    // Create the marca using a raw query to properly handle the array
     const result = await sql`
       INSERT INTO marcas (
         marca,
@@ -80,14 +168,35 @@ export async function POST(request: Request) {
         ${titular.fullName},
         ${titular.email},
         ${titular.phone},
-        ${JSON.stringify(anotaciones)},
-        ${oposicion},
+        ARRAY[]::text[],
+        ${oposicion || null},
         ${session.user.email}
       )
       RETURNING *
     `;
 
-    return NextResponse.json(result.rows[0]);
+    // If there are any anotaciones, update them separately
+    if (anotacionesArray.length > 0) {
+      const cleanedAnotaciones = anotacionesArray
+        .filter((note: string) => note && note.trim() !== '')
+        .map((note: string) => note.trim());
+
+      if (cleanedAnotaciones.length > 0) {
+        const anotacionesString = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
+        await sql`
+          UPDATE marcas 
+          SET anotaciones = ${anotacionesString}::text[]
+          WHERE id = ${result.rows[0].id}
+        `;
+      }
+    }
+
+    // Fetch the final result with all data
+    const finalResult = await sql`
+      SELECT * FROM marcas WHERE id = ${result.rows[0].id}
+    `;
+
+    return NextResponse.json(finalResult.rows[0]);
   } catch (error) {
     console.error('Error creating marca:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';
