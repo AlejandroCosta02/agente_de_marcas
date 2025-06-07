@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Marca, MarcaSubmissionData, Titular } from '@/types/marca';
+import { Marca, MarcaSubmissionData } from '@/types/marca';
 
 interface AddMarcaModalProps {
   isOpen: boolean;
