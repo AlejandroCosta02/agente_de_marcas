@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Agente de Marcas - Sistema de Gestión
 
-## Getting Started
+Sistema de gestión para agentes de marcas en Argentina, desarrollado con Next.js, Tailwind CSS y Neon Database.
 
-First, run the development server:
+## Características
 
+- Autenticación de usuarios (registro e inicio de sesión)
+- Dashboard para gestión de marcas
+- Interfaz moderna y responsive
+- Base de datos PostgreSQL alojada en Neon
+
+## Requisitos
+
+- Node.js 18.0.0 o superior
+- NPM 8.0.0 o superior
+- Cuenta en Neon Database (https://neon.tech)
+
+## Configuración
+
+1. Clonar el repositorio:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone <repository-url>
+cd agente_de_marcas
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Instalar dependencias:
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Configurar variables de entorno:
+Crear un archivo `.env.local` con las siguientes variables:
+```
+NEON_DATABASE_URL=your_neon_database_url
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your_nextauth_secret # Generar con: openssl rand -base64 32
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. Ejecutar las migraciones:
+- Copiar el contenido de `schema.sql`
+- Ejecutarlo en tu base de datos Neon
 
-## Learn More
+5. Iniciar el servidor de desarrollo:
+```bash
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Estructura del Proyecto
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+  ├── app/                 # App Router de Next.js
+  │   ├── api/            # API Routes
+  │   ├── auth/           # Páginas de autenticación
+  │   └── dashboard/      # Dashboard y gestión de marcas
+  ├── components/         # Componentes React
+  └── lib/               # Utilidades y configuraciones
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tecnologías Utilizadas
 
-## Deploy on Vercel
+- Next.js 14
+- Tailwind CSS
+- NextAuth.js
+- Neon Database (PostgreSQL)
+- TypeScript
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Desarrollo
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Para contribuir al proyecto:
+
+1. Crear una rama para tu feature:
+```bash
+git checkout -b feature/nombre-feature
+```
+
+2. Realizar cambios y commits:
+```bash
+git add .
+git commit -m "Descripción del cambio"
+```
+
+3. Enviar cambios al repositorio:
+```bash
+git push origin feature/nombre-feature
+```
+
+## Licencia
+
+MIT
