@@ -5,19 +5,11 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData } from '@/types/marca';
 
-interface Titular {
-  fullName: string;
-  email: string;
-  phone: string;
-}
-
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [marcaToDelete, setMarcaToDelete] = useState<Marca | null>(null);
 
   useEffect(() => {
     fetchMarcas();
@@ -102,169 +94,238 @@ export default function DashboardClient() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES');
-  };
+  // Calculate statistics
+  const totalMarcas = marcas.length;
+  const marcasConOposiciones = marcas.filter(m => m.oposicion && m.oposicion.length > 0).length;
+  const proximosVencimientos = marcas.filter(m => {
+    const vencimiento = new Date(m.vencimiento);
+    const hoy = new Date();
+    const diasRestantes = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    return diasRestantes <= 30;
+  }).length;
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
+      <div className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-xl font-bold text-gray-800">Agente de Marcas</h1>
+          {/* Statistics Cards */}
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+            {/* Total Marcas */}
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="bg-blue-600 bg-opacity-30 rounded-full p-3">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-white uppercase">Marcas Activas</p>
+                  <p className="text-3xl font-bold text-white">{totalMarcas}</p>
+                </div>
               </div>
             </div>
-            <div className="flex items-center">
-              <form action="/api/auth/signout" method="POST">
-                <button
-                  type="submit"
-                  className="bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
-                >
-                  Cerrar Sesión
-                </button>
-              </form>
+
+            {/* Próximos Vencimientos */}
+            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="bg-yellow-600 bg-opacity-30 rounded-full p-3">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-white uppercase">Próximos Vencimientos</p>
+                  <p className="text-3xl font-bold text-white">{proximosVencimientos}</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </nav>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Marcas</h1>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Agregar Marca
-            </button>
-          </div>
-
-          <div className="flex flex-col">
-            <div className="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div className="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                <div className="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Nombre
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Número
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Anotaciones
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Oposiciones
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Acciones
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {isLoading ? (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            Cargando...
-                          </td>
-                        </tr>
-                      ) : marcas.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                            No hay marcas registradas
-                          </td>
-                        </tr>
-                      ) : (
-                        marcas.map((marca) => (
-                          <tr key={marca.id} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {marca.nombre}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {marca.numero}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {marca.anotaciones.length > 0 ? (
-                                <ul className="list-disc list-inside">
-                                  {marca.anotaciones.map((anotacion, index) => (
-                                    <li key={index}>{anotacion}</li>
-                                  ))}
-                                </ul>
-                              ) : (
-                                <span className="text-gray-400">Sin anotaciones</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {marca.oposiciones ? '✅' : '❌'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              <div className="flex items-center space-x-3">
-                                <button 
-                                  onClick={() => handleEdit(marca)}
-                                  className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors duration-200 cursor-pointer"
-                                  title="Editar"
-                                >
-                                  <svg 
-                                    className="w-5 h-5" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                  >
-                                    <path 
-                                      strokeLinecap="round" 
-                                      strokeLinejoin="round" 
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                  </svg>
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteClick(marca)}
-                                  className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200 cursor-pointer"
-                                  title="Eliminar"
-                                >
-                                  <svg 
-                                    className="w-5 h-5" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                  >
-                                    <path 
-                                      strokeLinecap="round" 
-                                      strokeLinejoin="round" 
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+            {/* Con Oposiciones */}
+            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="bg-red-600 bg-opacity-30 rounded-full p-3">
+                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-medium text-white uppercase">Con Oposiciones</p>
+                  <p className="text-3xl font-bold text-white">{marcasConOposiciones}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <AddMarcaModal
-            isOpen={isModalOpen}
-            onClose={() => {
-              setIsModalOpen(false);
-              setSelectedMarca(null);
-            }}
-            onSubmit={handleSubmit}
-            initialData={selectedMarca}
-          />
+          {/* Table Section */}
+          <div className="bg-white shadow rounded-lg">
+            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+              <h1 className="text-xl font-semibold text-gray-900">Marcas Registradas</h1>
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Agregar Marca
+              </button>
+            </div>
+            <div className="border-t border-gray-200">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Marca
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acta
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Resolución
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Fechas
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Titular
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Anotaciones
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Oposiciones
+                      </th>
+                      <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Acciones
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {isLoading ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          Cargando...
+                        </td>
+                      </tr>
+                    ) : marcas.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          No hay marcas registradas
+                        </td>
+                      </tr>
+                    ) : (
+                      marcas.map((marca) => (
+                        <tr key={marca.id} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {marca.marca}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {marca.acta}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {marca.resolucion}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>
+                              <p>Renovar: {new Date(marca.renovar).toLocaleDateString()}</p>
+                              <p>Vence: {new Date(marca.vencimiento).toLocaleDateString()}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <div>
+                              <p>{marca.titular.fullName}</p>
+                              <p className="text-xs text-gray-400">{marca.titular.email}</p>
+                              <p className="text-xs text-gray-400">{marca.titular.phone}</p>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {marca.anotaciones && marca.anotaciones.length > 0 ? (
+                              <ul className="list-disc list-inside">
+                                {marca.anotaciones.map((anotacion, index) => (
+                                  <li key={index} className="truncate max-w-xs">{anotacion}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-gray-400">Sin anotaciones</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {marca.oposicion && marca.oposicion.length > 0 ? (
+                              <ul className="list-disc list-inside">
+                                {marca.oposicion.map((op, index) => (
+                                  <li key={index} className="truncate max-w-xs">{op}</li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span className="text-gray-400">Sin oposiciones</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end space-x-3">
+                              <button 
+                                onClick={() => handleEdit(marca)}
+                                className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors duration-200"
+                                title="Editar"
+                              >
+                                <svg 
+                                  className="w-5 h-5" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="2"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteClick(marca)}
+                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                                title="Eliminar"
+                              >
+                                <svg 
+                                  className="w-5 h-5" 
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                  strokeWidth="2"
+                                >
+                                  <path 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
-      </main>
+      </div>
+
+      <AddMarcaModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedMarca(null);
+        }}
+        onSubmit={handleSubmit}
+        initialData={selectedMarca}
+      />
     </div>
   );
 } 

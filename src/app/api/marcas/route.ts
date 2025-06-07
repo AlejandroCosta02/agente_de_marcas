@@ -82,7 +82,34 @@ export async function PUT(request: Request) {
     }
 
     const data = await request.json();
-    const { nombre, numero, anotaciones, oposiciones } = data;
+    const {
+      marca,
+      acta,
+      resolucion,
+      renovar,
+      vencimiento,
+      titular,
+      anotaciones = [],
+      oposicion = []
+    } = data;
+
+    // Validate required fields
+    if (!marca || !acta || !resolucion || !renovar || !vencimiento || !titular.fullName || !titular.email || !titular.phone) {
+      return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
+    }
+
+    // Validate marca length
+    if (marca.length > 20) {
+      return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
+    }
+
+    // Validate acta and resolucion format
+    if (!/^N\d+$/.test(acta)) {
+      return NextResponse.json({ message: 'El acta debe comenzar con N seguido de números' }, { status: 400 });
+    }
+    if (!/^N\d+$/.test(resolucion)) {
+      return NextResponse.json({ message: 'La resolución debe comenzar con N seguido de números' }, { status: 400 });
+    }
 
     // Verify the marca belongs to the user
     const verifyResult = await sql`
@@ -97,14 +124,32 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'No autorizado para editar esta marca' }, { status: 403 });
     }
 
+    // Clean arrays
+    const cleanedAnotaciones = Array.isArray(anotaciones) 
+      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
+      : [];
+    const cleanedOposicion = Array.isArray(oposicion)
+      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
+      : [];
+
+    // Convert arrays to PostgreSQL format
+    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
+    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
+
     // Update the marca
     await sql`
       UPDATE marcas 
       SET 
-        nombre = ${nombre},
-        numero = ${numero},
-        anotaciones = ${anotaciones},
-        oposiciones = ${oposiciones},
+        marca = ${marca},
+        acta = ${acta},
+        resolucion = ${resolucion},
+        renovar = ${renovar},
+        vencimiento = ${vencimiento},
+        titular_nombre = ${titular.fullName},
+        titular_email = ${titular.email},
+        titular_telefono = ${titular.phone},
+        anotaciones = ${anotacionesArray}::text[],
+        oposicion = ${oposicionArray}::text[],
         updated_at = NOW()
       WHERE id = ${id} AND user_email = ${session.user.email}
     `;
@@ -134,7 +179,7 @@ export async function POST(request: Request) {
       vencimiento,
       titular,
       anotaciones = [],
-      oposicion = ''
+      oposicion = []
     } = body;
 
     // Validate required fields
@@ -142,10 +187,32 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
-    // Ensure anotaciones is an array
-    const anotacionesArray = Array.isArray(anotaciones) ? anotaciones : [];
+    // Validate marca length
+    if (marca.length > 20) {
+      return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
+    }
 
-    // Create the marca using a raw query to properly handle the array
+    // Validate acta and resolucion format
+    if (!/^N\d+$/.test(acta)) {
+      return NextResponse.json({ message: 'El acta debe comenzar con N seguido de números' }, { status: 400 });
+    }
+    if (!/^N\d+$/.test(resolucion)) {
+      return NextResponse.json({ message: 'La resolución debe comenzar con N seguido de números' }, { status: 400 });
+    }
+
+    // Clean arrays
+    const cleanedAnotaciones = Array.isArray(anotaciones) 
+      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
+      : [];
+    const cleanedOposicion = Array.isArray(oposicion)
+      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
+      : [];
+
+    // Convert arrays to PostgreSQL format
+    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
+    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    // Create the marca
     const result = await sql`
       INSERT INTO marcas (
         marca,
@@ -168,35 +235,14 @@ export async function POST(request: Request) {
         ${titular.fullName},
         ${titular.email},
         ${titular.phone},
-        ARRAY[]::text[],
-        ${oposicion || null},
+        ${anotacionesArray}::text[],
+        ${oposicionArray}::text[],
         ${session.user.email}
       )
       RETURNING *
     `;
 
-    // If there are any anotaciones, update them separately
-    if (anotacionesArray.length > 0) {
-      const cleanedAnotaciones = anotacionesArray
-        .filter((note: string) => note && note.trim() !== '')
-        .map((note: string) => note.trim());
-
-      if (cleanedAnotaciones.length > 0) {
-        const anotacionesString = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-        await sql`
-          UPDATE marcas 
-          SET anotaciones = ${anotacionesString}::text[]
-          WHERE id = ${result.rows[0].id}
-        `;
-      }
-    }
-
-    // Fetch the final result with all data
-    const finalResult = await sql`
-      SELECT * FROM marcas WHERE id = ${result.rows[0].id}
-    `;
-
-    return NextResponse.json(finalResult.rows[0]);
+    return NextResponse.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating marca:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';
