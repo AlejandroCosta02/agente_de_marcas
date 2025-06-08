@@ -255,7 +255,7 @@ export default function DashboardClient() {
                               <div className="flex items-center space-x-2">
                                 <p>Renovar: {new Date(marca.renovar).toLocaleDateString()}</p>
                                 <a
-                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Renovar Marca: ${marca.marca}&dates=${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Renovación de la marca ${marca.marca}. Titular: ${marca.titular.fullName}`}
+                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Renovar Marca: ${marca.marca}&dates=${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Renovación de la marca ${marca.marca}.%0A%0AInformación:%0A- Titular: ${marca.titular.fullName}%0A- Acta: ${marca.acta}%0A- Resolución: ${marca.resolucion}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-1.5 bg-purple-50 text-purple-600 rounded-full 
@@ -283,7 +283,7 @@ export default function DashboardClient() {
                               <div className="flex items-center space-x-2">
                                 <p>Vence: {new Date(marca.vencimiento).toLocaleDateString()}</p>
                                 <a
-                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Vencimiento Marca: ${marca.marca}&dates=${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Vencimiento de la marca ${marca.marca}. Titular: ${marca.titular.fullName}`}
+                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Vencimiento Marca: ${marca.marca}&dates=${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Vencimiento de la marca ${marca.marca}.%0A%0AInformación:%0A- Titular: ${marca.titular.fullName}%0A- Acta: ${marca.acta}%0A- Resolución: ${marca.resolucion}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="p-1.5 bg-orange-50 text-orange-600 rounded-full 
