@@ -251,9 +251,63 @@ export default function DashboardClient() {
                             {marca.resolucion}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <div>
-                              <p>Renovar: {new Date(marca.renovar).toLocaleDateString()}</p>
-                              <p>Vence: {new Date(marca.vencimiento).toLocaleDateString()}</p>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <p>Renovar: {new Date(marca.renovar).toLocaleDateString()}</p>
+                                <a
+                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Renovar Marca: ${marca.marca}&dates=${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.renovar).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Renovación de la marca ${marca.marca}. Titular: ${marca.titular.fullName}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 bg-purple-50 text-purple-600 rounded-full 
+                                    transition-all duration-200 ease-in-out
+                                    hover:bg-purple-100 hover:shadow-md hover:scale-110
+                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500
+                                    cursor-pointer"
+                                  title="Agregar a Google Calendar"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </a>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <p>Vence: {new Date(marca.vencimiento).toLocaleDateString()}</p>
+                                <a
+                                  href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Vencimiento Marca: ${marca.marca}&dates=${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${new Date(marca.vencimiento).toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Vencimiento de la marca ${marca.marca}. Titular: ${marca.titular.fullName}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-1.5 bg-orange-50 text-orange-600 rounded-full 
+                                    transition-all duration-200 ease-in-out
+                                    hover:bg-orange-100 hover:shadow-md hover:scale-110
+                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500
+                                    cursor-pointer"
+                                  title="Agregar a Google Calendar"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </a>
+                              </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

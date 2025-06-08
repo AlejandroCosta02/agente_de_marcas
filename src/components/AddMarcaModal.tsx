@@ -334,7 +334,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 {/* Anotaciones */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Anotaciones</label>
+                    <label className="block text-sm font-semibold text-gray-700">Anotaciones</label>
                     <button
                       type="button"
                       onClick={addAnotacion}
@@ -347,7 +347,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     <div key={index} className="flex gap-2 mt-2">
                       <input
                         type="text"
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="flex-1 text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         value={anotacion}
                         onChange={(e) => updateAnotacion(index, e.target.value)}
                       />
@@ -367,7 +367,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 {/* Oposiciones */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Oposiciones</label>
+                    <label className="block text-sm font-semibold text-gray-700">Oposiciones</label>
                     <button
                       type="button"
                       onClick={addOposicion}
@@ -380,7 +380,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     <div key={index} className="flex gap-2 mt-2">
                       <input
                         type="text"
-                        className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="flex-1 text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                         value={oposicion}
                         onChange={(e) => updateOposicion(index, e.target.value)}
                       />
