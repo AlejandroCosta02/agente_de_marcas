@@ -31,8 +31,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     if (initialData) {
       setFormData({
         marca: initialData.marca,
-        acta: initialData.acta.replace(/^n\.º\s*/, ''),
-        resolucion: initialData.resolucion.replace(/^n\.º\s*/, ''),
+        acta: initialData.acta.toString(),
+        resolucion: initialData.resolucion.toString(),
         renovar: initialData.renovar,
         vencimiento: initialData.vencimiento,
         titular: initialData.titular,
@@ -115,7 +115,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       return;
     }
 
-    // Submit the data without any prefixes
     onSubmit(formData);
   };
 

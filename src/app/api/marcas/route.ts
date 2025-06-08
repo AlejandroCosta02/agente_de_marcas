@@ -158,30 +158,13 @@ export async function PUT(request: Request) {
     const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
     const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
 
-    // Add n.º prefix to acta and resolucion for storage
-    const formattedActa = `n.º ${acta}`;
-    const formattedResolucion = `n.º ${resolucion}`;
-
-    // Verify the marca belongs to the user
-    const verifyResult = await sql`
-      SELECT user_email FROM marcas WHERE id = ${id}
-    `;
-
-    if (verifyResult.rows.length === 0) {
-      return NextResponse.json({ message: 'Marca no encontrada' }, { status: 404 });
-    }
-
-    if (verifyResult.rows[0].user_email !== session.user.email) {
-      return NextResponse.json({ message: 'No autorizado para editar esta marca' }, { status: 403 });
-    }
-
     // Update the marca
     await sql`
       UPDATE marcas 
       SET 
         marca = ${marca},
-        acta = ${formattedActa},
-        resolucion = ${formattedResolucion},
+        acta = ${parseInt(acta, 10)},
+        resolucion = ${parseInt(resolucion, 10)},
         renovar = ${renovar},
         vencimiento = ${vencimiento},
         titular_nombre = ${titular.fullName},
@@ -251,10 +234,6 @@ export async function POST(request: Request) {
     const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
     const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
 
-    // Add n.º prefix to acta and resolucion for storage
-    const formattedActa = `n.º ${acta}`;
-    const formattedResolucion = `n.º ${resolucion}`;
-
     // Create the marca
     const result = await sql`
       INSERT INTO marcas (
@@ -271,8 +250,8 @@ export async function POST(request: Request) {
         user_email
       ) VALUES (
         ${marca},
-        ${formattedActa},
-        ${formattedResolucion},
+        ${parseInt(acta, 10)},
+        ${parseInt(resolucion, 10)},
         ${renovar},
         ${vencimiento},
         ${titular.fullName},
