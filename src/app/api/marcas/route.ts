@@ -113,10 +113,10 @@ export async function PUT(request: Request) {
     const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json({ message: 'ID de marca no proporcionado' }, { status: 400 });
+      return NextResponse.json({ message: 'ID no proporcionado' }, { status: 400 });
     }
 
-    const data = await request.json();
+    const body = await request.json();
     const {
       marca,
       acta,
@@ -126,7 +126,7 @@ export async function PUT(request: Request) {
       titular,
       anotaciones = [],
       oposicion = []
-    } = data;
+    } = body;
 
     // Validate required fields
     if (!marca || !acta || !resolucion || !renovar || !vencimiento || !titular.fullName || !titular.email || !titular.phone) {
@@ -146,6 +146,22 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
 
+    // Clean arrays
+    const cleanedAnotaciones = Array.isArray(anotaciones) 
+      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
+      : [];
+    const cleanedOposicion = Array.isArray(oposicion)
+      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
+      : [];
+
+    // Convert arrays to PostgreSQL format
+    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
+    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
+
+    // Add n.º prefix to acta and resolucion for storage
+    const formattedActa = `n.º ${acta}`;
+    const formattedResolucion = `n.º ${resolucion}`;
+
     // Verify the marca belongs to the user
     const verifyResult = await sql`
       SELECT user_email FROM marcas WHERE id = ${id}
@@ -159,25 +175,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'No autorizado para editar esta marca' }, { status: 403 });
     }
 
-    // Clean arrays
-    const cleanedAnotaciones = Array.isArray(anotaciones) 
-      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
-      : [];
-    const cleanedOposicion = Array.isArray(oposicion)
-      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
-      : [];
-
-    // Convert arrays to PostgreSQL format
-    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
-
     // Update the marca
     await sql`
       UPDATE marcas 
       SET 
         marca = ${marca},
-        acta = ${acta},
-        resolucion = ${resolucion},
+        acta = ${formattedActa},
+        resolucion = ${formattedResolucion},
         renovar = ${renovar},
         vencimiento = ${vencimiento},
         titular_nombre = ${titular.fullName},
@@ -247,6 +251,10 @@ export async function POST(request: Request) {
     const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
     const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
 
+    // Add n.º prefix to acta and resolucion for storage
+    const formattedActa = `n.º ${acta}`;
+    const formattedResolucion = `n.º ${resolucion}`;
+
     // Create the marca
     const result = await sql`
       INSERT INTO marcas (
@@ -263,8 +271,8 @@ export async function POST(request: Request) {
         user_email
       ) VALUES (
         ${marca},
-        ${acta},
-        ${resolucion},
+        ${formattedActa},
+        ${formattedResolucion},
         ${renovar},
         ${vencimiento},
         ${titular.fullName},

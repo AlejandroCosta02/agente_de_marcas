@@ -69,17 +69,17 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       newErrors.marca = 'La marca no puede tener más de 20 caracteres';
     }
 
-    // Validate acta and resolucion (must be numbers)
+    // Validate acta and resolucion (must be numbers up to 8 digits)
     if (!formData.acta) {
       newErrors.acta = 'El acta es requerida';
-    } else if (!/^\d+$/.test(formData.acta)) {
-      newErrors.acta = 'El acta debe contener solo números';
+    } else if (!/^\d{1,8}$/.test(formData.acta)) {
+      newErrors.acta = 'El acta debe ser un número de hasta 8 dígitos';
     }
 
     if (!formData.resolucion) {
       newErrors.resolucion = 'La resolución es requerida';
-    } else if (!/^\d+$/.test(formData.resolucion)) {
-      newErrors.resolucion = 'La resolución debe contener solo números';
+    } else if (!/^\d{1,8}$/.test(formData.resolucion)) {
+      newErrors.resolucion = 'La resolución debe ser un número de hasta 8 dígitos';
     }
 
     // Validate dates
@@ -115,14 +115,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       return;
     }
 
-    // Add the n.º prefix to acta and resolucion
-    const submissionData = {
-      ...formData,
-      acta: `n.º ${formData.acta}`,
-      resolucion: `n.º ${formData.resolucion}`
-    };
-
-    onSubmit(submissionData);
+    // Submit the data without any prefixes
+    onSubmit(formData);
   };
 
   const addAnotacion = () => {
