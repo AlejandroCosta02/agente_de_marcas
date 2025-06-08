@@ -1,8 +1,8 @@
 CREATE TABLE IF NOT EXISTS marcas (
   id SERIAL PRIMARY KEY,
   marca VARCHAR(20) NOT NULL,
-  acta VARCHAR(20) NOT NULL CHECK (acta ~ '^N\d+$'),
-  resolucion VARCHAR(20) NOT NULL CHECK (resolucion ~ '^N\d+$'),
+  acta VARCHAR(8) NOT NULL CHECK (acta ~ '^\d{1,8}$'),
+  resolucion VARCHAR(8) NOT NULL CHECK (resolucion ~ '^\d{1,8}$'),
   renovar DATE NOT NULL,
   vencimiento DATE NOT NULL,
   titular_nombre VARCHAR(255) NOT NULL,

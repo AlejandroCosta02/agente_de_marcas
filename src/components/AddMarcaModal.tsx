@@ -188,148 +188,152 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             transition={{ type: "spring", duration: 0.5 }}
-            className="relative top-20 mx-auto p-5 border w-[600px] shadow-lg rounded-md bg-white"
+            className="relative top-20 mx-auto p-8 border w-[600px] shadow-xl rounded-lg bg-white"
           >
-            <div className="mt-3">
-              <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <div className="mt-2">
+              <h3 className="text-2xl font-semibold text-gray-900 mb-6">
                 {initialData ? 'Editar Marca' : 'Nueva Marca'}
               </h3>
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Marca */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700" htmlFor="marca">
+                <div className="form-group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="marca">
                     Marca <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     id="marca"
                     maxLength={20}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                     value={formData.marca}
                     onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                    placeholder="Nombre de la marca"
                   />
-                  {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
+                  {errors.marca && <p className="mt-2 text-sm text-red-600">{errors.marca}</p>}
                 </div>
 
                 {/* Acta y Resolución */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="acta">
-                      n.º Acta <span className="text-red-500">*</span>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="form-group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="acta">
+                      Acta <span className="text-red-500">*</span>
                     </label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <input
-                        type="text"
-                        id="acta"
-                        pattern="\d*"
-                        placeholder="123"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={formData.acta}
-                        onChange={(e) => setFormData({ ...formData, acta: e.target.value.replace(/\D/g, '') })}
-                      />
-                    </div>
-                    {errors.acta && <p className="mt-1 text-sm text-red-600">{errors.acta}</p>}
+                    <input
+                      type="text"
+                      id="acta"
+                      maxLength={8}
+                      pattern="\d*"
+                      placeholder="12345678"
+                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                      value={formData.acta}
+                      onChange={(e) => setFormData({ ...formData, acta: e.target.value.replace(/\D/g, '') })}
+                    />
+                    {errors.acta && <p className="mt-2 text-sm text-red-600">{errors.acta}</p>}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="resolucion">
-                      n.º Resolución <span className="text-red-500">*</span>
+                  <div className="form-group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="resolucion">
+                      Resolución <span className="text-red-500">*</span>
                     </label>
-                    <div className="mt-1 relative rounded-md shadow-sm">
-                      <input
-                        type="text"
-                        id="resolucion"
-                        pattern="\d*"
-                        placeholder="123"
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={formData.resolucion}
-                        onChange={(e) => setFormData({ ...formData, resolucion: e.target.value.replace(/\D/g, '') })}
-                      />
-                    </div>
-                    {errors.resolucion && <p className="mt-1 text-sm text-red-600">{errors.resolucion}</p>}
+                    <input
+                      type="text"
+                      id="resolucion"
+                      maxLength={8}
+                      pattern="\d*"
+                      placeholder="12345678"
+                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                      value={formData.resolucion}
+                      onChange={(e) => setFormData({ ...formData, resolucion: e.target.value.replace(/\D/g, '') })}
+                    />
+                    {errors.resolucion && <p className="mt-2 text-sm text-red-600">{errors.resolucion}</p>}
                   </div>
                 </div>
 
                 {/* Fechas */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="renovar">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="form-group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="renovar">
                       Renovar <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       id="renovar"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                       value={formData.renovar}
                       onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
                     />
-                    {errors.renovar && <p className="mt-1 text-sm text-red-600">{errors.renovar}</p>}
+                    {errors.renovar && <p className="mt-2 text-sm text-red-600">{errors.renovar}</p>}
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="vencimiento">
+                  <div className="form-group">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="vencimiento">
                       Vencimiento <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"
                       id="vencimiento"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
                       value={formData.vencimiento}
                       onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
                     />
-                    {errors.vencimiento && <p className="mt-1 text-sm text-red-600">{errors.vencimiento}</p>}
+                    {errors.vencimiento && <p className="mt-2 text-sm text-red-600">{errors.vencimiento}</p>}
                   </div>
                 </div>
 
                 {/* Titular */}
-                <div className="space-y-4">
-                  <h4 className="text-sm font-medium text-gray-700">Titular</h4>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700" htmlFor="titular-name">
-                      Nombre Completo <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="titular-name"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      value={formData.titular.fullName}
-                      onChange={(e) => setFormData({
-                        ...formData,
-                        titular: { ...formData.titular, fullName: e.target.value }
-                      })}
-                    />
-                    {errors['titular.fullName'] && <p className="mt-1 text-sm text-red-600">{errors['titular.fullName']}</p>}
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700" htmlFor="titular-email">
-                        Email <span className="text-red-500">*</span>
+                <div className="space-y-6">
+                  <h4 className="text-lg font-semibold text-gray-900">Titular</h4>
+                  <div className="grid grid-cols-1 gap-6">
+                    <div className="form-group">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-name">
+                        Nombre Completo <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="email"
-                        id="titular-email"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={formData.titular.email}
+                        type="text"
+                        id="titular-name"
+                        className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                        value={formData.titular.fullName}
                         onChange={(e) => setFormData({
                           ...formData,
-                          titular: { ...formData.titular, email: e.target.value }
+                          titular: { ...formData.titular, fullName: e.target.value }
                         })}
+                        placeholder="Nombre completo del titular"
                       />
-                      {errors['titular.email'] && <p className="mt-1 text-sm text-red-600">{errors['titular.email']}</p>}
+                      {errors['titular.fullName'] && <p className="mt-2 text-sm text-red-600">{errors['titular.fullName']}</p>}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700" htmlFor="titular-phone">
-                        Teléfono <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="tel"
-                        id="titular-phone"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={formData.titular.phone}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, phone: e.target.value }
-                        })}
-                      />
-                      {errors['titular.phone'] && <p className="mt-1 text-sm text-red-600">{errors['titular.phone']}</p>}
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="form-group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-email">
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          id="titular-email"
+                          className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                          value={formData.titular.email}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            titular: { ...formData.titular, email: e.target.value }
+                          })}
+                          placeholder="email@ejemplo.com"
+                        />
+                        {errors['titular.email'] && <p className="mt-2 text-sm text-red-600">{errors['titular.email']}</p>}
+                      </div>
+                      <div className="form-group">
+                        <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-phone">
+                          Teléfono <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="tel"
+                          id="titular-phone"
+                          className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                          value={formData.titular.phone}
+                          onChange={(e) => setFormData({
+                            ...formData,
+                            titular: { ...formData.titular, phone: e.target.value }
+                          })}
+                          placeholder="+1234567890"
+                        />
+                        {errors['titular.phone'] && <p className="mt-2 text-sm text-red-600">{errors['titular.phone']}</p>}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -401,17 +405,17 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 </div>
 
                 {/* Buttons */}
-                <div className="flex justify-end gap-3 pt-4">
+                <div className="flex justify-end gap-4 pt-6">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md"
+                    className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 border border-transparent rounded-md shadow-sm hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md transform hover:scale-105"
+                    className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 border border-transparent rounded-lg shadow-sm hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md transform hover:scale-105"
                   >
                     {initialData ? 'Guardar Cambios' : 'Crear Marca'}
                   </button>

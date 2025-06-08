@@ -138,12 +138,12 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
     }
 
-    // Validate acta and resolucion format
-    if (!/^N\d+$/.test(acta)) {
-      return NextResponse.json({ message: 'El acta debe comenzar con N seguido de números' }, { status: 400 });
+    // Validate acta and resolucion format (only numbers up to 8 digits)
+    if (!/^\d{1,8}$/.test(acta)) {
+      return NextResponse.json({ message: 'El acta debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
-    if (!/^N\d+$/.test(resolucion)) {
-      return NextResponse.json({ message: 'La resolución debe comenzar con N seguido de números' }, { status: 400 });
+    if (!/^\d{1,8}$/.test(resolucion)) {
+      return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
 
     // Verify the marca belongs to the user
@@ -227,12 +227,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
     }
 
-    // Validate acta and resolucion format
-    if (!/^N\d+$/.test(acta)) {
-      return NextResponse.json({ message: 'El acta debe comenzar con N seguido de números' }, { status: 400 });
+    // Validate acta and resolucion format (only numbers up to 8 digits)
+    if (!/^\d{1,8}$/.test(acta)) {
+      return NextResponse.json({ message: 'El acta debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
-    if (!/^N\d+$/.test(resolucion)) {
-      return NextResponse.json({ message: 'La resolución debe comenzar con N seguido de números' }, { status: 400 });
+    if (!/^\d{1,8}$/.test(resolucion)) {
+      return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
 
     // Clean arrays
