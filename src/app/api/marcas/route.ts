@@ -12,12 +12,47 @@ export async function GET() {
     }
 
     const result = await sql`
-      SELECT * FROM marcas 
+      SELECT 
+        id,
+        marca,
+        acta,
+        resolucion,
+        renovar,
+        vencimiento,
+        titular_nombre,
+        titular_email,
+        titular_telefono,
+        anotaciones,
+        oposicion,
+        user_email,
+        created_at,
+        updated_at
+      FROM marcas 
       WHERE user_email = ${session.user.email}
       ORDER BY created_at DESC
     `;
 
-    return NextResponse.json(result.rows);
+    // Transform the data to match the frontend structure
+    const transformedData = result.rows.map(row => ({
+      id: row.id,
+      marca: row.marca,
+      acta: row.acta,
+      resolucion: row.resolucion,
+      renovar: row.renovar,
+      vencimiento: row.vencimiento,
+      titular: {
+        fullName: row.titular_nombre,
+        email: row.titular_email,
+        phone: row.titular_telefono
+      },
+      anotaciones: row.anotaciones || [],
+      oposicion: row.oposicion || [],
+      user_email: row.user_email,
+      created_at: row.created_at,
+      updated_at: row.updated_at
+    }));
+
+    return NextResponse.json(transformedData);
   } catch (error) {
     console.error('Error fetching marcas:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';
