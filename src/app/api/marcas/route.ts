@@ -30,8 +30,8 @@ export async function GET() {
         email: row.titular_email,
         phone: row.titular_telefono
       },
-      anotaciones: row.anotaciones || [],
-      oposicion: row.oposicion || [],
+      anotaciones: Array.isArray(row.anotaciones) ? row.anotaciones : [],
+      oposicion: Array.isArray(row.oposicion) ? row.oposicion : [],
       user_email: row.user_email,
       created_at: row.created_at,
       updated_at: row.updated_at
