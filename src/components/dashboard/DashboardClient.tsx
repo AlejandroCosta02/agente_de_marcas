@@ -10,6 +10,7 @@ export default function DashboardClient() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   useEffect(() => {
     fetchMarcas();
@@ -20,7 +21,8 @@ export default function DashboardClient() {
       const response = await fetch('/api/marcas');
       if (!response.ok) throw new Error('Error fetching data');
       const data = await response.json();
-      setMarcas(data);
+      const sortedData = sortMarcasByVencimiento(data, sortDirection);
+      setMarcas(sortedData);
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -30,6 +32,20 @@ export default function DashboardClient() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const sortMarcasByVencimiento = (data: Marca[], direction: 'asc' | 'desc') => {
+    return [...data].sort((a, b) => {
+      const dateA = new Date(a.vencimiento).getTime();
+      const dateB = new Date(b.vencimiento).getTime();
+      return direction === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  };
+
+  const handleSort = () => {
+    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortDirection(newDirection);
+    setMarcas(sortMarcasByVencimiento(marcas, newDirection));
   };
 
   const handleEdit = (marca: Marca) => {
@@ -209,7 +225,30 @@ export default function DashboardClient() {
                         Resolución
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Fechas
+                        <div className="flex items-center space-x-2">
+                          <span>Fechas</span>
+                          <button
+                            onClick={handleSort}
+                            className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                            title={sortDirection === 'asc' ? 'Ordenar descendente' : 'Ordenar ascendente'}
+                          >
+                            <svg
+                              className={`w-4 h-4 text-gray-400 transform transition-transform duration-200 ${
+                                sortDirection === 'desc' ? 'rotate-180' : ''
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                              strokeWidth="2"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
                       </th>
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Titular
