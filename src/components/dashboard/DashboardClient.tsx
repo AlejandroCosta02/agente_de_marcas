@@ -168,9 +168,30 @@ export default function DashboardClient() {
               <h1 className="text-xl font-semibold text-gray-900">Marcas Registradas</h1>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="relative overflow-hidden group bg-gradient-to-br from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg 
+                  transform transition-all duration-200 ease-in-out
+                  hover:scale-105 hover:shadow-lg hover:from-purple-700 hover:to-indigo-700
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                  cursor-pointer"
               >
-                Agregar Marca
+                <span className="absolute w-0 h-0 transition-all duration-300 ease-out bg-white rounded-full group-hover:w-32 group-hover:h-32 opacity-10"></span>
+                <span className="relative flex items-center">
+                  <svg
+                    className="w-5 h-5 mr-2 transform transition-transform duration-200 ease-in-out group-hover:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                    />
+                  </svg>
+                  Agregar Marca
+                </span>
               </button>
             </div>
             <div className="border-t border-gray-200">
@@ -268,7 +289,11 @@ export default function DashboardClient() {
                             <div className="flex items-center justify-end space-x-3">
                               <button 
                                 onClick={() => handleEdit(marca)}
-                                className="p-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-full transition-colors duration-200"
+                                className="p-1.5 bg-indigo-50 text-indigo-600 rounded-full 
+                                  transition-all duration-200 ease-in-out
+                                  hover:bg-indigo-100 hover:shadow-md hover:scale-110
+                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                                  cursor-pointer"
                                 title="Editar"
                               >
                                 <svg 
@@ -287,7 +312,11 @@ export default function DashboardClient() {
                               </button>
                               <button 
                                 onClick={() => handleDeleteClick(marca)}
-                                className="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-full transition-colors duration-200"
+                                className="p-1.5 bg-red-50 text-red-600 rounded-full 
+                                  transition-all duration-200 ease-in-out
+                                  hover:bg-red-100 hover:shadow-md hover:scale-110
+                                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
+                                  cursor-pointer"
                                 title="Eliminar"
                               >
                                 <svg 
