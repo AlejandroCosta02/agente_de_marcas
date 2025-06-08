@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -17,11 +17,24 @@ export async function GET() {
       ORDER BY created_at DESC
     `;
 
-    // Transform the results to ensure arrays are properly initialized
+    // Transform the results to match the frontend structure
     const transformedResults = result.rows.map(row => ({
-      ...row,
+      id: row.id,
+      marca: row.marca,
+      acta: row.acta,
+      resolucion: row.resolucion,
+      renovar: row.renovar,
+      vencimiento: row.vencimiento,
+      titular: {
+        fullName: row.titular_nombre,
+        email: row.titular_email,
+        phone: row.titular_telefono
+      },
       anotaciones: row.anotaciones || [],
-      oposicion: row.oposicion || []
+      oposicion: row.oposicion || [],
+      user_email: row.user_email,
+      created_at: row.created_at,
+      updated_at: row.updated_at
     }));
 
     return NextResponse.json(transformedResults);
@@ -236,11 +249,24 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    // Transform the response to ensure arrays are properly initialized
+    // Transform the response to match the frontend structure
     const transformedResult = {
-      ...result.rows[0],
+      id: result.rows[0].id,
+      marca: result.rows[0].marca,
+      acta: result.rows[0].acta,
+      resolucion: result.rows[0].resolucion,
+      renovar: result.rows[0].renovar,
+      vencimiento: result.rows[0].vencimiento,
+      titular: {
+        fullName: result.rows[0].titular_nombre,
+        email: result.rows[0].titular_email,
+        phone: result.rows[0].titular_telefono
+      },
       anotaciones: result.rows[0].anotaciones || [],
-      oposicion: result.rows[0].oposicion || []
+      oposicion: result.rows[0].oposicion || [],
+      user_email: result.rows[0].user_email,
+      created_at: result.rows[0].created_at,
+      updated_at: result.rows[0].updated_at
     };
 
     return NextResponse.json(transformedResult);
