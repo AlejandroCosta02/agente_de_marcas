@@ -12,47 +12,19 @@ export async function GET() {
     }
 
     const result = await sql`
-      SELECT 
-        id,
-        marca,
-        acta,
-        resolucion,
-        renovar,
-        vencimiento,
-        titular_nombre,
-        titular_email,
-        titular_telefono,
-        anotaciones,
-        oposicion,
-        user_email,
-        created_at,
-        updated_at
-      FROM marcas 
+      SELECT * FROM marcas 
       WHERE user_email = ${session.user.email}
       ORDER BY created_at DESC
     `;
 
-    // Transform the data to match the frontend structure
-    const transformedData = result.rows.map(row => ({
-      id: row.id,
-      marca: row.marca,
-      acta: row.acta,
-      resolucion: row.resolucion,
-      renovar: row.renovar,
-      vencimiento: row.vencimiento,
-      titular: {
-        fullName: row.titular_nombre,
-        email: row.titular_email,
-        phone: row.titular_telefono
-      },
+    // Transform the results to ensure arrays are properly initialized
+    const transformedResults = result.rows.map(row => ({
+      ...row,
       anotaciones: row.anotaciones || [],
-      oposicion: row.oposicion || [],
-      user_email: row.user_email,
-      created_at: row.created_at,
-      updated_at: row.updated_at
+      oposicion: row.oposicion || []
     }));
 
-    return NextResponse.json(transformedData);
+    return NextResponse.json(transformedResults);
   } catch (error) {
     console.error('Error fetching marcas:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';
@@ -146,11 +118,11 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
 
-    // Clean arrays
+    // Ensure arrays are properly initialized
     const cleanedAnotaciones = Array.isArray(anotaciones) 
       ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
       : [];
-    const cleanedOposicion = Array.isArray(oposicion)
+    const cleanedOposicion = Array.isArray(oposicion) 
       ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
       : [];
 
@@ -222,11 +194,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
     }
 
-    // Clean arrays
+    // Ensure arrays are properly initialized
     const cleanedAnotaciones = Array.isArray(anotaciones) 
       ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
       : [];
-    const cleanedOposicion = Array.isArray(oposicion)
+    const cleanedOposicion = Array.isArray(oposicion) 
       ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
       : [];
 
@@ -264,7 +236,14 @@ export async function POST(request: Request) {
       RETURNING *
     `;
 
-    return NextResponse.json(result.rows[0]);
+    // Transform the response to ensure arrays are properly initialized
+    const transformedResult = {
+      ...result.rows[0],
+      anotaciones: result.rows[0].anotaciones || [],
+      oposicion: result.rows[0].oposicion || []
+    };
+
+    return NextResponse.json(transformedResult);
   } catch (error) {
     console.error('Error creating marca:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';

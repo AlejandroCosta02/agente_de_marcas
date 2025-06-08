@@ -7,8 +7,8 @@ export interface Titular {
 export interface Marca {
   id: string;
   marca: string;
-  acta: string;
-  resolucion: string;
+  acta: number;
+  resolucion: number;
   renovar: string;
   vencimiento: string;
   titular: Titular;
@@ -26,6 +26,6 @@ export interface MarcaSubmissionData {
   renovar: string;
   vencimiento: string;
   titular: Titular;
-  anotaciones?: string[];
-  oposicion?: string[];
+  anotaciones: string[];
+  oposicion: string[];
 } 
