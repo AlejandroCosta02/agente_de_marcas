@@ -1,3 +1,6 @@
+-- Drop existing table if it exists
+DROP TABLE IF EXISTS marcas;
+
 CREATE TABLE IF NOT EXISTS marcas (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   marca VARCHAR(20) NOT NULL,
