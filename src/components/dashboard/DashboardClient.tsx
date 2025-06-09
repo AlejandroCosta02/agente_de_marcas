@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData } from '@/types/marca';
@@ -11,6 +11,30 @@ export default function DashboardClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
+  const timeRangeRef = useRef<HTMLDivElement>(null);
+
+  const timeRangeOptions = [
+    { label: 'Una semana', days: 7 },
+    { label: '3 Semanas', days: 21 },
+    { label: '1 mes', days: 30 },
+    { label: '2 meses', days: 60 },
+    { label: '3 meses', days: 90 },
+  ];
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (timeRangeRef.current && !timeRangeRef.current.contains(event.target as Node)) {
+        setIsTimeRangeOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     fetchMarcas();
@@ -113,12 +137,17 @@ export default function DashboardClient() {
   // Calculate statistics
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(m => Array.isArray(m.oposicion) && m.oposicion.length > 0).length;
-  const proximosVencimientos = marcas.filter(m => {
-    const vencimiento = new Date(m.vencimiento);
+  const proximosRenovar = marcas.filter(m => {
+    const renovar = new Date(m.renovar);
     const hoy = new Date();
-    const diasRestantes = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    return diasRestantes <= 30;
+    const diasRestantes = Math.ceil((renovar.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    return diasRestantes <= selectedTimeRange;
   }).length;
+
+  const handleTimeRangeSelect = (days: number) => {
+    setSelectedTimeRange(days);
+    setIsTimeRangeOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -143,7 +172,7 @@ export default function DashboardClient() {
               </div>
             </div>
 
-            {/* Próximos Vencimientos */}
+            {/* Próximo a Renovar */}
             <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -153,9 +182,42 @@ export default function DashboardClient() {
                     </svg>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-white uppercase">Próximos Vencimientos</p>
-                  <p className="text-3xl font-bold text-white">{proximosVencimientos}</p>
+                <div className="text-right flex items-start space-x-2">
+                  <div>
+                    <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
+                    <p className="text-3xl font-bold text-white">{proximosRenovar}</p>
+                  </div>
+                  <div className="relative">
+                    <button
+                      onClick={() => setIsTimeRangeOpen(!isTimeRangeOpen)}
+                      className="p-1.5 bg-yellow-600 bg-opacity-30 rounded-full hover:bg-opacity-50 transition-all duration-200"
+                    >
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </button>
+                    {isTimeRangeOpen && (
+                      <div ref={timeRangeRef} className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 transform transition-all duration-200 ease-in-out">
+                        <div className="py-1" role="menu" aria-orientation="vertical">
+                          {timeRangeOptions.map((option) => (
+                            <button
+                              key={option.days}
+                              onClick={() => handleTimeRangeSelect(option.days)}
+                              className={`block w-full text-left px-4 py-2 text-sm ${
+                                selectedTimeRange === option.days
+                                  ? 'bg-yellow-50 text-yellow-700'
+                                  : 'text-gray-700 hover:bg-gray-100'
+                              }`}
+                              role="menuitem"
+                            >
+                              {option.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
