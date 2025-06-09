@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
-import { Marca, MarcaSubmissionData } from '@/types/marca';
+import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
+import OposicionModal from '@/components/modals/OposicionModal';
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function DashboardClient() {
   const [newAnotacion, setNewAnotacion] = useState('');
   const [viewingAnotacion, setViewingAnotacion] = useState<{text: string; marcaId: string; index: number} | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
+  const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
 
   const timeRangeOptions = [
     { label: 'Una semana', days: 7 },
@@ -712,12 +714,15 @@ export default function DashboardClient() {
                                   {marca.oposicion.map((op, index) => (
                                     <li key={index} className="group">
                                       <div className="flex items-center justify-between pb-1">
-                                        <div 
-                                          className={`truncate flex-1 mr-2 ${op.completed ? 'line-through text-gray-400' : ''}`}
-                                          title={op.text}
+                                        <button
+                                          onClick={() => setSelectedOposicion({ marcaId: marca.id, index, oposicion: op })}
+                                          className={`truncate flex-1 mr-2 text-left hover:text-indigo-600 ${
+                                            op.completed ? 'line-through text-gray-400' : ''
+                                          }`}
+                                          title="Click para ver detalles"
                                         >
                                           {op.text.length > 20 ? `${op.text.slice(0, 20)}...` : op.text}
-                                        </div>
+                                        </button>
                                         <button
                                           onClick={() => handleToggleOposicion(marca.id, index)}
                                           className={`transition-all duration-200 px-2 py-1 rounded-md text-sm
@@ -862,6 +867,18 @@ export default function DashboardClient() {
             </div>
           </div>
         </div>
+      )}
+
+      {selectedOposicion && (
+        <OposicionModal
+          isOpen={!!selectedOposicion}
+          onClose={() => setSelectedOposicion(null)}
+          oposicion={selectedOposicion.oposicion}
+          onComplete={() => {
+            handleToggleOposicion(selectedOposicion.marcaId, selectedOposicion.index);
+            setSelectedOposicion(null);
+          }}
+        />
       )}
     </div>
   );
