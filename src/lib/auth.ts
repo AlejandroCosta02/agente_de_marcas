@@ -2,6 +2,29 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaClient } from '@prisma/client';
 import { compare } from 'bcryptjs';
+import { sql } from '@vercel/postgres';
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id: string;
+      email: string;
+      name?: string;
+    }
+  }
+  interface User {
+    id: string;
+    email: string;
+    name?: string;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id: string;
+    email: string;
+  }
+}
 
 const prisma = new PrismaClient();
 
@@ -31,11 +54,13 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const user = await prisma.user.findUnique({
-            where: {
-              email: credentials.email,
-            },
-          });
+          const result = await sql`
+            SELECT id, email, name, password
+            FROM users
+            WHERE email = ${credentials.email}
+          `;
+
+          const user = result.rows[0];
 
           if (!user) {
             console.error('User not found');
@@ -53,7 +78,7 @@ export const authOptions: NextAuthOptions = {
           }
 
           return {
-            id: user.id + '',
+            id: user.id,
             email: user.email,
             name: user.name,
           };
@@ -65,23 +90,19 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    session: ({ session, token }) => {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id,
-        },
-      };
-    },
-    jwt: ({ token, user }) => {
+    async jwt({ token, user }) {
       if (user) {
-        return {
-          ...token,
-          id: user.id,
-        };
+        token.id = user.id;
+        token.email = user.email;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+        session.user.email = token.email;
+      }
+      return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
