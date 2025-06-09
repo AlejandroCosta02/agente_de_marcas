@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData } from '@/types/marca';
@@ -39,11 +39,7 @@ export default function DashboardClient() {
     };
   }, []);
 
-  useEffect(() => {
-    fetchMarcas();
-  }, []);
-
-  const fetchMarcas = async () => {
+  const fetchMarcas = useCallback(async () => {
     try {
       const response = await fetch('/api/marcas');
       if (!response.ok) throw new Error('Error fetching data');
@@ -59,7 +55,11 @@ export default function DashboardClient() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortDirection]);
+
+  useEffect(() => {
+    fetchMarcas();
+  }, [fetchMarcas]);
 
   const sortMarcasByVencimiento = (data: Marca[], direction: 'asc' | 'desc') => {
     return [...data].sort((a, b) => {

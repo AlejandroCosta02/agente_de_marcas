@@ -1,8 +1,8 @@
 import { neon } from '@neondatabase/serverless';
-import ws from 'ws';
+import { WebSocket } from 'ws';
 import { neonConfig } from '@neondatabase/serverless';
 
-neonConfig.webSocketConstructor = ws;
+neonConfig.webSocketConstructor = WebSocket;
 
 const sql = neon(process.env.DIRECT_URL!);
 
