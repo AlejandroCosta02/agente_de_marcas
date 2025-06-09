@@ -66,31 +66,6 @@ export default function DashboardClient() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (marca: Marca) => {
-    try {
-      const response = await fetch(`/api/marcas?id=${marca.id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al eliminar la marca');
-      }
-
-      toast.success('Marca eliminada exitosamente');
-      fetchMarcas(); // Refresh the list
-    } catch (error) {
-      console.error('Error deleting marca:', error);
-      toast.error(error instanceof Error ? error.message : 'Error al eliminar la marca');
-    }
-  };
-
-  const handleDeleteClick = (marca: Marca) => {
-    if (window.confirm('¿Estás seguro de que deseas eliminar esta marca? Esta acción no se puede deshacer.')) {
-      handleDelete(marca);
-    }
-  };
-
   const handleSubmit = async (data: MarcaSubmissionData) => {
     try {
       const method = selectedMarca ? 'PUT' : 'POST';
@@ -127,6 +102,7 @@ export default function DashboardClient() {
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(m => Array.isArray(m.oposicion) && m.oposicion.length > 0).length;
   const proximosVencer = marcas.filter(m => {
+    if (!m.updatedAt) return false;
     const vencimiento = new Date(m.updatedAt);
     vencimiento.setFullYear(vencimiento.getFullYear() + 10); // Trademark validity is 10 years
     const hoy = new Date();
@@ -450,13 +426,13 @@ export default function DashboardClient() {
                     <tbody className="divide-y divide-gray-200">
                       {isLoading ? (
                         <tr>
-                          <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          <td colSpan={9} className="text-center py-4">
                             Cargando...
                           </td>
                         </tr>
                       ) : marcas.length === 0 ? (
                         <tr>
-                          <td colSpan={8} className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+                          <td colSpan={9} className="text-center py-4 text-gray-500">
                             No hay marcas registradas
                           </td>
                         </tr>
@@ -473,83 +449,84 @@ export default function DashboardClient() {
                               {marca.resolucion}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {marca.clases.join(', ')}
+                              {Array.isArray(marca.clases) ? marca.clases.join(', ') : ''}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1)}
+                              {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : ''}
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                               {marca.status}
                             </td>
                             <td className="px-3 py-4 text-sm text-gray-500">
-                              {marca.oposicion && marca.oposicion.length > 0 ? (
-                                <ul className="space-y-1">
-                                  {marca.oposicion.map((op, index) => (
-                                    <li key={index} className="group">
-                                      <div className="flex items-center justify-between pb-1">
-                                        <button
-                                          onClick={() => setSelectedOposicion({ marcaId: marca.id, index, oposicion: op })}
-                                          className={`truncate flex-1 mr-2 text-left hover:text-indigo-600 ${
-                                            op.completed ? 'line-through text-gray-400' : ''
-                                          }`}
-                                          title="Click para ver detalles"
-                                        >
-                                          {op.text.length > 20 ? `${op.text.slice(0, 20)}...` : op.text}
-                                        </button>
-                                        <button
-                                          onClick={() => handleToggleOposicion(marca.id, index)}
-                                          className={`transition-all duration-200 px-2 py-1 rounded-md text-sm
-                                            ${op.completed 
-                                              ? 'bg-green-50 text-green-600 hover:bg-green-100' 
-                                              : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
-                                        >
-                                          {op.completed ? 'Realizado' : 'Marcar'}
-                                        </button>
-                                      </div>
-                                      {index < marca.oposicion.length - 1 && (
-                                        <div className="border-b border-gray-200 my-1"></div>
-                                      )}
-                                    </li>
-                                  ))}
-                                </ul>
-                              ) : null}
-                              
-                              <button
-                                onClick={() => {
-                                  const text = prompt('Nueva oposición:');
-                                  if (text?.trim()) {
-                                    handleAddOposicion(marca.id, text.trim());
-                                  }
-                                }}
-                                className="text-indigo-600 hover:text-indigo-800 text-sm flex items-center space-x-1"
-                              >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <span>{marca.oposicion?.length ? 'Agregar otra' : 'Agregar oposición'}</span>
-                              </button>
+                              <div className="space-y-2">
+                                {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
+                                  <ul className="space-y-1">
+                                    {marca.oposicion.map((op, index) => (
+                                      <li key={index} className="group">
+                                        <div className="flex items-center justify-between pb-1">
+                                          <button
+                                            onClick={() => setSelectedOposicion({ marcaId: marca.id, index, oposicion: op })}
+                                            className={`truncate flex-1 mr-2 text-left hover:text-indigo-600 ${
+                                              op.completed ? 'line-through text-gray-400' : ''
+                                            }`}
+                                            title="Click para ver detalles"
+                                          >
+                                            {op.text?.length > 20 ? `${op.text.slice(0, 20)}...` : op.text}
+                                          </button>
+                                          <button
+                                            onClick={() => handleToggleOposicion(marca.id, index)}
+                                            className={`transition-all duration-200 px-2 py-1 rounded-md text-sm
+                                              ${op.completed 
+                                                ? 'bg-green-50 text-green-600 hover:bg-green-100' 
+                                                : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+                                          >
+                                            {op.completed ? 'Realizado' : 'Marcar'}
+                                          </button>
+                                        </div>
+                                        {index < marca.oposicion.length - 1 && (
+                                          <div className="border-b border-gray-200 my-1"></div>
+                                        )}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : null}
+                                
+                                <button
+                                  onClick={() => {
+                                    const text = prompt('Nueva oposición:');
+                                    if (text?.trim()) {
+                                      handleAddOposicion(marca.id, text.trim());
+                                    }
+                                  }}
+                                  className="text-indigo-600 hover:text-indigo-800 text-sm flex items-center space-x-1"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                  </svg>
+                                  <span>{Array.isArray(marca.oposicion) && marca.oposicion.length ? 'Agregar otra' : 'Agregar oposición'}</span>
+                                </button>
+                              </div>
                             </td>
                             <td className="px-3 py-4 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {marca.anotacion && marca.anotacion.length > 0 ? (
+                                {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
                                   <ul className="space-y-1">
-                                    {marca.anotacion.map((anotacion, index) => (
+                                    {marca.anotacion.map((anot, index) => (
                                       <li key={index} className="group">
                                         <div className="flex items-center justify-between pb-1">
                                           <div 
-                                            onClick={() => setViewingAnotacion({ text: anotacion.text, marcaId: marca.id, index })}
+                                            onClick={() => setViewingAnotacion({ text: anot.text, marcaId: marca.id, index })}
                                             className="truncate cursor-pointer hover:text-gray-900 flex-1 mr-2"
                                             title="Click para ver completo"
                                           >
-                                            {anotacion.text.length > 20 ? `${anotacion.text.slice(0, 20)}...` : anotacion.text}
+                                            {anot.text?.length > 20 ? `${anot.text.slice(0, 20)}...` : anot.text}
                                           </div>
                                           <button
                                             onClick={() => handleDeleteAnotacion(marca.id, index)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full flex-shrink-0"
-                                            title="Eliminar anotación"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-red-600 hover:text-red-800"
                                           >
                                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                             </svg>
                                           </button>
                                         </div>
@@ -607,60 +584,18 @@ export default function DashboardClient() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
-                                    <span>{marca.anotacion?.length ? 'Agregar otra' : 'Agregar anotación'}</span>
+                                    <span>{Array.isArray(marca.anotacion) && marca.anotacion.length ? 'Agregar otra' : 'Agregar anotación'}</span>
                                   </button>
                                 )}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                              <div className="flex items-center justify-end space-x-3">
-                                <button 
-                                  onClick={() => handleEdit(marca)}
-                                  className="p-1.5 bg-indigo-50 text-indigo-600 rounded-full 
-                                    transition-all duration-200 ease-in-out
-                                    hover:bg-indigo-100 hover:shadow-md hover:scale-110
-                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                                    cursor-pointer"
-                                  title="Editar"
-                                >
-                                  <svg 
-                                    className="w-5 h-5" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                  >
-                                    <path 
-                                      strokeLinecap="round" 
-                                      strokeLinejoin="round" 
-                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                                    />
-                                  </svg>
-                                </button>
-                                <button 
-                                  onClick={() => handleDeleteClick(marca)}
-                                  className="p-1.5 bg-red-50 text-red-600 rounded-full 
-                                    transition-all duration-200 ease-in-out
-                                    hover:bg-red-100 hover:shadow-md hover:scale-110
-                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
-                                    cursor-pointer"
-                                  title="Eliminar"
-                                >
-                                  <svg 
-                                    className="w-5 h-5" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                    strokeWidth="2"
-                                  >
-                                    <path 
-                                      strokeLinecap="round" 
-                                      strokeLinejoin="round" 
-                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                    />
-                                  </svg>
-                                </button>
-                              </div>
+                            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
+                              <button
+                                onClick={() => handleEdit(marca)}
+                                className="text-indigo-600 hover:text-indigo-900"
+                              >
+                                Editar
+                              </button>
                             </td>
                           </tr>
                         ))
