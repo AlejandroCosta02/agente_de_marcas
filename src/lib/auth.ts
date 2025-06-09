@@ -3,22 +3,6 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from './db';
 import { compare } from 'bcryptjs';
 
-interface User {
-  id: string;
-  email: string;
-  name: string;
-}
-
-interface SessionUser {
-  id: string;
-  email: string;
-  name: string;
-}
-
-if (!process.env.POSTGRES_URL) {
-  throw new Error('Please define the POSTGRES_URL environment variable');
-}
-
 export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/',
@@ -81,10 +65,9 @@ export const authOptions: NextAuthOptions = {
     },
     jwt: ({ token, user }) => {
       if (user) {
-        const u = user as unknown as any;
         return {
           ...token,
-          id: u.id,
+          id: user.id,
         };
       }
       return token;
