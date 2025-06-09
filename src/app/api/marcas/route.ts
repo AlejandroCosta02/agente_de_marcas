@@ -7,7 +7,16 @@ export async function GET() {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
+      console.error('No session or user email found');
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+    }
+
+    // Test database connection
+    try {
+      await sql`SELECT 1`;
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
+      return NextResponse.json({ message: 'Error de conexión a la base de datos' }, { status: 500 });
     }
 
     const marcas = await sql`
@@ -41,8 +50,11 @@ export async function GET() {
 
     return NextResponse.json(formattedMarcas);
   } catch (error) {
-    console.error('Error fetching marcas:', error);
-    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
+    console.error('Error detallado al obtener marcas:', error);
+    return NextResponse.json({ 
+      message: 'Error interno del servidor',
+      details: error instanceof Error ? error.message : 'Error desconocido'
+    }, { status: 500 });
   }
 }
 
