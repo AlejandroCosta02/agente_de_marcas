@@ -11,7 +11,6 @@ export default function DashboardClient() {
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
   const [editingAnotacionMarcaId, setEditingAnotacionMarcaId] = useState<string | null>(null);
@@ -46,8 +45,7 @@ export default function DashboardClient() {
       const response = await fetch('/api/marcas');
       if (!response.ok) throw new Error('Error fetching data');
       const data = await response.json();
-      const sortedData = sortMarcasByVencimiento(data, sortDirection);
-      setMarcas(sortedData);
+      setMarcas(data);
     } catch (error: unknown) {
       if (error instanceof Error) {
         toast.error(error.message);
@@ -57,25 +55,11 @@ export default function DashboardClient() {
     } finally {
       setIsLoading(false);
     }
-  }, [sortDirection]);
+  }, []);
 
   useEffect(() => {
     fetchMarcas();
   }, [fetchMarcas]);
-
-  const sortMarcasByVencimiento = (data: Marca[], direction: 'asc' | 'desc') => {
-    return [...data].sort((a, b) => {
-      const dateA = new Date(a.renovar).getTime();
-      const dateB = new Date(b.renovar).getTime();
-      return direction === 'asc' ? dateA - dateB : dateB - dateA;
-    });
-  };
-
-  const handleSort = () => {
-    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    setSortDirection(newDirection);
-    setMarcas(sortMarcasByVencimiento(marcas, newDirection));
-  };
 
   const handleEdit = (marca: Marca) => {
     setSelectedMarca(marca);
@@ -142,10 +126,11 @@ export default function DashboardClient() {
   // Calculate statistics
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(m => Array.isArray(m.oposicion) && m.oposicion.length > 0).length;
-  const proximosRenovar = marcas.filter(m => {
-    const renovar = new Date(m.renovar);
+  const proximosVencer = marcas.filter(m => {
+    const vencimiento = new Date(m.updatedAt);
+    vencimiento.setFullYear(vencimiento.getFullYear() + 10); // Trademark validity is 10 years
     const hoy = new Date();
-    const diasRestantes = Math.ceil((renovar.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    const diasRestantes = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
     return diasRestantes <= selectedTimeRange;
   }).length;
 
@@ -161,7 +146,7 @@ export default function DashboardClient() {
       const marca = marcas.find(m => m.id === marcaId);
       if (!marca) return;
 
-      const updatedAnotaciones = [...(marca.anotaciones || []), newAnotacion.trim()];
+      const updatedAnotaciones = [...(marca.anotacion || []), { text: newAnotacion.trim(), completed: false }];
       
       const response = await fetch(`/api/marcas?id=${marcaId}`, {
         method: 'PUT',
@@ -170,7 +155,7 @@ export default function DashboardClient() {
         },
         body: JSON.stringify({
           ...marca,
-          anotaciones: updatedAnotaciones,
+          anotacion: updatedAnotaciones,
         }),
       });
 
@@ -186,12 +171,12 @@ export default function DashboardClient() {
     }
   };
 
-  const handleDeleteAnotacion = async (marcaId: string, anotacionIndex: number) => {
+  const handleDeleteAnotacion = async (marcaId: string, index: number) => {
     try {
       const marca = marcas.find(m => m.id === marcaId);
       if (!marca) return;
 
-      const updatedAnotaciones = marca.anotaciones.filter((_, index) => index !== anotacionIndex);
+      const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
       
       const response = await fetch(`/api/marcas?id=${marcaId}`, {
         method: 'PUT',
@@ -200,7 +185,7 @@ export default function DashboardClient() {
         },
         body: JSON.stringify({
           ...marca,
-          anotaciones: updatedAnotaciones,
+          anotacion: updatedAnotaciones,
         }),
       });
 
@@ -263,8 +248,7 @@ export default function DashboardClient() {
       const marca = marcas.find(m => m.id === marcaId);
       if (!marca) return;
 
-      const newOposicion = { text, completed: false };
-      const updatedOposiciones = [...marca.oposicion, newOposicion];
+      const updatedOposiciones = [...marca.oposicion, { text, completed: false }];
 
       const response = await fetch(`/api/marcas?id=${marcaId}`, {
         method: 'PUT',
@@ -335,7 +319,7 @@ export default function DashboardClient() {
                 <div className="text-right flex items-start space-x-2">
                   <div>
                     <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
-                    <p className="text-3xl font-bold text-white">{proximosRenovar}</p>
+                    <p className="text-3xl font-bold text-white">{proximosVencer}</p>
                   </div>
                   <div className="relative">
                     <button
@@ -547,17 +531,17 @@ export default function DashboardClient() {
                             </td>
                             <td className="px-3 py-4 text-sm text-gray-500">
                               <div className="space-y-2">
-                                {marca.anotaciones && marca.anotaciones.length > 0 ? (
+                                {marca.anotacion && marca.anotacion.length > 0 ? (
                                   <ul className="space-y-1">
-                                    {marca.anotaciones.map((anotacion, index) => (
+                                    {marca.anotacion.map((anotacion, index) => (
                                       <li key={index} className="group">
                                         <div className="flex items-center justify-between pb-1">
                                           <div 
-                                            onClick={() => setViewingAnotacion({ text: anotacion, marcaId: marca.id, index })}
+                                            onClick={() => setViewingAnotacion({ text: anotacion.text, marcaId: marca.id, index })}
                                             className="truncate cursor-pointer hover:text-gray-900 flex-1 mr-2"
                                             title="Click para ver completo"
                                           >
-                                            {anotacion.length > 20 ? `${anotacion.slice(0, 20)}...` : anotacion}
+                                            {anotacion.text.length > 20 ? `${anotacion.text.slice(0, 20)}...` : anotacion.text}
                                           </div>
                                           <button
                                             onClick={() => handleDeleteAnotacion(marca.id, index)}
@@ -569,7 +553,7 @@ export default function DashboardClient() {
                                             </svg>
                                           </button>
                                         </div>
-                                        {index < marca.anotaciones.length - 1 && (
+                                        {index < marca.anotacion.length - 1 && (
                                           <div className="border-b border-gray-200 my-1"></div>
                                         )}
                                       </li>
@@ -623,7 +607,7 @@ export default function DashboardClient() {
                                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                                     </svg>
-                                    <span>{marca.anotaciones?.length ? 'Agregar otra' : 'Agregar anotación'}</span>
+                                    <span>{marca.anotacion?.length ? 'Agregar otra' : 'Agregar anotación'}</span>
                                   </button>
                                 )}
                               </div>
