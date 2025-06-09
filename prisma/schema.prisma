@@ -24,14 +24,13 @@ model Titular {
 
 model Marca {
   id          String   @id @default(cuid())
-  nombre      String
-  acta        String
-  clase       String
-  estado      String
-  renovar     DateTime
-  vencimiento DateTime
-  anotaciones String[]
-  oposicion   Json[]
+  name        String
+  description String?
+  status      String
+  oposicion   Json[]   @default([])
+  anotacion   Json[]   @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   user_email  String
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
