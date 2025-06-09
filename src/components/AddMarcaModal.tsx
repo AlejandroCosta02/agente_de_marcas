@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Marca, MarcaSubmissionData, TipoMarca, Oposicion, Anotacion } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import AnotacionModal from './AnotacionModal';
 import OposicionModal from './OposicionModal';
 
@@ -29,7 +29,7 @@ const TIPOS_MARCA: TipoMarca[] = [
 
 export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }: AddMarcaModalProps) {
   const [formData, setFormData] = useState<MarcaSubmissionData>({
-    name: '',
+    marca: '',
     acta: '',
     resolucion: '',
     renovar: new Date().toISOString().split('T')[0],
@@ -56,7 +56,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   useEffect(() => {
     if (initialData) {
       setFormData({
-        name: initialData.name,
+        marca: initialData.marca,
         acta: initialData.acta,
         resolucion: initialData.resolucion,
         renovar: initialData.renovar ? new Date(initialData.renovar).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
@@ -71,7 +71,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     } else {
       // Reset form when opening for a new marca
       setFormData({
-        name: '',
+        marca: '',
         acta: '',
         resolucion: '',
         renovar: new Date().toISOString().split('T')[0],
@@ -94,10 +94,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name) {
-      newErrors.name = 'El nombre es requerido';
-    } else if (formData.name.length > 20) {
-      newErrors.name = 'El nombre no puede tener más de 20 caracteres';
+    if (!formData.marca) {
+      newErrors.marca = 'El nombre es requerido';
+    } else if (formData.marca.length > 20) {
+      newErrors.marca = 'El nombre no puede tener más de 20 caracteres';
     }
 
     if (!formData.acta) {
@@ -160,20 +160,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     });
   };
 
-  const handleAddToCalendar = (date: string, title: string) => {
-    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date.replace(/-/g, '')}/${date.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${formData.name}\nActa: ${formData.acta}`)}`;
-    window.open(googleCalendarUrl, '_blank');
-  };
-
-  const handleContactClick = (type: 'whatsapp' | 'email') => {
-    if (type === 'whatsapp') {
-      const whatsappUrl = `https://wa.me/${formData.titular.phone.replace(/\D/g, '')}`;
-      window.open(whatsappUrl, '_blank');
-    } else {
-      window.location.href = `mailto:${formData.titular.email}`;
-    }
-  };
-
   const handleAddAnotacion = (anotacion: Omit<Anotacion, 'id'>) => {
     const newAnotacion = {
       ...anotacion,
@@ -228,7 +214,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const handleDeleteOposicion = (id: string) => {
     setFormData(prev => ({
       ...prev,
-      oposicion: prev.oposicion.filter(o => o.id !== id)
+      oposicion: prev.oposicion.filter(op => op.id !== id)
     }));
   };
 
@@ -261,12 +247,12 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     <label className="block text-sm font-medium text-gray-700">Nombre</label>
                     <input
                       type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      value={formData.marca}
+                      onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                       required
                     />
-                    {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+                    {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
                   </div>
 
                   <div>
@@ -295,42 +281,22 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Fecha de Renovación</label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="date"
-                        value={formData.renovar}
-                        onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCalendar(formData.renovar, 'Renovación de Marca')}
-                        className="p-2 text-indigo-600 hover:text-indigo-800 transition-colors"
-                        title="Agregar a Google Calendar"
-                      >
-                        <FaCalendarPlus className="w-5 h-5" />
-                      </button>
-                    </div>
+                    <input
+                      type="date"
+                      value={formData.renovar}
+                      onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="date"
-                        value={formData.vencimiento}
-                        onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCalendar(formData.vencimiento, 'Vencimiento de Marca')}
-                        className="p-2 text-indigo-600 hover:text-indigo-800 transition-colors"
-                        title="Agregar a Google Calendar"
-                      >
-                        <FaCalendarPlus className="w-5 h-5" />
-                      </button>
-                    </div>
+                    <input
+                      type="date"
+                      value={formData.vencimiento}
+                      onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    />
                   </div>
 
                   <div className="space-y-4">
@@ -355,26 +321,16 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="email"
-                          value={formData.titular.email}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            titular: { ...formData.titular, email: e.target.value }
-                          })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleContactClick('email')}
-                          className="p-2 text-indigo-600 hover:text-indigo-800 transition-colors"
-                          title="Enviar Email"
-                        >
-                          <FaEnvelope className="w-5 h-5" />
-                        </button>
-                      </div>
+                      <input
+                        type="email"
+                        value={formData.titular.email}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          titular: { ...formData.titular, email: e.target.value }
+                        })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
+                        required
+                      />
                       {errors['titular.email'] && (
                         <p className="mt-1 text-sm text-red-600">{errors['titular.email']}</p>
                       )}
@@ -382,27 +338,17 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="tel"
-                          value={formData.titular.phone}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            titular: { ...formData.titular, phone: e.target.value }
-                          })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                          required
-                          placeholder="+1234567890"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleContactClick('whatsapp')}
-                          className="p-2 text-green-600 hover:text-green-800 transition-colors"
-                          title="Enviar WhatsApp"
-                        >
-                          <FaWhatsapp className="w-5 h-5" />
-                        </button>
-                      </div>
+                      <input
+                        type="tel"
+                        value={formData.titular.phone}
+                        onChange={(e) => setFormData({
+                          ...formData,
+                          titular: { ...formData.titular, phone: e.target.value }
+                        })}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
+                        required
+                        placeholder="+1234567890"
+                      />
                       {errors['titular.phone'] && (
                         <p className="mt-1 text-sm text-red-600">{errors['titular.phone']}</p>
                       )}

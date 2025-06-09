@@ -31,7 +31,7 @@ export interface Anotacion {
 
 export interface Marca {
   id: string;
-  name: string;
+  marca: string;
   acta: string;
   resolucion: string;
   renovar: string;

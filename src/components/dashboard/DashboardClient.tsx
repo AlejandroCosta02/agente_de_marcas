@@ -469,7 +469,7 @@ export default function DashboardClient() {
                           marcas.map((marca) => (
                             <tr key={marca.id} className="hover:bg-gray-50">
                               <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                {marca.name}
+                                {marca.marca}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {marca.acta}
@@ -488,7 +488,7 @@ export default function DashboardClient() {
                                   <span>{new Date(marca.renovar).toLocaleDateString()}</span>
                                   <button
                                     onClick={() => {
-                                      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Renovar Marca: ${marca.name}`)}&dates=${marca.renovar.replace(/-/g, '')}/${marca.renovar.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.name}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
+                                      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Renovar Marca: ${marca.marca}`)}&dates=${marca.renovar.replace(/-/g, '')}/${marca.renovar.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.marca}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
                                       window.open(googleCalendarUrl, '_blank');
                                     }}
                                     className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors duration-200 cursor-pointer"
@@ -503,7 +503,7 @@ export default function DashboardClient() {
                                   <span>{new Date(marca.vencimiento).toLocaleDateString()}</span>
                                   <button
                                     onClick={() => {
-                                      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Vencimiento Marca: ${marca.name}`)}&dates=${marca.vencimiento.replace(/-/g, '')}/${marca.vencimiento.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.name}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
+                                      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Vencimiento Marca: ${marca.marca}`)}&dates=${marca.vencimiento.replace(/-/g, '')}/${marca.vencimiento.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.marca}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
                                       window.open(googleCalendarUrl, '_blank');
                                     }}
                                     className="p-2 text-orange-600 hover:bg-orange-50 rounded-full transition-colors duration-200 cursor-pointer"
