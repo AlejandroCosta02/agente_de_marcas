@@ -15,12 +15,13 @@ export default withAuth(
       const isApiRequest = req.nextUrl.pathname.startsWith('/api/');
       const isMigratePage = req.nextUrl.pathname.startsWith('/migrate');
 
-      if (isAuthPage) {
+      // Allow access to auth page only if not authenticated
+      if (isAuthPage || isMigratePage) {
         if (isAuth) {
-          console.log('Middleware - Redirecting authenticated user from auth page to dashboard');
+          console.log('Middleware - Redirecting authenticated user from auth/migrate page to dashboard');
           return NextResponse.redirect(new URL('/dashboard', req.url));
         }
-        console.log('Middleware - Allowing access to auth page for unauthenticated user');
+        console.log('Middleware - Allowing access to auth/migrate page for unauthenticated user');
         return null;
       }
 
