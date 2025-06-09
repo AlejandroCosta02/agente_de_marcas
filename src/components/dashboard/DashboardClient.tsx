@@ -50,7 +50,15 @@ export default function DashboardClient() {
     
     try {
       const response = await fetch('/api/marcas');
-      if (!response.ok) throw new Error('Error fetching data');
+      if (response.status === 401) {
+        // Unauthorized, redirect to login
+        window.location.href = '/?error=Unauthorized';
+        return;
+      }
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.message || 'Error fetching data');
+      }
       const data = await response.json();
       setMarcas(data);
     } catch (error: unknown) {
