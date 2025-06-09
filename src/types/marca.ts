@@ -20,6 +20,7 @@ export interface Oposicion {
   id: string;
   text: string;
   date: string;
+  completed: boolean;
 }
 
 export interface Anotacion {
