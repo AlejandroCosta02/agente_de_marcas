@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Marca, MarcaSubmissionData, TipoMarca, Titular, Oposicion, Anotacion } from '@/types/marca';
+import { Marca, MarcaSubmissionData, TipoMarca, Oposicion, Anotacion } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import AnotacionModal from './AnotacionModal';
@@ -550,42 +550,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700">Clases</label>
-                    <div 
-                      className="mt-1 p-2 border rounded-md cursor-pointer flex items-center justify-between"
-                      onClick={() => setShowClasesDropdown(!showClasesDropdown)}
-                    >
-                      <span className="text-gray-700">
-                        {selectedClases.length > 0 
-                          ? selectedClases.join(', ') 
-                          : 'Seleccionar clases...'}
-                      </span>
-                      <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    {showClasesDropdown && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                        <div className="grid grid-cols-5 gap-1 p-2">
-                          {Array.from({ length: 45 }, (_, i) => i + 1).map((clase) => (
-                            <div
-                              key={clase}
-                              onClick={() => handleClaseSelect(clase)}
-                              className={`p-2 text-center cursor-pointer rounded ${
-                                selectedClases.includes(clase)
-                                  ? 'bg-indigo-100 text-indigo-700'
-                                  : 'hover:bg-gray-100'
-                              }`}
-                            >
-                              {clase}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="mt-6 flex justify-end space-x-3">
