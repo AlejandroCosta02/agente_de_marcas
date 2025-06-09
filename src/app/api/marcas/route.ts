@@ -33,7 +33,7 @@ export async function GET() {
         anotaciones as anotacion,
         oposicion,
         tipo_marca as "tipoMarca",
-        clases,
+        COALESCE(clases, ARRAY[]::INTEGER[]) as clases,
         created_at as "createdAt",
         updated_at as "updatedAt"
       FROM marcas 
@@ -43,9 +43,20 @@ export async function GET() {
 
     const formattedMarcas = marcas.rows.map(marca => ({
       ...marca,
-      anotacion: marca.anotacion?.map((text: string) => ({ id: Math.random().toString(36).substr(2, 9), text })) || [],
-      oposicion: Array.isArray(marca.oposicion) ? marca.oposicion : [],
-      clases: Array.isArray(marca.clases) ? marca.clases : []
+      anotacion: Array.isArray(marca.anotacion) 
+        ? marca.anotacion.map((text: string) => ({ 
+            id: Math.random().toString(36).substr(2, 9), 
+            text 
+          })) 
+        : [],
+      oposicion: Array.isArray(marca.oposicion) 
+        ? marca.oposicion 
+        : typeof marca.oposicion === 'object' && marca.oposicion !== null
+          ? Object.values(marca.oposicion)
+          : [],
+      clases: Array.isArray(marca.clases) 
+        ? marca.clases.map(Number).filter(n => !isNaN(n))
+        : []
     }));
 
     return NextResponse.json(formattedMarcas);

@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS marcas (
   titular_telefono VARCHAR(20) NOT NULL,
   anotaciones TEXT[] DEFAULT '{}',
   oposicion JSONB DEFAULT '[]',
+  tipo_marca VARCHAR(255) DEFAULT 'denominativa',
+  clases INTEGER[] DEFAULT ARRAY[]::INTEGER[],
   user_email VARCHAR(100) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
