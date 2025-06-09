@@ -37,7 +37,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
   const [selectedClases, setSelectedClases] = useState<number[]>([]);
   const [showClasesDropdown, setShowClasesDropdown] = useState(false);
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -46,8 +45,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         name: initialData.name,
         description: initialData.description,
         status: initialData.status,
-        acta: initialData.acta.toString(),
-        resolucion: initialData.resolucion.toString(),
+        acta: initialData.acta,
+        resolucion: initialData.resolucion,
         clases: initialData.clases || [],
         tipoMarca: initialData.tipoMarca
       });
@@ -71,34 +70,28 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Validate name (string max 20 chars)
     if (!formData.name) {
       newErrors.name = 'El nombre es requerido';
-    } else if (formData.name.length > 20) {
-      newErrors.name = 'El nombre no puede tener más de 20 caracteres';
     }
 
-    // Validate acta and resolucion (must be numbers up to 8 digits)
     if (!formData.acta) {
       newErrors.acta = 'El acta es requerida';
-    } else if (!/^\d{1,8}$/.test(formData.acta)) {
-      newErrors.acta = 'El acta debe ser un número de hasta 8 dígitos';
     }
 
     if (!formData.resolucion) {
       newErrors.resolucion = 'La resolución es requerida';
-    } else if (!/^\d{1,8}$/.test(formData.resolucion)) {
-      newErrors.resolucion = 'La resolución debe ser un número de hasta 8 dígitos';
     }
 
-    // Validate status
     if (!formData.status) {
       newErrors.status = 'El estado es requerido';
     }
 
-    // Validate tipoMarca
     if (!formData.tipoMarca) {
       newErrors.tipoMarca = 'El tipo de marca es requerido';
+    }
+
+    if (selectedClases.length === 0) {
+      newErrors.clases = 'Debe seleccionar al menos una clase';
     }
 
     return newErrors;
@@ -166,28 +159,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Descripción</label>
-                  <input
-                    type="text"
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Estado</label>
-                  <input
-                    type="text"
-                    value={formData.status}
-                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                  />
-                  {errors.status && <p className="mt-2 text-sm text-red-600">{errors.status}</p>}
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium text-gray-700">Acta</label>
                   <input
                     type="text"
@@ -209,6 +180,35 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     required
                   />
                   {errors.resolucion && <p className="mt-2 text-sm text-red-600">{errors.resolucion}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Estado</label>
+                  <input
+                    type="text"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                  {errors.status && <p className="mt-2 text-sm text-red-600">{errors.status}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tipo de Marca</label>
+                  <select
+                    value={formData.tipoMarca}
+                    onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  >
+                    {TIPOS_MARCA.map((tipo) => (
+                      <option key={tipo} value={tipo}>
+                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tipoMarca && <p className="mt-2 text-sm text-red-600">{errors.tipoMarca}</p>}
                 </div>
 
                 <div className="relative">
@@ -245,36 +245,20 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       </div>
                     </div>
                   )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Tipo de Marca</label>
-                  <select
-                    value={formData.tipoMarca}
-                    onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    required
-                  >
-                    {TIPOS_MARCA.map((tipo) => (
-                      <option key={tipo} value={tipo}>
-                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.tipoMarca && <p className="mt-2 text-sm text-red-600">{errors.tipoMarca}</p>}
+                  {errors.clases && <p className="mt-2 text-sm text-red-600">{errors.clases}</p>}
                 </div>
 
                 <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     {initialData ? 'Guardar Cambios' : 'Crear Marca'}
                   </button>
