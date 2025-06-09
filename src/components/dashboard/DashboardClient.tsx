@@ -26,19 +26,23 @@ export default function DashboardClient() {
   ];
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (timeRangeRef.current && !timeRangeRef.current.contains(event.target as Node)) {
-        setIsTimeRangeOpen(false);
-      }
-    };
+    if (typeof window !== 'undefined') {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (timeRangeRef.current && !timeRangeRef.current.contains(event.target as Node)) {
+          setIsTimeRangeOpen(false);
+        }
+      };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, []);
 
   const fetchMarcas = useCallback(async () => {
+    if (typeof window === 'undefined') return;
+    
     try {
       const response = await fetch('/api/marcas');
       if (!response.ok) throw new Error('Error fetching data');
@@ -439,31 +443,31 @@ export default function DashboardClient() {
                                 {marca.resolucion}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.titular.fullName}
+                                {marca.titular?.fullName || '-'}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1)}
+                                {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : '-'}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.clases.join(', ')}
+                                {Array.isArray(marca.clases) && marca.clases.length > 0 ? marca.clases.join(', ') : '-'}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 <div className="flex flex-col space-y-2">
                                   <div className="flex items-center space-x-2">
                                     <FaCalendarPlus className="text-purple-500" />
-                                    <span>Renovar: {new Date(marca.renovar).toLocaleDateString()}</span>
+                                    <span>Renovar: {marca.renovar ? new Date(marca.renovar).toLocaleDateString() : '-'}</span>
                                   </div>
                                   <div className="flex items-center space-x-2">
                                     <FaCalendarPlus className="text-orange-500" />
-                                    <span>Vence: {new Date(marca.vencimiento).toLocaleDateString()}</span>
+                                    <span>Vence: {marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString() : '-'}</span>
                                   </div>
                                 </div>
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.oposicion.length > 0 ? (
+                                {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
                                   <div className="space-y-1">
                                     {marca.oposicion.map((op, index) => (
-                                      <div key={op.id} className="flex items-center space-x-2">
+                                      <div key={op.id || index} className="flex items-center space-x-2">
                                         <input
                                           type="checkbox"
                                           checked={op.completed}
@@ -491,15 +495,15 @@ export default function DashboardClient() {
                                 )}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.anotacion.length > 0 ? (
+                                {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
                                   <div className="space-y-1">
                                     {marca.anotacion.map((note, index) => (
-                                      <div key={note.id} className="flex items-center space-x-2">
+                                      <div key={note.id || index} className="flex items-center space-x-2">
                                         <button
                                           onClick={() => setViewingAnotacion({ text: note.text, marcaId: marca.id, index })}
                                           className="text-gray-600 hover:text-gray-900"
                                         >
-                                          {note.text.length > 20 ? `${note.text.substring(0, 20)}...` : note.text}
+                                          {note.text?.length > 20 ? `${note.text.substring(0, 20)}...` : note.text || ''}
                                         </button>
                                         <button
                                           onClick={() => handleDeleteAnotacion(marca.id, index)}
@@ -538,13 +542,13 @@ export default function DashboardClient() {
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 <div className="flex space-x-3">
                                   <button
-                                    onClick={() => window.open(`https://wa.me/${marca.titular.phone.replace(/\D/g, '')}`, '_blank')}
+                                    onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
                                     className="text-green-600 hover:text-green-900"
                                   >
                                     <FaWhatsapp className="h-5 w-5" />
                                   </button>
                                   <button
-                                    onClick={() => window.location.href = `mailto:${marca.titular.email}`}
+                                    onClick={() => window.location.href = `mailto:${marca.titular?.email}`}
                                     className="text-blue-600 hover:text-blue-900"
                                   >
                                     <FaEnvelope className="h-5 w-5" />
