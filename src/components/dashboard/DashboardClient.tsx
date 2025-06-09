@@ -36,8 +36,8 @@ export default function DashboardClient() {
 
   const sortMarcasByVencimiento = (data: Marca[], direction: 'asc' | 'desc') => {
     return [...data].sort((a, b) => {
-      const dateA = new Date(a.vencimiento).getTime();
-      const dateB = new Date(b.vencimiento).getTime();
+      const dateA = new Date(a.renovar).getTime();
+      const dateB = new Date(b.renovar).getTime();
       return direction === 'asc' ? dateA - dateB : dateB - dateA;
     });
   };

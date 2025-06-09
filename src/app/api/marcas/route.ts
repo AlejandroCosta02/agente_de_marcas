@@ -14,7 +14,7 @@ export async function GET() {
     const result = await sql`
       SELECT * FROM marcas 
       WHERE user_email = ${session.user.email}
-      ORDER BY created_at DESC
+      ORDER BY renovar ASC
     `;
 
     // Transform the results to match the frontend structure
