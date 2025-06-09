@@ -263,10 +263,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                       required
                     />
-                    {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
+                    {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
                   </div>
 
                   <div>
@@ -275,10 +275,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       type="text"
                       value={formData.acta}
                       onChange={(e) => setFormData({ ...formData, acta: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                       required
                     />
-                    {errors.acta && <p className="mt-2 text-sm text-red-600">{errors.acta}</p>}
+                    {errors.acta && <p className="mt-1 text-sm text-red-600">{errors.acta}</p>}
                   </div>
 
                   <div>
@@ -287,10 +287,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       type="text"
                       value={formData.resolucion}
                       onChange={(e) => setFormData({ ...formData, resolucion: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                       required
                     />
-                    {errors.resolucion && <p className="mt-2 text-sm text-red-600">{errors.resolucion}</p>}
+                    {errors.resolucion && <p className="mt-1 text-sm text-red-600">{errors.resolucion}</p>}
                   </div>
 
                   <div>
@@ -345,11 +345,11 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                           ...formData,
                           titular: { ...formData.titular, fullName: e.target.value }
                         })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                         required
                       />
                       {errors['titular.fullName'] && (
-                        <p className="mt-2 text-sm text-red-600">{errors['titular.fullName']}</p>
+                        <p className="mt-1 text-sm text-red-600">{errors['titular.fullName']}</p>
                       )}
                     </div>
 
@@ -363,7 +363,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                             ...formData,
                             titular: { ...formData.titular, email: e.target.value }
                           })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                           required
                         />
                         <button
@@ -376,7 +376,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                         </button>
                       </div>
                       {errors['titular.email'] && (
-                        <p className="mt-2 text-sm text-red-600">{errors['titular.email']}</p>
+                        <p className="mt-1 text-sm text-red-600">{errors['titular.email']}</p>
                       )}
                     </div>
 
@@ -390,7 +390,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                             ...formData,
                             titular: { ...formData.titular, phone: e.target.value }
                           })}
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                           required
                           placeholder="+1234567890"
                         />
@@ -404,7 +404,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                         </button>
                       </div>
                       {errors['titular.phone'] && (
-                        <p className="mt-2 text-sm text-red-600">{errors['titular.phone']}</p>
+                        <p className="mt-1 text-sm text-red-600">{errors['titular.phone']}</p>
                       )}
                     </div>
                   </div>
@@ -450,16 +450,16 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     <select
                       value={formData.tipoMarca}
                       onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black bg-white"
                       required
                     >
                       {TIPOS_MARCA.map((tipo) => (
-                        <option key={tipo} value={tipo}>
+                        <option key={tipo} value={tipo} className="text-black">
                           {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
                         </option>
                       ))}
                     </select>
-                    {errors.tipoMarca && <p className="mt-2 text-sm text-red-600">{errors.tipoMarca}</p>}
+                    {errors.tipoMarca && <p className="mt-1 text-sm text-red-600">{errors.tipoMarca}</p>}
                   </div>
 
                   <div className="space-y-4">

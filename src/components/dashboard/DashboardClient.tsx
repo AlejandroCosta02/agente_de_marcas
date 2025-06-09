@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
+import { FaWhatsapp, FaEnvelope, FaCalendarPlus } from 'react-icons/fa';
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -422,6 +423,12 @@ export default function DashboardClient() {
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Anotaciones
                         </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                          Contacto
+                        </th>
+                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                          Fechas
+                        </th>
                         <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-0">
                           <span className="sr-only">Acciones</span>
                         </th>
@@ -588,6 +595,53 @@ export default function DashboardClient() {
                                     <span>{Array.isArray(marca.anotacion) && marca.anotacion.length ? 'Agregar otra' : 'Agregar anotación'}</span>
                                   </button>
                                 )}
+                              </div>
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    const whatsappUrl = `https://wa.me/${marca.titular.phone.replace(/\D/g, '')}`;
+                                    window.open(whatsappUrl, '_blank');
+                                  }}
+                                  className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors duration-200"
+                                  title="WhatsApp"
+                                >
+                                  <FaWhatsapp className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    window.location.href = `mailto:${marca.titular.email}`;
+                                  }}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors duration-200"
+                                  title="Email"
+                                >
+                                  <FaEnvelope className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => {
+                                    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Renovar Marca: ${marca.name}`)}&dates=${marca.renovar.replace(/-/g, '')}/${marca.renovar.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.name}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
+                                    window.open(googleCalendarUrl, '_blank');
+                                  }}
+                                  className="p-2 text-purple-600 hover:bg-purple-50 rounded-full transition-colors duration-200"
+                                  title="Agregar renovación al calendario"
+                                >
+                                  <FaCalendarPlus className="w-5 h-5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Vencimiento Marca: ${marca.name}`)}&dates=${marca.vencimiento.replace(/-/g, '')}/${marca.vencimiento.replace(/-/g, '')}&details=${encodeURIComponent(`Marca: ${marca.name}\nActa: ${marca.acta}\nTitular: ${marca.titular.fullName}`)}`;
+                                    window.open(googleCalendarUrl, '_blank');
+                                  }}
+                                  className="p-2 text-orange-600 hover:bg-orange-50 rounded-full transition-colors duration-200"
+                                  title="Agregar vencimiento al calendario"
+                                >
+                                  <FaCalendarPlus className="w-5 h-5" />
+                                </button>
                               </div>
                             </td>
                             <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-0">
