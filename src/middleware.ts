@@ -13,6 +13,7 @@ export default withAuth(
       const isAuth = !!token;
       const isAuthPage = req.nextUrl.pathname.startsWith('/login');
       const isApiRequest = req.nextUrl.pathname.startsWith('/api/');
+      const isMigratePage = req.nextUrl.pathname.startsWith('/migrate');
 
       if (isAuthPage) {
         if (isAuth) {
@@ -68,6 +69,7 @@ export const config = {
     '/dashboard/:path*',
     '/api/marcas/:path*',
     '/api/migrations/:path*',
-    '/login'
+    '/login',
+    '/migrate'
   ],
 }; 

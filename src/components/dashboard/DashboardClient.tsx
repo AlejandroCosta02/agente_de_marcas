@@ -7,6 +7,7 @@ import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
 import { FaWhatsapp, FaEnvelope, FaCalendarPlus } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -21,6 +22,8 @@ export default function DashboardClient() {
     title: '',
     content: ''
   });
+  const [needsMigration, setNeedsMigration] = useState(false);
+  const router = useRouter();
 
   const timeRangeOptions = [
     { label: 'Una semana', days: 7 },
@@ -57,12 +60,21 @@ export default function DashboardClient() {
       }
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
+        if (errorData?.details?.includes('column "tipo_marca" does not exist')) {
+          setNeedsMigration(true);
+          return;
+        }
         throw new Error(errorData?.message || 'Error fetching data');
       }
       const data = await response.json();
       setMarcas(data);
+      setNeedsMigration(false);
     } catch (error: unknown) {
       if (error instanceof Error) {
+        if (error.message.includes('column "tipo_marca" does not exist')) {
+          setNeedsMigration(true);
+          return;
+        }
         toast.error(error.message);
       } else {
         toast.error('An error occurred while fetching the data');
@@ -303,303 +315,319 @@ export default function DashboardClient() {
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Statistics Cards */}
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
-            {/* Total Marcas */}
-            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="bg-blue-600 bg-opacity-30 rounded-full p-3">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-white uppercase">Marcas Activas</p>
-                  <p className="text-3xl font-bold text-white">{totalMarcas}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Próximo a Renovar */}
-            <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="bg-yellow-600 bg-opacity-30 rounded-full p-3">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-right flex items-start space-x-2">
-                  <div>
-                    <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
-                    <p className="text-3xl font-bold text-white">{proximosVencer}</p>
-                  </div>
-                  <div className="relative">
-                    <button
-                      onClick={() => setIsTimeRangeOpen(!isTimeRangeOpen)}
-                      className="p-1.5 bg-yellow-600 bg-opacity-30 rounded-full hover:bg-opacity-50 transition-all duration-200"
-                    >
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                    {isTimeRangeOpen && (
-                      <div 
-                        ref={timeRangeRef} 
-                        className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 
-                          transform origin-top-right transition-all duration-200 ease-out
-                          animate-in fade-in slide-in-from-top-2 zoom-in-95
-                          data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-2 data-[state=closed]:zoom-out-95"
-                      >
-                        <div className="py-1" role="menu" aria-orientation="vertical">
-                          {timeRangeOptions.map((option) => (
-                            <button
-                              key={option.days}
-                              onClick={() => handleTimeRangeSelect(option.days)}
-                              className={`block w-full text-left px-4 py-2 text-sm ${
-                                selectedTimeRange === option.days
-                                  ? 'bg-yellow-50 text-yellow-700'
-                                  : 'text-gray-700 hover:bg-gray-100'
-                              }`}
-                              role="menuitem"
-                            >
-                              {option.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Con Oposiciones */}
-            <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="bg-red-600 bg-opacity-30 rounded-full p-3">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-white uppercase">Con Oposiciones</p>
-                  <p className="text-3xl font-bold text-white">{marcasConOposiciones}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Table Section */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-              <h1 className="text-xl font-semibold text-gray-900">Marcas Registradas</h1>
+          {needsMigration ? (
+            <div className="mb-8 p-4 bg-yellow-100 rounded-lg">
+              <p className="text-yellow-800 mb-4">
+                La base de datos necesita ser actualizada para continuar.
+              </p>
               <button
-                onClick={() => setIsModalOpen(true)}
-                className="relative overflow-hidden group bg-gradient-to-br from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg 
-                  transform transition-all duration-200 ease-in-out
-                  hover:scale-105 hover:shadow-lg hover:from-purple-700 hover:to-indigo-700
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
-                  cursor-pointer"
+                onClick={() => router.push('/migrate')}
+                className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
               >
-                <span className="absolute w-0 h-0 transition-all duration-300 ease-out bg-white rounded-full group-hover:w-32 group-hover:h-32 opacity-10"></span>
-                <span className="relative flex items-center">
-                  <svg
-                    className="w-5 h-5 mr-2 transform transition-transform duration-200 ease-in-out group-hover:rotate-180"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    />
-                  </svg>
-                  Agregar Marca
-                </span>
+                Actualizar Base de Datos
               </button>
             </div>
-            <div className="border-t border-gray-200">
-              <div className="mt-8 flow-root">
-                <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                  <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                    <div className="overflow-hidden">
-                      <table className="min-w-full divide-y divide-gray-100">
-                        <thead>
-                          <tr className="bg-gray-50">
-                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Marca</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acta</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Resolución</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Titular</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tipo</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clases</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fechas</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Oposiciones</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Anotaciones</th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acciones</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {marcas.map((marca) => (
-                            <tr key={marca.id} className="hover:bg-gray-50">
-                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                {marca.marca}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.acta}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.resolucion}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.titular?.fullName || '-'}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : '-'}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {Array.isArray(marca.clases) && marca.clases.length > 0 ? marca.clases.join(', ') : '-'}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <div className="flex flex-col space-y-2">
-                                  <div className="flex items-center space-x-2">
-                                    <FaCalendarPlus className="text-purple-500" />
-                                    <span>Renovar: {marca.renovar ? new Date(marca.renovar).toLocaleDateString() : '-'}</span>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <FaCalendarPlus className="text-orange-500" />
-                                    <span>Vence: {marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString() : '-'}</span>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {marca.oposicion.map((op, index) => (
-                                      <div key={op.id || index} className="flex items-center space-x-2">
-                                        <input
-                                          type="checkbox"
-                                          checked={op.completed}
-                                          onChange={() => handleToggleOposicion(marca.id, index)}
-                                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <button
-                                          onClick={() => setViewTextModal({
-                                            isOpen: true,
-                                            title: 'Oposición',
-                                            content: op.text
-                                          })}
-                                          className={`text-left ${op.completed ? 'line-through text-gray-400' : 'text-gray-600 hover:text-gray-900'}`}
-                                        >
-                                          {truncateText(op.text)}
-                                        </button>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      const text = prompt('Nueva oposición:');
-                                      if (text?.trim()) {
-                                        handleAddOposicion(marca.id, text);
-                                      }
-                                    }}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    + Agregar oposición
-                                  </button>
-                                )}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {marca.anotacion.map((note, index) => (
-                                      <div key={note.id || index} className="flex items-center space-x-2">
-                                        <button
-                                          onClick={() => setViewTextModal({
-                                            isOpen: true,
-                                            title: 'Anotación',
-                                            content: note.text
-                                          })}
-                                          className="text-left text-gray-600 hover:text-gray-900"
-                                        >
-                                          {truncateText(note.text)}
-                                        </button>
-                                        <button
-                                          onClick={() => handleDeleteAnotacion(marca.id, index)}
-                                          className="text-red-600 hover:text-red-900"
-                                        >
-                                          ×
-                                        </button>
-                                      </div>
-                                    ))}
-                                    <button
-                                      onClick={() => {
-                                        const text = prompt('Nueva anotación:');
-                                        if (text?.trim()) {
-                                          handleAddAnotacion(marca.id, text);
-                                        }
-                                      }}
-                                      className="text-indigo-600 hover:text-indigo-900 text-sm"
-                                    >
-                                      + Agregar otra
-                                    </button>
-                                  </div>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      const text = prompt('Nueva anotación:');
-                                      if (text?.trim()) {
-                                        handleAddAnotacion(marca.id, text);
-                                      }
-                                    }}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    + Agregar anotación
-                                  </button>
-                                )}
-                              </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <div className="flex space-x-3">
-                                  <button
-                                    onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
-                                    className="text-green-600 hover:text-green-900"
-                                  >
-                                    <FaWhatsapp className="h-5 w-5" />
-                                  </button>
-                                  <button
-                                    onClick={() => window.location.href = `mailto:${marca.titular?.email}`}
-                                    className="text-blue-600 hover:text-blue-900"
-                                  >
-                                    <FaEnvelope className="h-5 w-5" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleEdit(marca)}
-                                    className="text-indigo-600 hover:text-indigo-900"
-                                  >
-                                    Editar
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+          ) : (
+            <>
+              {/* Statistics Cards */}
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
+                {/* Total Marcas */}
+                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-lg p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="bg-blue-600 bg-opacity-30 rounded-full p-3">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-white uppercase">Marcas Activas</p>
+                      <p className="text-3xl font-bold text-white">{totalMarcas}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Próximo a Renovar */}
+                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="bg-yellow-600 bg-opacity-30 rounded-full p-3">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="text-right flex items-start space-x-2">
+                      <div>
+                        <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
+                        <p className="text-3xl font-bold text-white">{proximosVencer}</p>
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={() => setIsTimeRangeOpen(!isTimeRangeOpen)}
+                          className="p-1.5 bg-yellow-600 bg-opacity-30 rounded-full hover:bg-opacity-50 transition-all duration-200"
+                        >
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </button>
+                        {isTimeRangeOpen && (
+                          <div 
+                            ref={timeRangeRef} 
+                            className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 
+                              transform origin-top-right transition-all duration-200 ease-out
+                              animate-in fade-in slide-in-from-top-2 zoom-in-95
+                              data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-2 data-[state=closed]:zoom-out-95"
+                          >
+                            <div className="py-1" role="menu" aria-orientation="vertical">
+                              {timeRangeOptions.map((option) => (
+                                <button
+                                  key={option.days}
+                                  onClick={() => handleTimeRangeSelect(option.days)}
+                                  className={`block w-full text-left px-4 py-2 text-sm ${
+                                    selectedTimeRange === option.days
+                                      ? 'bg-yellow-50 text-yellow-700'
+                                      : 'text-gray-700 hover:bg-gray-100'
+                                  }`}
+                                  role="menuitem"
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Con Oposiciones */}
+                <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-lg shadow-lg p-5">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="bg-red-600 bg-opacity-30 rounded-full p-3">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-white uppercase">Con Oposiciones</p>
+                      <p className="text-3xl font-bold text-white">{marcasConOposiciones}</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+
+              {/* Table Section */}
+              <div className="bg-white shadow rounded-lg">
+                <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
+                  <h1 className="text-xl font-semibold text-gray-900">Marcas Registradas</h1>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="relative overflow-hidden group bg-gradient-to-br from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg 
+                      transform transition-all duration-200 ease-in-out
+                      hover:scale-105 hover:shadow-lg hover:from-purple-700 hover:to-indigo-700
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500
+                      cursor-pointer"
+                  >
+                    <span className="absolute w-0 h-0 transition-all duration-300 ease-out bg-white rounded-full group-hover:w-32 group-hover:h-32 opacity-10"></span>
+                    <span className="relative flex items-center">
+                      <svg
+                        className="w-5 h-5 mr-2 transform transition-transform duration-200 ease-in-out group-hover:rotate-180"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Agregar Marca
+                    </span>
+                  </button>
+                </div>
+                <div className="border-t border-gray-200">
+                  <div className="mt-8 flow-root">
+                    <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                      <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                        <div className="overflow-hidden">
+                          <table className="min-w-full divide-y divide-gray-100">
+                            <thead>
+                              <tr className="bg-gray-50">
+                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Marca</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acta</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Resolución</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Titular</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tipo</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clases</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fechas</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Oposiciones</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Anotaciones</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acciones</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                              {marcas.map((marca) => (
+                                <tr key={marca.id} className="hover:bg-gray-50">
+                                  <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
+                                    {marca.marca}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {marca.acta}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {marca.resolucion}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {marca.titular?.fullName || '-'}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : '-'}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {Array.isArray(marca.clases) && marca.clases.length > 0 ? marca.clases.join(', ') : '-'}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <div className="flex flex-col space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <FaCalendarPlus className="text-purple-500" />
+                                        <span>Renovar: {marca.renovar ? new Date(marca.renovar).toLocaleDateString() : '-'}</span>
+                                      </div>
+                                      <div className="flex items-center space-x-2">
+                                        <FaCalendarPlus className="text-orange-500" />
+                                        <span>Vence: {marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString() : '-'}</span>
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {marca.oposicion.map((op, index) => (
+                                          <div key={op.id || index} className="flex items-center space-x-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={op.completed}
+                                              onChange={() => handleToggleOposicion(marca.id, index)}
+                                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            />
+                                            <button
+                                              onClick={() => setViewTextModal({
+                                                isOpen: true,
+                                                title: 'Oposición',
+                                                content: op.text
+                                              })}
+                                              className={`text-left ${op.completed ? 'line-through text-gray-400' : 'text-gray-600 hover:text-gray-900'}`}
+                                            >
+                                              {truncateText(op.text)}
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          const text = prompt('Nueva oposición:');
+                                          if (text?.trim()) {
+                                            handleAddOposicion(marca.id, text);
+                                          }
+                                        }}
+                                        className="text-indigo-600 hover:text-indigo-900"
+                                      >
+                                        + Agregar oposición
+                                      </button>
+                                    )}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {marca.anotacion.map((note, index) => (
+                                          <div key={note.id || index} className="flex items-center space-x-2">
+                                            <button
+                                              onClick={() => setViewTextModal({
+                                                isOpen: true,
+                                                title: 'Anotación',
+                                                content: note.text
+                                              })}
+                                              className="text-left text-gray-600 hover:text-gray-900"
+                                            >
+                                              {truncateText(note.text)}
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteAnotacion(marca.id, index)}
+                                              className="text-red-600 hover:text-red-900"
+                                            >
+                                              ×
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <button
+                                          onClick={() => {
+                                            const text = prompt('Nueva anotación:');
+                                            if (text?.trim()) {
+                                              handleAddAnotacion(marca.id, text);
+                                            }
+                                          }}
+                                          className="text-indigo-600 hover:text-indigo-900 text-sm"
+                                        >
+                                          + Agregar otra
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          const text = prompt('Nueva anotación:');
+                                          if (text?.trim()) {
+                                            handleAddAnotacion(marca.id, text);
+                                          }
+                                        }}
+                                        className="text-indigo-600 hover:text-indigo-900"
+                                      >
+                                        + Agregar anotación
+                                      </button>
+                                    )}
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                    <div className="flex space-x-3">
+                                      <button
+                                        onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
+                                        className="text-green-600 hover:text-green-900"
+                                      >
+                                        <FaWhatsapp className="h-5 w-5" />
+                                      </button>
+                                      <button
+                                        onClick={() => window.location.href = `mailto:${marca.titular?.email}`}
+                                        className="text-blue-600 hover:text-blue-900"
+                                      >
+                                        <FaEnvelope className="h-5 w-5" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleEdit(marca)}
+                                        className="text-indigo-600 hover:text-indigo-900"
+                                      >
+                                        Editar
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
