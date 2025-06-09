@@ -33,6 +33,34 @@ export async function GET() {
       return NextResponse.json({ message: 'Error de conexión a la base de datos' }, { status: 500 });
     }
 
+    // Check if required columns exist
+    try {
+      const columnsExist = await sql`
+        SELECT EXISTS (
+          SELECT 1 
+          FROM information_schema.columns 
+          WHERE table_name = 'marcas' 
+          AND column_name = 'tipo_marca'
+        ) as has_tipo_marca,
+        EXISTS (
+          SELECT 1 
+          FROM information_schema.columns 
+          WHERE table_name = 'marcas' 
+          AND column_name = 'clases'
+        ) as has_clases;
+      `;
+
+      if (!columnsExist.rows[0].has_tipo_marca || !columnsExist.rows[0].has_clases) {
+        return NextResponse.json({ 
+          message: 'Error interno del servidor',
+          details: 'Database needs migration',
+          needsMigration: true
+        }, { status: 500 });
+      }
+    } catch (error) {
+      console.error('Error checking columns:', error);
+    }
+
     console.log('Fetching marcas for user:', session.user.email);
     const marcas = await sql`
       SELECT 
@@ -47,7 +75,7 @@ export async function GET() {
         m.titular_telefono as "titular.phone",
         m.anotaciones as anotacion,
         m.oposicion,
-        m.tipo_marca as "tipoMarca",
+        COALESCE(m.tipo_marca, 'denominativa') as "tipoMarca",
         COALESCE(m.clases, ARRAY[]::INTEGER[]) as clases,
         m.created_at as "createdAt",
         m.updated_at as "updatedAt"

@@ -25,70 +25,100 @@ async function runUsersMigration() {
 
 async function runMarcasMigration() {
   try {
-    // First ensure the table exists with basic structure
-    await sql`
-      CREATE TABLE IF NOT EXISTS marcas (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-        marca VARCHAR(20) NOT NULL,
-        acta INTEGER NOT NULL CHECK (acta > 0 AND acta < 100000000),
-        resolucion INTEGER NOT NULL CHECK (resolucion > 0 AND resolucion < 100000000),
-        renovar DATE NOT NULL,
-        vencimiento DATE NOT NULL,
-        titular_nombre VARCHAR(100) NOT NULL,
-        titular_email VARCHAR(100) NOT NULL,
-        titular_telefono VARCHAR(20) NOT NULL,
-        anotaciones TEXT[] DEFAULT '{}',
-        oposicion JSONB DEFAULT '[]',
-        user_email VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    // First check if the table exists
+    const tableExists = await sql`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.tables 
+        WHERE table_name = 'marcas'
       );
     `;
-    console.log('Marcas table created or verified');
 
-    // Add tipo_marca column if it doesn't exist
-    await sql`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'marcas' AND column_name = 'tipo_marca') THEN
-          ALTER TABLE marcas ADD COLUMN tipo_marca VARCHAR(255) DEFAULT 'denominativa';
-        END IF;
-      END $$;
-    `;
-    console.log('Added or verified tipo_marca column');
+    if (!tableExists.rows[0].exists) {
+      // Create the table with all columns if it doesn't exist
+      await sql`
+        CREATE TABLE marcas (
+          id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+          marca VARCHAR(20) NOT NULL,
+          acta INTEGER NOT NULL CHECK (acta > 0 AND acta < 100000000),
+          resolucion INTEGER NOT NULL CHECK (resolucion > 0 AND resolucion < 100000000),
+          renovar DATE NOT NULL,
+          vencimiento DATE NOT NULL,
+          titular_nombre VARCHAR(100) NOT NULL,
+          titular_email VARCHAR(100) NOT NULL,
+          titular_telefono VARCHAR(20) NOT NULL,
+          anotaciones TEXT[] DEFAULT '{}',
+          oposicion JSONB DEFAULT '[]',
+          tipo_marca VARCHAR(255) DEFAULT 'denominativa',
+          clases INTEGER[] DEFAULT ARRAY[]::INTEGER[],
+          user_email VARCHAR(100) NOT NULL,
+          created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `;
+      console.log('Created marcas table with all columns');
+      return true;
+    }
 
-    // Add clases column if it doesn't exist
-    await sql`
-      DO $$ 
-      BEGIN 
-        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'marcas' AND column_name = 'clases') THEN
-          ALTER TABLE marcas ADD COLUMN clases INTEGER[] DEFAULT ARRAY[]::INTEGER[];
-        END IF;
-      END $$;
-    `;
-    console.log('Added or verified clases column');
+    // If table exists, check and add missing columns
+    console.log('Checking for missing columns...');
 
-    // Update oposicion column to use JSONB if needed
-    await sql`
-      DO $$ 
-      BEGIN 
-        IF EXISTS (
-          SELECT 1 
-          FROM information_schema.columns 
-          WHERE table_name = 'marcas' 
-          AND column_name = 'oposicion' 
-          AND data_type != 'jsonb'
-        ) THEN
-          ALTER TABLE marcas 
-          ALTER COLUMN oposicion TYPE JSONB USING CASE 
-            WHEN oposicion IS NULL THEN '[]'::jsonb
-            WHEN oposicion = ARRAY[]::TEXT[] THEN '[]'::jsonb
-            ELSE json_build_array(json_build_object('text', oposicion[1], 'completed', false))::jsonb
-          END;
-        END IF;
-      END $$;
+    // Check for tipo_marca column
+    const tipoMarcaExists = await sql`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'marcas' 
+        AND column_name = 'tipo_marca'
+      );
     `;
-    console.log('Verified oposicion column as JSONB');
+
+    if (!tipoMarcaExists.rows[0].exists) {
+      await sql`
+        ALTER TABLE marcas 
+        ADD COLUMN tipo_marca VARCHAR(255) DEFAULT 'denominativa';
+      `;
+      console.log('Added tipo_marca column');
+    }
+
+    // Check for clases column
+    const clasesExists = await sql`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'marcas' 
+        AND column_name = 'clases'
+      );
+    `;
+
+    if (!clasesExists.rows[0].exists) {
+      await sql`
+        ALTER TABLE marcas 
+        ADD COLUMN clases INTEGER[] DEFAULT ARRAY[]::INTEGER[];
+      `;
+      console.log('Added clases column');
+    }
+
+    // Check oposicion column type
+    const oposicionType = await sql`
+      SELECT data_type 
+      FROM information_schema.columns 
+      WHERE table_name = 'marcas' 
+      AND column_name = 'oposicion';
+    `;
+
+    if (oposicionType.rows[0]?.data_type !== 'jsonb') {
+      await sql`
+        ALTER TABLE marcas 
+        ALTER COLUMN oposicion TYPE JSONB 
+        USING CASE 
+          WHEN oposicion IS NULL THEN '[]'::jsonb
+          WHEN oposicion = ARRAY[]::TEXT[] THEN '[]'::jsonb
+          ELSE json_build_array(json_build_object('text', oposicion[1], 'completed', false))::jsonb
+        END;
+      `;
+      console.log('Updated oposicion column to JSONB');
+    }
 
     return true;
   } catch (error) {
