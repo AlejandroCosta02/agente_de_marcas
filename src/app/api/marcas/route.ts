@@ -5,7 +5,15 @@ import { sql } from '@vercel/postgres';
 
 export async function GET() {
   try {
+    console.log('GET /api/marcas - Starting request');
+    
     const session = await getServerSession(authOptions);
+    console.log('Session state:', {
+      exists: !!session,
+      hasUser: !!session?.user,
+      hasEmail: !!session?.user?.email
+    });
+
     if (!session?.user?.email) {
       console.error('No session or user email found');
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
@@ -13,58 +21,89 @@ export async function GET() {
 
     // Test database connection
     try {
+      console.log('Testing database connection...');
       await sql`SELECT 1`;
+      console.log('Database connection successful');
     } catch (dbError) {
-      console.error('Database connection error:', dbError);
+      console.error('Database connection error:', {
+        error: dbError,
+        message: dbError instanceof Error ? dbError.message : 'Unknown error',
+        stack: dbError instanceof Error ? dbError.stack : undefined
+      });
       return NextResponse.json({ message: 'Error de conexión a la base de datos' }, { status: 500 });
     }
 
+    console.log('Fetching marcas for user:', session.user.email);
     const marcas = await sql`
       SELECT 
-        id,
-        marca,
-        acta,
-        resolucion,
-        renovar,
-        vencimiento,
-        titular_nombre as "titular.fullName",
-        titular_email as "titular.email",
-        titular_telefono as "titular.phone",
-        anotaciones as anotacion,
-        oposicion,
-        tipo_marca as "tipoMarca",
-        COALESCE(clases, ARRAY[]::INTEGER[]) as clases,
-        created_at as "createdAt",
-        updated_at as "updatedAt"
-      FROM marcas 
-      WHERE user_email = ${session.user.email}
-      ORDER BY created_at DESC
+        m.id,
+        m.marca,
+        m.acta,
+        m.resolucion,
+        m.renovar,
+        m.vencimiento,
+        m.titular_nombre as "titular.fullName",
+        m.titular_email as "titular.email",
+        m.titular_telefono as "titular.phone",
+        m.anotaciones as anotacion,
+        m.oposicion,
+        m.tipo_marca as "tipoMarca",
+        COALESCE(m.clases, ARRAY[]::INTEGER[]) as clases,
+        m.created_at as "createdAt",
+        m.updated_at as "updatedAt"
+      FROM marcas m
+      WHERE m.user_email = ${session.user.email}
+      ORDER BY m.created_at DESC
     `;
+    
+    console.log('Raw marcas data:', JSON.stringify(marcas.rows[0], null, 2));
 
-    const formattedMarcas = marcas.rows.map(marca => ({
-      ...marca,
-      anotacion: Array.isArray(marca.anotacion) 
-        ? marca.anotacion.map((text: string) => ({ 
-            id: Math.random().toString(36).substr(2, 9), 
-            text 
-          })) 
-        : [],
-      oposicion: Array.isArray(marca.oposicion) 
-        ? marca.oposicion 
-        : typeof marca.oposicion === 'object' && marca.oposicion !== null
-          ? Object.values(marca.oposicion)
-          : [],
-      clases: Array.isArray(marca.clases) 
-        ? marca.clases.map(Number).filter(n => !isNaN(n))
-        : []
-    }));
+    const formattedMarcas = marcas.rows.map(marca => {
+      try {
+        console.log('Processing marca:', marca.id);
+        return {
+          ...marca,
+          anotacion: Array.isArray(marca.anotacion) 
+            ? marca.anotacion.map((text: string) => ({ 
+                id: Math.random().toString(36).substr(2, 9), 
+                text,
+                date: new Date().toISOString()
+              })) 
+            : [],
+          oposicion: Array.isArray(marca.oposicion) 
+            ? marca.oposicion 
+            : typeof marca.oposicion === 'object' && marca.oposicion !== null
+              ? Object.values(marca.oposicion)
+              : [],
+          clases: Array.isArray(marca.clases) 
+            ? marca.clases.map(Number).filter(n => !isNaN(n))
+            : [],
+          tipoMarca: marca.tipoMarca || 'denominativa'
+        };
+      } catch (formatError) {
+        console.error('Error formatting marca:', {
+          marcaId: marca.id,
+          error: formatError,
+          rawData: marca
+        });
+        throw formatError;
+      }
+    });
 
+    console.log('Successfully formatted marcas data');
     return NextResponse.json(formattedMarcas);
   } catch (error) {
-    console.error('Error detallado al obtener marcas:', error);
+    console.error('Detailed error in GET /api/marcas:', {
+      error: error,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      type: error instanceof Error ? error.constructor.name : typeof error
+    });
+    
     return NextResponse.json({ 
       message: 'Error interno del servidor',
-      details: error instanceof Error ? error.message : 'Error desconocido'
+      details: error instanceof Error ? error.message : 'Error desconocido',
+      type: error instanceof Error ? error.constructor.name : typeof error
     }, { status: 500 });
   }
 }
