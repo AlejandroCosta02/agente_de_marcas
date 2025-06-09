@@ -224,7 +224,14 @@ export default function DashboardClient() {
       const marca = marcas.find(m => m.id === marcaId);
       if (!marca) return;
 
-      const updatedOposiciones = [...marca.oposicion, { text, completed: false }];
+      const newOposicion: Oposicion = {
+        id: Math.random().toString(36).substr(2, 9),
+        text,
+        date: new Date().toISOString(),
+        completed: false
+      };
+
+      const updatedOposiciones = [...marca.oposicion, newOposicion];
 
       const response = await fetch(`/api/marcas?id=${marcaId}`, {
         method: 'PUT',
@@ -410,9 +417,6 @@ export default function DashboardClient() {
                           Tipo
                         </th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                          Estado
-                        </th>
-                        <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                           Oposiciones
                         </th>
                         <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
@@ -453,9 +457,6 @@ export default function DashboardClient() {
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                               {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : ''}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                              {marca.status}
                             </td>
                             <td className="px-3 py-4 text-sm text-gray-500">
                               <div className="space-y-2">
