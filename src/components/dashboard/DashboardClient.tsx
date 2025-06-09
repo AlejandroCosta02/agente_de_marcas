@@ -14,7 +14,6 @@ export default function DashboardClient() {
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
-  const [viewingAnotacion, setViewingAnotacion] = useState<{text: string; marcaId: string; index: number} | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<{ isOpen: boolean; title: string; content: string }>({
