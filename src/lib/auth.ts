@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { db } from './db';
-import { compare } from 'bcrypt';
+import { compare } from 'bcryptjs';
 
 interface User {
   id: string;
