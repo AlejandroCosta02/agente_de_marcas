@@ -540,25 +540,30 @@ export default function DashboardClient() {
                           <td className="px-6 py-4 text-sm text-gray-500">
                             <div className="space-y-2">
                               {marca.anotaciones && marca.anotaciones.length > 0 ? (
-                                <ul className="space-y-2">
+                                <ul className="space-y-1">
                                   {marca.anotaciones.map((anotacion, index) => (
-                                    <li key={index} className="flex items-center justify-between group">
-                                      <div 
-                                        onClick={() => setViewingAnotacion({ text: anotacion, marcaId: marca.id, index })}
-                                        className="truncate cursor-pointer hover:text-gray-900 flex-1 mr-2"
-                                        title="Click para ver completo"
-                                      >
-                                        {anotacion.length > 50 ? `${anotacion.slice(0, 50)}...` : anotacion}
+                                    <li key={index} className="group">
+                                      <div className="flex items-center justify-between pb-1">
+                                        <div 
+                                          onClick={() => setViewingAnotacion({ text: anotacion, marcaId: marca.id, index })}
+                                          className="truncate cursor-pointer hover:text-gray-900 flex-1 mr-2"
+                                          title="Click para ver completo"
+                                        >
+                                          {anotacion.length > 20 ? `${anotacion.slice(0, 20)}...` : anotacion}
+                                        </div>
+                                        <button
+                                          onClick={() => handleDeleteAnotacion(marca.id, index)}
+                                          className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full flex-shrink-0"
+                                          title="Eliminar anotación"
+                                        >
+                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                        </button>
                                       </div>
-                                      <button
-                                        onClick={() => handleDeleteAnotacion(marca.id, index)}
-                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full flex-shrink-0"
-                                        title="Eliminar anotación"
-                                      >
-                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                      </button>
+                                      {index < marca.anotaciones.length - 1 && (
+                                        <div className="border-b border-gray-200 my-1"></div>
+                                      )}
                                     </li>
                                   ))}
                                 </ul>
