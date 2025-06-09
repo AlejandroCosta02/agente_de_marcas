@@ -486,7 +486,7 @@ export default function DashboardClient() {
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {marca.resolucion}
                                   </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
                                     {marca.titular?.fullName || '-'}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
