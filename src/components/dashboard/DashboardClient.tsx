@@ -10,12 +10,9 @@ import { FaWhatsapp, FaEnvelope, FaCalendarPlus } from 'react-icons/fa';
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [marcas, setMarcas] = useState<Marca[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
-  const [editingAnotacionMarcaId, setEditingAnotacionMarcaId] = useState<string | null>(null);
-  const [newAnotacion, setNewAnotacion] = useState('');
   const [viewingAnotacion, setViewingAnotacion] = useState<{text: string; marcaId: string; index: number} | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
@@ -53,8 +50,6 @@ export default function DashboardClient() {
       } else {
         toast.error('An error occurred while fetching the data');
       }
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
@@ -116,80 +111,6 @@ export default function DashboardClient() {
     setIsTimeRangeOpen(false);
   };
 
-  const handleAddAnotacion = async (marcaId: string) => {
-    if (!newAnotacion.trim()) return;
-
-    try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
-
-      const newAnotacionObj = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: newAnotacion.trim(),
-        date: new Date().toISOString()
-      };
-
-      const updatedAnotaciones = [...(marca.anotacion || []), newAnotacionObj];
-      
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...marca,
-          anotacion: updatedAnotaciones,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al actualizar anotaciones');
-
-      // Update local state
-      setMarcas(prevMarcas =>
-        prevMarcas.map(m =>
-          m.id === marcaId
-            ? { ...m, anotacion: updatedAnotaciones }
-            : m
-        )
-      );
-
-      setNewAnotacion('');
-      setEditingAnotacionMarcaId(null);
-      toast.success('Anotación agregada exitosamente');
-    } catch (error) {
-      console.error('Error adding anotacion:', error);
-      toast.error('Error al agregar la anotación');
-    }
-  };
-
-  const handleDeleteAnotacion = async (marcaId: string, index: number) => {
-    try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
-
-      const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
-      
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...marca,
-          anotacion: updatedAnotaciones,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al eliminar anotación');
-
-      await fetchMarcas(); // Refresh the data
-      toast.success('Anotación eliminada exitosamente');
-    } catch (error) {
-      console.error('Error deleting anotacion:', error);
-      toast.error('Error al eliminar la anotación');
-    }
-  };
-
   const handleToggleOposicion = async (marcaId: string, index: number) => {
     try {
       const marca = marcas.find(m => m.id === marcaId);
@@ -234,6 +155,82 @@ export default function DashboardClient() {
     }
   };
 
+  const handleAddAnotacion = async (marcaId: string, text: string) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const newAnotacion = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: text.trim(),
+        date: new Date().toISOString()
+      };
+
+      const updatedAnotaciones = [...marca.anotacion, newAnotacion];
+
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          anotacion: updatedAnotaciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar anotaciones');
+
+      setMarcas(prevMarcas =>
+        prevMarcas.map(m =>
+          m.id === marcaId
+            ? { ...m, anotacion: updatedAnotaciones }
+            : m
+        )
+      );
+
+      toast.success('Anotación agregada exitosamente');
+    } catch (error) {
+      console.error('Error adding anotacion:', error);
+      toast.error('Error al agregar la anotación');
+    }
+  };
+
+  const handleDeleteAnotacion = async (marcaId: string, index: number) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
+      
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          anotacion: updatedAnotaciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar anotación');
+
+      setMarcas(prevMarcas =>
+        prevMarcas.map(m =>
+          m.id === marcaId
+            ? { ...m, anotacion: updatedAnotaciones }
+            : m
+        )
+      );
+
+      toast.success('Anotación eliminada exitosamente');
+    } catch (error) {
+      console.error('Error deleting anotacion:', error);
+      toast.error('Error al eliminar la anotación');
+    }
+  };
+
   const handleAddOposicion = async (marcaId: string, text: string) => {
     try {
       const marca = marcas.find(m => m.id === marcaId);
@@ -241,7 +238,7 @@ export default function DashboardClient() {
 
       const newOposicion: Oposicion = {
         id: Math.random().toString(36).substr(2, 9),
-        text,
+        text: text.trim(),
         date: new Date().toISOString(),
         completed: false
       };
@@ -261,7 +258,6 @@ export default function DashboardClient() {
 
       if (!response.ok) throw new Error('Error al agregar oposición');
 
-      // Update local state
       setMarcas((prevMarcas) =>
         prevMarcas.map((m) => {
           if (m.id === marcaId) {
@@ -482,7 +478,12 @@ export default function DashboardClient() {
                                   </div>
                                 ) : (
                                   <button
-                                    onClick={() => setSelectedOposicion({ marcaId: marca.id, index: -1, oposicion: { id: '', text: '', date: '', completed: false } })}
+                                    onClick={() => {
+                                      const text = prompt('Nueva oposición:');
+                                      if (text?.trim()) {
+                                        handleAddOposicion(marca.id, text);
+                                      }
+                                    }}
                                     className="text-indigo-600 hover:text-indigo-900"
                                   >
                                     + Agregar oposición
@@ -500,12 +501,34 @@ export default function DashboardClient() {
                                         >
                                           {note.text.length > 20 ? `${note.text.substring(0, 20)}...` : note.text}
                                         </button>
+                                        <button
+                                          onClick={() => handleDeleteAnotacion(marca.id, index)}
+                                          className="text-red-600 hover:text-red-900"
+                                        >
+                                          ×
+                                        </button>
                                       </div>
                                     ))}
+                                    <button
+                                      onClick={() => {
+                                        const text = prompt('Nueva anotación:');
+                                        if (text?.trim()) {
+                                          handleAddAnotacion(marca.id, text);
+                                        }
+                                      }}
+                                      className="text-indigo-600 hover:text-indigo-900 text-sm"
+                                    >
+                                      + Agregar otra
+                                    </button>
                                   </div>
                                 ) : (
                                   <button
-                                    onClick={() => setEditingAnotacionMarcaId(marca.id)}
+                                    onClick={() => {
+                                      const text = prompt('Nueva anotación:');
+                                      if (text?.trim()) {
+                                        handleAddAnotacion(marca.id, text);
+                                      }
+                                    }}
                                     className="text-indigo-600 hover:text-indigo-900"
                                   >
                                     + Agregar anotación
