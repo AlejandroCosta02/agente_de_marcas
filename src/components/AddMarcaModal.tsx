@@ -144,13 +144,13 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const addOposicion = () => {
     setFormData(prev => ({
       ...prev,
-      oposicion: [...(prev.oposicion || []), '']
+      oposicion: [...(prev.oposicion || []), { text: '', completed: false }]
     }));
   };
 
   const updateOposicion = (index: number, value: string) => {
     const newOposiciones = [...(formData.oposicion || [])];
-    newOposiciones[index] = value;
+    newOposiciones[index] = { text: value, completed: false };
     setFormData(prev => ({
       ...prev,
       oposicion: newOposiciones
@@ -365,36 +365,40 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 </div>
 
                 {/* Oposiciones */}
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-semibold text-gray-700">Oposiciones</label>
-                    <button
-                      type="button"
-                      onClick={addOposicion}
-                      className="text-sm text-indigo-600 hover:text-indigo-500"
-                    >
-                      + Agregar oposición
-                    </button>
-                  </div>
-                  {(formData.oposicion || []).map((oposicion, index) => (
-                    <div key={index} className="flex gap-2 mt-2">
+                <div className="form-group">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Oposiciones
+                  </label>
+                  {formData.oposicion.map((op, index) => (
+                    <div key={index} className="flex items-center mb-2">
                       <input
                         type="text"
-                        className="flex-1 text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={oposicion}
+                        value={op.text}
                         onChange={(e) => updateOposicion(index, e.target.value)}
+                        className="form-input flex-1 px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
+                        placeholder="Ingrese la oposición"
                       />
                       <button
                         type="button"
                         onClick={() => removeOposicion(index)}
-                        className="text-red-500 hover:text-red-700"
+                        className="ml-2 text-red-600 hover:text-red-800"
                       >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       </button>
                     </div>
                   ))}
+                  <button
+                    type="button"
+                    onClick={addOposicion}
+                    className="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Agregar oposición
+                  </button>
                 </div>
 
                 {/* Buttons */}

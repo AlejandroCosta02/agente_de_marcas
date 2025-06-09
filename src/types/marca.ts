@@ -36,5 +36,5 @@ export interface MarcaSubmissionData {
   vencimiento: string;
   titular: Titular;
   anotaciones: string[];
-  oposicion: string[];
+  oposicion: Oposicion[];
 } 
