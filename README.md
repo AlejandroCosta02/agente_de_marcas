@@ -36,7 +36,7 @@ npm install
 3. Configurar variables de entorno:
 Crear un archivo `.env.local` y agregar las siguientes variables:
 ```
-POSTGRES_URL=
+DATABASE_URL=
 NEXTAUTH_SECRET=
 NEXTAUTH_URL=http://localhost:3000
 ```
