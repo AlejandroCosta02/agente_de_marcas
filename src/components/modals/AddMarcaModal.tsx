@@ -1,13 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Titular, TipoMarca } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
-
-interface Titular {
-  fullName: string;
-  email: string;
-  phone: string;
-}
 
 interface MarcaFormData {
   marca: string;
@@ -18,6 +13,8 @@ interface MarcaFormData {
   titular: Titular;
   anotaciones: string[];
   oposicion: string;
+  tipoMarca: TipoMarca;
+  clases: number[];
 }
 
 interface MarcaSubmissionData {
@@ -29,6 +26,22 @@ interface MarcaSubmissionData {
   titular: Titular;
   anotaciones: string[];
   oposicion: string;
+  tipoMarca: TipoMarca;
+  clases: number[];
+}
+
+interface FormErrors {
+  marca?: string;
+  acta?: string;
+  resolucion?: string;
+  renovar?: string;
+  vencimiento?: string;
+  titular?: {
+    fullName?: string;
+    email?: string;
+    phone?: string;
+  };
+  tipoMarca?: string;
 }
 
 interface AddMarcaModalProps {
@@ -37,39 +50,45 @@ interface AddMarcaModalProps {
   onSubmit: (data: MarcaSubmissionData) => void;
 }
 
+const TIPOS_MARCA: TipoMarca[] = [
+  "denominativa",
+  "mixta",
+  "figurativa",
+  "tridimensional",
+  "olfativa",
+  "sonora",
+  "movimiento",
+  "holografica",
+  "colectiva",
+  "certificacion"
+];
+
 export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaModalProps) {
   const [formData, setFormData] = useState<MarcaFormData>({
     marca: '',
     acta: '',
     resolucion: '',
-    renovar: '',
-    vencimiento: '',
+    renovar: new Date().toISOString().split('T')[0],
+    vencimiento: new Date().toISOString().split('T')[0],
     titular: {
       fullName: '',
       email: '',
       phone: ''
     },
     anotaciones: [''],
-    oposicion: ''
+    oposicion: '',
+    tipoMarca: 'denominativa',
+    clases: []
   });
 
-  const [errors, setErrors] = useState<Partial<MarcaFormData>>({});
+  const [showClasesDropdown, setShowClasesDropdown] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    const newErrors: Partial<MarcaFormData> = {};
-    if (!formData.marca || formData.marca.length > 20) {
-      newErrors.marca = 'La marca debe tener entre 1 y 20 caracteres';
-    }
-    if (!formData.acta) newErrors.acta = 'El acta es requerido';
-    if (!formData.resolucion) newErrors.resolucion = 'La resolución es requerida';
-    if (!formData.renovar) newErrors.renovar = 'La fecha de renovación es requerida';
-    if (!formData.vencimiento) newErrors.vencimiento = 'La fecha de vencimiento es requerida';
-    if (!formData.titular.fullName) newErrors.titular = { ...formData.titular, fullName: 'El nombre es requerido' };
-    if (!formData.titular.email) newErrors.titular = { ...formData.titular, email: 'El email es requerido' };
-    if (!formData.titular.phone) newErrors.titular = { ...formData.titular, phone: 'El teléfono es requerido' };
+    const newErrors = validateForm();
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -94,27 +113,34 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
     }));
   };
 
-  const addAnotacion = () => {
-    setFormData({
-      ...formData,
-      anotaciones: [...formData.anotaciones, '']
-    });
+  const handleClaseSelect = (clase: number) => {
+    setFormData(prev => ({
+      ...prev,
+      clases: prev.clases.includes(clase)
+        ? prev.clases.filter(c => c !== clase)
+        : [...prev.clases, clase].sort((a, b) => a - b)
+    }));
   };
 
-  const updateAnotacion = (index: number, value: string) => {
-    const newAnotaciones = [...formData.anotaciones];
-    newAnotaciones[index] = value;
-    setFormData({
-      ...formData,
-      anotaciones: newAnotaciones
-    });
-  };
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
 
-  const removeAnotacion = (index: number) => {
-    setFormData({
-      ...formData,
-      anotaciones: formData.anotaciones.filter((_, i) => i !== index)
-    });
+    if (!formData.marca) {
+      newErrors.marca = 'El nombre es requerido';
+    } else if (formData.marca.length > 20) {
+      newErrors.marca = 'El nombre no puede tener más de 20 caracteres';
+    }
+
+    if (!formData.acta) newErrors.acta = 'El acta es requerido';
+    if (!formData.resolucion) newErrors.resolucion = 'La resolución es requerida';
+    if (!formData.renovar) newErrors.renovar = 'La fecha de renovación es requerida';
+    if (!formData.vencimiento) newErrors.vencimiento = 'La fecha de vencimiento es requerida';
+    if (!formData.titular.fullName) newErrors.titular = { ...newErrors.titular, fullName: 'El nombre es requerido' };
+    if (!formData.titular.email) newErrors.titular = { ...newErrors.titular, email: 'El email es requerido' };
+    if (!formData.titular.phone) newErrors.titular = { ...newErrors.titular, phone: 'El teléfono es requerido' };
+    if (!formData.tipoMarca) newErrors.tipoMarca = 'El tipo de marca es requerido';
+
+    return newErrors;
   };
 
   return (
@@ -165,6 +191,64 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                     className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                   />
                   {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
+                </div>
+
+                {/* Tipo de Marca */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Tipo de Marca <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.tipoMarca}
+                    onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
+                    className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-white"
+                  >
+                    {TIPOS_MARCA.map((tipo) => (
+                      <option key={tipo} value={tipo}>
+                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tipoMarca && <p className="mt-1 text-sm text-red-600">{errors.tipoMarca}</p>}
+                </div>
+
+                {/* Clases */}
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Clases <span className="text-red-500">*</span>
+                  </label>
+                  <div 
+                    className="mt-1 p-2 border rounded-md cursor-pointer flex items-center justify-between"
+                    onClick={() => setShowClasesDropdown(!showClasesDropdown)}
+                  >
+                    <span className="text-gray-700">
+                      {formData.clases.length > 0 
+                        ? formData.clases.join(', ') 
+                        : 'Seleccionar clases...'}
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  {showClasesDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                      <div className="grid grid-cols-5 gap-1 p-2">
+                        {Array.from({ length: 45 }, (_, i) => i + 1).map((clase) => (
+                          <div
+                            key={clase}
+                            onClick={() => handleClaseSelect(clase)}
+                            className={`p-2 text-center cursor-pointer rounded ${
+                              formData.clases.includes(clase)
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'hover:bg-gray-100'
+                            }`}
+                          >
+                            {clase}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Acta */}
@@ -281,7 +365,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                     <label className="block text-sm font-medium text-gray-700">Anotaciones</label>
                     <button
                       type="button"
-                      onClick={addAnotacion}
+                      onClick={() => setFormData(prev => ({
+                        ...prev,
+                        anotaciones: [...prev.anotaciones, '']
+                      }))}
                       className="text-sm text-indigo-600 hover:text-indigo-500 cursor-pointer"
                     >
                       + Agregar anotación
@@ -292,12 +379,19 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                       <input
                         type="text"
                         value={anotacion}
-                        onChange={(e) => updateAnotacion(index, e.target.value)}
+                        onChange={(e) => {
+                          const newAnotaciones = [...formData.anotaciones];
+                          newAnotaciones[index] = e.target.value;
+                          setFormData({ ...formData, anotaciones: newAnotaciones });
+                        }}
                         className="flex-1 text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                       />
                       <button
                         type="button"
-                        onClick={() => removeAnotacion(index)}
+                        onClick={() => {
+                          const newAnotaciones = formData.anotaciones.filter((_, i) => i !== index);
+                          setFormData({ ...formData, anotaciones: newAnotaciones });
+                        }}
                         className="text-red-500 hover:text-red-700 cursor-pointer"
                       >
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

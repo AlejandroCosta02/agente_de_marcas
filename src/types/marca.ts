@@ -19,8 +19,8 @@ export interface Titular {
 export interface Oposicion {
   id: string;
   text: string;
-  date: string;
   completed: boolean;
+  date: string;
 }
 
 export interface Anotacion {

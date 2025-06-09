@@ -56,7 +56,9 @@ CREATE TABLE IF NOT EXISTS marcas (
   titular_email VARCHAR(255) NOT NULL,
   titular_telefono VARCHAR(255) NOT NULL,
   anotaciones TEXT[] DEFAULT ARRAY[]::TEXT[],
-  oposicion TEXT[] DEFAULT ARRAY[]::TEXT[],
+  oposicion JSONB DEFAULT '[]'::jsonb,
+  tipo_marca VARCHAR(255) DEFAULT 'denominativa',
+  clases INTEGER[] DEFAULT ARRAY[]::INTEGER[],
   user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
