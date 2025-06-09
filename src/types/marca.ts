@@ -11,30 +11,43 @@ export interface Oposicion {
 
 export interface Marca {
   id: string;
-  nombre: string;
-  marca: string;
-  acta: string;
-  clase: string;
-  estado: string;
-  resolucion: string;
-  renovar: string;
-  vencimiento: string;
-  anotaciones: string[];
+  name: string;
+  description: string;
+  status: string;
   oposicion: Oposicion[];
+  anotacion: Anotacion[];
+  createdAt: Date;
+  updatedAt: Date;
   user_email: string;
-  titular: Titular;
-  titularId: string;
-  created_at: string;
-  updated_at: string;
+  acta: string;
+  resolucion: string;
+  clases: number[];
+  tipoMarca: TipoMarca;
+}
+
+export type TipoMarca = 
+  | "denominativa"
+  | "mixta"
+  | "figurativa"
+  | "tridimensional"
+  | "olfativa"
+  | "sonora"
+  | "movimiento"
+  | "holografica"
+  | "colectiva"
+  | "certificacion";
+
+export interface Anotacion {
+  text: string;
+  completed: boolean;
 }
 
 export interface MarcaSubmissionData {
-  marca: string;
+  name: string;
+  description: string;
+  status: string;
   acta: string;
   resolucion: string;
-  renovar: string;
-  vencimiento: string;
-  titular: Titular;
-  anotaciones: string[];
-  oposicion: Oposicion[];
+  clases: number[];
+  tipoMarca: TipoMarca;
 } 

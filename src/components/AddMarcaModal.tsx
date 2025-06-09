@@ -1,5 +1,7 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { Marca, MarcaSubmissionData } from '@/types/marca';
+import { Marca, MarcaSubmissionData, TipoMarca } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AddMarcaModalProps {
@@ -9,52 +11,59 @@ interface AddMarcaModalProps {
   initialData?: Marca | null;
 }
 
+const TIPOS_MARCA: TipoMarca[] = [
+  "denominativa",
+  "mixta",
+  "figurativa",
+  "tridimensional",
+  "olfativa",
+  "sonora",
+  "movimiento",
+  "holografica",
+  "colectiva",
+  "certificacion"
+];
+
 export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }: AddMarcaModalProps) {
   const [formData, setFormData] = useState<MarcaSubmissionData>({
-    marca: '',
+    name: '',
+    description: '',
+    status: '',
     acta: '',
     resolucion: '',
-    renovar: '',
-    vencimiento: '',
-    titular: {
-      fullName: '',
-      email: '',
-      phone: ''
-    },
-    anotaciones: [],
-    oposicion: []
+    clases: [],
+    tipoMarca: 'denominativa'
   });
+
+  const [selectedClases, setSelectedClases] = useState<number[]>([]);
+  const [showClasesDropdown, setShowClasesDropdown] = useState(false);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (initialData) {
       setFormData({
-        marca: initialData.marca,
+        name: initialData.name,
+        description: initialData.description,
+        status: initialData.status,
         acta: initialData.acta.toString(),
         resolucion: initialData.resolucion.toString(),
-        renovar: initialData.renovar,
-        vencimiento: initialData.vencimiento,
-        titular: initialData.titular,
-        anotaciones: initialData.anotaciones || [],
-        oposicion: initialData.oposicion || []
+        clases: initialData.clases || [],
+        tipoMarca: initialData.tipoMarca
       });
+      setSelectedClases(initialData.clases || []);
     } else {
       // Reset form when opening for a new marca
       setFormData({
-        marca: '',
+        name: '',
+        description: '',
+        status: '',
         acta: '',
         resolucion: '',
-        renovar: '',
-        vencimiento: '',
-        titular: {
-          fullName: '',
-          email: '',
-          phone: ''
-        },
-        anotaciones: [],
-        oposicion: []
+        clases: [],
+        tipoMarca: 'denominativa'
       });
+      setSelectedClases([]);
     }
     setErrors({});
   }, [initialData, isOpen]);
@@ -62,11 +71,11 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-    // Validate marca (string max 20 chars)
-    if (!formData.marca) {
-      newErrors.marca = 'La marca es requerida';
-    } else if (formData.marca.length > 20) {
-      newErrors.marca = 'La marca no puede tener más de 20 caracteres';
+    // Validate name (string max 20 chars)
+    if (!formData.name) {
+      newErrors.name = 'El nombre es requerido';
+    } else if (formData.name.length > 20) {
+      newErrors.name = 'El nombre no puede tener más de 20 caracteres';
     }
 
     // Validate acta and resolucion (must be numbers up to 8 digits)
@@ -82,25 +91,14 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       newErrors.resolucion = 'La resolución debe ser un número de hasta 8 dígitos';
     }
 
-    // Validate dates
-    if (!formData.renovar) {
-      newErrors.renovar = 'La fecha de renovación es requerida';
-    }
-    if (!formData.vencimiento) {
-      newErrors.vencimiento = 'La fecha de vencimiento es requerida';
+    // Validate status
+    if (!formData.status) {
+      newErrors.status = 'El estado es requerido';
     }
 
-    // Validate titular
-    if (!formData.titular.fullName) {
-      newErrors['titular.fullName'] = 'El nombre completo es requerido';
-    }
-    if (!formData.titular.email) {
-      newErrors['titular.email'] = 'El email es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.titular.email)) {
-      newErrors['titular.email'] = 'El email no es válido';
-    }
-    if (!formData.titular.phone) {
-      newErrors['titular.phone'] = 'El teléfono es requerido';
+    // Validate tipoMarca
+    if (!formData.tipoMarca) {
+      newErrors.tipoMarca = 'El tipo de marca es requerido';
     }
 
     return newErrors;
@@ -115,53 +113,20 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({
+      ...formData,
+      clases: selectedClases
+    });
+    onClose();
   };
 
-  const addAnotacion = () => {
-    setFormData(prev => ({
-      ...prev,
-      anotaciones: [...(prev.anotaciones || []), '']
-    }));
-  };
-
-  const updateAnotacion = (index: number, value: string) => {
-    const newAnotaciones = [...(formData.anotaciones || [])];
-    newAnotaciones[index] = value;
-    setFormData(prev => ({
-      ...prev,
-      anotaciones: newAnotaciones
-    }));
-  };
-
-  const removeAnotacion = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      anotaciones: (prev.anotaciones || []).filter((_, i) => i !== index)
-    }));
-  };
-
-  const addOposicion = () => {
-    setFormData(prev => ({
-      ...prev,
-      oposicion: [...(prev.oposicion || []), { text: '', completed: false }]
-    }));
-  };
-
-  const updateOposicion = (index: number, value: string) => {
-    const newOposiciones = [...(formData.oposicion || [])];
-    newOposiciones[index] = { text: value, completed: false };
-    setFormData(prev => ({
-      ...prev,
-      oposicion: newOposiciones
-    }));
-  };
-
-  const removeOposicion = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      oposicion: (prev.oposicion || []).filter((_, i) => i !== index)
-    }));
+  const handleClaseSelect = (clase: number) => {
+    setSelectedClases(prev => {
+      if (prev.includes(clase)) {
+        return prev.filter(c => c !== clase);
+      }
+      return [...prev, clase].sort((a, b) => a - b);
+    });
   };
 
   return (
@@ -188,231 +153,128 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 {initialData ? 'Editar Marca' : 'Nueva Marca'}
               </h3>
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Marca */}
-                <div className="form-group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="marca">
-                    Marca <span className="text-red-500">*</span>
-                  </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Nombre</label>
                   <input
                     type="text"
-                    id="marca"
-                    maxLength={20}
-                    className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                    value={formData.marca}
-                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                    placeholder="Nombre de la marca"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
                   />
-                  {errors.marca && <p className="mt-2 text-sm text-red-600">{errors.marca}</p>}
+                  {errors.name && <p className="mt-2 text-sm text-red-600">{errors.name}</p>}
                 </div>
 
-                {/* Acta y Resolución */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="form-group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="acta">
-                      Acta <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="acta"
-                      maxLength={8}
-                      pattern="\d*"
-                      placeholder="12345678"
-                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                      value={formData.acta}
-                      onChange={(e) => setFormData({ ...formData, acta: e.target.value.replace(/\D/g, '') })}
-                    />
-                    {errors.acta && <p className="mt-2 text-sm text-red-600">{errors.acta}</p>}
-                  </div>
-                  <div className="form-group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="resolucion">
-                      Resolución <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      id="resolucion"
-                      maxLength={8}
-                      pattern="\d*"
-                      placeholder="12345678"
-                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                      value={formData.resolucion}
-                      onChange={(e) => setFormData({ ...formData, resolucion: e.target.value.replace(/\D/g, '') })}
-                    />
-                    {errors.resolucion && <p className="mt-2 text-sm text-red-600">{errors.resolucion}</p>}
-                  </div>
-                </div>
-
-                {/* Fechas */}
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="form-group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="renovar">
-                      Renovar <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="renovar"
-                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                      value={formData.renovar}
-                      onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
-                    />
-                    {errors.renovar && <p className="mt-2 text-sm text-red-600">{errors.renovar}</p>}
-                  </div>
-                  <div className="form-group">
-                    <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="vencimiento">
-                      Vencimiento <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      id="vencimiento"
-                      className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                      value={formData.vencimiento}
-                      onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
-                    />
-                    {errors.vencimiento && <p className="mt-2 text-sm text-red-600">{errors.vencimiento}</p>}
-                  </div>
-                </div>
-
-                {/* Titular */}
-                <div className="space-y-6">
-                  <h4 className="text-lg font-semibold text-gray-900">Titular</h4>
-                  <div className="grid grid-cols-1 gap-6">
-                    <div className="form-group">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-name">
-                        Nombre Completo <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        id="titular-name"
-                        className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                        value={formData.titular.fullName}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, fullName: e.target.value }
-                        })}
-                        placeholder="Nombre completo del titular"
-                      />
-                      {errors['titular.fullName'] && <p className="mt-2 text-sm text-red-600">{errors['titular.fullName']}</p>}
-                    </div>
-                    <div className="grid grid-cols-2 gap-6">
-                      <div className="form-group">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-email">
-                          Email <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          id="titular-email"
-                          className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                          value={formData.titular.email}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            titular: { ...formData.titular, email: e.target.value }
-                          })}
-                          placeholder="email@ejemplo.com"
-                        />
-                        {errors['titular.email'] && <p className="mt-2 text-sm text-red-600">{errors['titular.email']}</p>}
-                      </div>
-                      <div className="form-group">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2" htmlFor="titular-phone">
-                          Teléfono <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          id="titular-phone"
-                          className="form-input w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                          value={formData.titular.phone}
-                          onChange={(e) => setFormData({
-                            ...formData,
-                            titular: { ...formData.titular, phone: e.target.value }
-                          })}
-                          placeholder="+1234567890"
-                        />
-                        {errors['titular.phone'] && <p className="mt-2 text-sm text-red-600">{errors['titular.phone']}</p>}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Anotaciones */}
                 <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label className="block text-sm font-semibold text-gray-700">Anotaciones</label>
-                    <button
-                      type="button"
-                      onClick={addAnotacion}
-                      className="text-sm text-indigo-600 hover:text-indigo-500"
-                    >
-                      + Agregar anotación
-                    </button>
-                  </div>
-                  {(formData.anotaciones || []).map((anotacion, index) => (
-                    <div key={index} className="flex gap-2 mt-2">
-                      <input
-                        type="text"
-                        className="flex-1 text-gray-900 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        value={anotacion}
-                        onChange={(e) => updateAnotacion(index, e.target.value)}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeAnotacion(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
+                  <label className="block text-sm font-medium text-gray-700">Descripción</label>
+                  <input
+                    type="text"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
                 </div>
 
-                {/* Oposiciones */}
-                <div className="form-group">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Oposiciones
-                  </label>
-                  {formData.oposicion.map((op, index) => (
-                    <div key={index} className="flex items-center mb-2">
-                      <input
-                        type="text"
-                        value={op.text}
-                        onChange={(e) => updateOposicion(index, e.target.value)}
-                        className="form-input flex-1 px-4 py-2 text-gray-900 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 shadow-sm"
-                        placeholder="Ingrese la oposición"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeOposicion(index)}
-                        className="ml-2 text-red-600 hover:text-red-800"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addOposicion}
-                    className="mt-2 inline-flex items-center text-sm text-indigo-600 hover:text-indigo-800"
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Estado</label>
+                  <input
+                    type="text"
+                    value={formData.status}
+                    onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                  {errors.status && <p className="mt-2 text-sm text-red-600">{errors.status}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Acta</label>
+                  <input
+                    type="text"
+                    value={formData.acta}
+                    onChange={(e) => setFormData({ ...formData, acta: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                  {errors.acta && <p className="mt-2 text-sm text-red-600">{errors.acta}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Resolución</label>
+                  <input
+                    type="text"
+                    value={formData.resolucion}
+                    onChange={(e) => setFormData({ ...formData, resolucion: e.target.value })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  />
+                  {errors.resolucion && <p className="mt-2 text-sm text-red-600">{errors.resolucion}</p>}
+                </div>
+
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700">Clases</label>
+                  <div 
+                    className="mt-1 p-2 border rounded-md cursor-pointer flex items-center justify-between"
+                    onClick={() => setShowClasesDropdown(!showClasesDropdown)}
                   >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    <span className="text-gray-700">
+                      {selectedClases.length > 0 
+                        ? selectedClases.join(', ') 
+                        : 'Seleccionar clases...'}
+                    </span>
+                    <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
-                    Agregar oposición
-                  </button>
+                  </div>
+                  {showClasesDropdown && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                      <div className="grid grid-cols-5 gap-1 p-2">
+                        {Array.from({ length: 45 }, (_, i) => i + 1).map((clase) => (
+                          <div
+                            key={clase}
+                            onClick={() => handleClaseSelect(clase)}
+                            className={`p-2 text-center cursor-pointer rounded ${
+                              selectedClases.includes(clase)
+                                ? 'bg-indigo-100 text-indigo-700'
+                                : 'hover:bg-gray-100'
+                            }`}
+                          >
+                            {clase}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Buttons */}
-                <div className="flex justify-end gap-4 pt-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Tipo de Marca</label>
+                  <select
+                    value={formData.tipoMarca}
+                    onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    required
+                  >
+                    {TIPOS_MARCA.map((tipo) => (
+                      <option key={tipo} value={tipo}>
+                        {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.tipoMarca && <p className="mt-2 text-sm text-red-600">{errors.tipoMarca}</p>}
+                </div>
+
+                <div className="mt-6 flex justify-end space-x-3">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-6 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-500"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 border border-transparent rounded-lg shadow-sm hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 ease-in-out cursor-pointer hover:shadow-md transform hover:scale-105"
+                    className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     {initialData ? 'Guardar Cambios' : 'Crear Marca'}
                   </button>
