@@ -72,9 +72,9 @@ export async function GET() {
         m.resolucion,
         m.renovar,
         m.vencimiento,
-        m.titular_nombre as "titular.fullName",
-        m.titular_email as "titular.email",
-        m.titular_telefono as "titular.phone",
+        m.titular_nombre,
+        m.titular_email,
+        m.titular_telefono,
         m.anotaciones as anotacion,
         m.oposicion,
         COALESCE(m.tipo_marca, 'denominativa') as "tipoMarca",
@@ -93,6 +93,11 @@ export async function GET() {
         console.log('Processing marca:', marca.id);
         return {
           ...marca,
+          titular: {
+            fullName: marca.titular_nombre,
+            email: marca.titular_email,
+            phone: marca.titular_telefono
+          },
           anotacion: Array.isArray(marca.anotacion) 
             ? marca.anotacion.map((text: string) => ({ 
                 id: Math.random().toString(36).substr(2, 9), 
