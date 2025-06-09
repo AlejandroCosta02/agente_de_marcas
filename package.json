@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@auth/neon-adapter": "^1.9.1",
+    "@headlessui/react": "^2.2.4",
     "@neondatabase/serverless": "^1.0.1",
     "@prisma/client": "^6.9.0",
     "@types/bcryptjs": "^2.4.6",

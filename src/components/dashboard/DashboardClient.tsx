@@ -6,6 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
 import { FaWhatsapp, FaEnvelope, FaCalendarPlus } from 'react-icons/fa';
+import ViewTextModal from '../ViewTextModal';
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +17,11 @@ export default function DashboardClient() {
   const [viewingAnotacion, setViewingAnotacion] = useState<{text: string; marcaId: string; index: number} | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
+  const [viewTextModal, setViewTextModal] = useState<{ isOpen: boolean; title: string; content: string }>({
+    isOpen: false,
+    title: '',
+    content: ''
+  });
 
   const timeRangeOptions = [
     { label: 'Una semana', days: 7 },
@@ -281,6 +287,11 @@ export default function DashboardClient() {
     }
   };
 
+  const truncateText = (text: string, maxLength: number = 20) => {
+    if (!text) return '';
+    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -474,9 +485,16 @@ export default function DashboardClient() {
                                           onChange={() => handleToggleOposicion(marca.id, index)}
                                           className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                         />
-                                        <span className={op.completed ? 'line-through text-gray-400' : ''}>
-                                          {op.text}
-                                        </span>
+                                        <button
+                                          onClick={() => setViewTextModal({
+                                            isOpen: true,
+                                            title: 'Oposición',
+                                            content: op.text
+                                          })}
+                                          className={`text-left ${op.completed ? 'line-through text-gray-400' : 'text-gray-600 hover:text-gray-900'}`}
+                                        >
+                                          {truncateText(op.text)}
+                                        </button>
                                       </div>
                                     ))}
                                   </div>
@@ -500,10 +518,14 @@ export default function DashboardClient() {
                                     {marca.anotacion.map((note, index) => (
                                       <div key={note.id || index} className="flex items-center space-x-2">
                                         <button
-                                          onClick={() => setViewingAnotacion({ text: note.text, marcaId: marca.id, index })}
-                                          className="text-gray-600 hover:text-gray-900"
+                                          onClick={() => setViewTextModal({
+                                            isOpen: true,
+                                            title: 'Anotación',
+                                            content: note.text
+                                          })}
+                                          className="text-left text-gray-600 hover:text-gray-900"
                                         >
-                                          {note.text?.length > 20 ? `${note.text.substring(0, 20)}...` : note.text || ''}
+                                          {truncateText(note.text)}
                                         </button>
                                         <button
                                           onClick={() => handleDeleteAnotacion(marca.id, index)}
@@ -584,46 +606,12 @@ export default function DashboardClient() {
         initialData={selectedMarca}
       />
 
-      {/* Anotacion Modal */}
-      {viewingAnotacion && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">Anotación</h3>
-              <button
-                onClick={() => setViewingAnotacion(null)}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none"
-              >
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="px-6 py-4">
-              <div className="whitespace-pre-wrap break-words text-gray-700">
-                {viewingAnotacion.text}
-              </div>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
-              <button
-                onClick={() => {
-                  handleDeleteAnotacion(viewingAnotacion.marcaId, viewingAnotacion.index);
-                  setViewingAnotacion(null);
-                }}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-              >
-                Eliminar
-              </button>
-              <button
-                onClick={() => setViewingAnotacion(null)}
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ViewTextModal
+        isOpen={viewTextModal.isOpen}
+        onClose={() => setViewTextModal({ isOpen: false, title: '', content: '' })}
+        title={viewTextModal.title}
+        content={viewTextModal.content}
+      />
 
       {selectedOposicion && (
         <OposicionModal

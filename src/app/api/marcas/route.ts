@@ -3,45 +3,46 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { sql } from '@vercel/postgres';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    const result = await sql`
-      SELECT * FROM marcas 
+    const marcas = await sql`
+      SELECT 
+        id,
+        marca,
+        acta,
+        resolucion,
+        renovar,
+        vencimiento,
+        titular_nombre as "titular.fullName",
+        titular_email as "titular.email",
+        titular_telefono as "titular.phone",
+        anotaciones as anotacion,
+        oposicion,
+        tipo_marca as "tipoMarca",
+        clases,
+        created_at as "createdAt",
+        updated_at as "updatedAt"
+      FROM marcas 
       WHERE user_email = ${session.user.email}
-      ORDER BY renovar ASC
+      ORDER BY created_at DESC
     `;
 
-    // Transform the results to match the frontend structure
-    const transformedResults = result.rows.map(row => ({
-      id: row.id,
-      marca: row.marca,
-      acta: row.acta,
-      resolucion: row.resolucion,
-      renovar: row.renovar,
-      vencimiento: row.vencimiento,
-      titular: {
-        fullName: row.titular_nombre,
-        email: row.titular_email,
-        phone: row.titular_telefono
-      },
-      anotaciones: Array.isArray(row.anotaciones) ? row.anotaciones : [],
-      oposicion: Array.isArray(row.oposicion) ? row.oposicion : [],
-      user_email: row.user_email,
-      created_at: row.created_at,
-      updated_at: row.updated_at
+    const formattedMarcas = marcas.rows.map(marca => ({
+      ...marca,
+      anotacion: marca.anotacion?.map((text: string) => ({ id: Math.random().toString(36).substr(2, 9), text })) || [],
+      oposicion: Array.isArray(marca.oposicion) ? marca.oposicion : [],
+      clases: Array.isArray(marca.clases) ? marca.clases : []
     }));
 
-    return NextResponse.json(transformedResults);
+    return NextResponse.json(formattedMarcas);
   } catch (error) {
     console.error('Error fetching marcas:', error);
-    const message = error instanceof Error ? error.message : 'Error interno del servidor';
-    return NextResponse.json({ message }, { status: 500 });
+    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
@@ -89,52 +90,33 @@ export async function DELETE(request: Request) {
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ message: 'ID no proporcionado' }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const {
-      marca,
-      acta,
-      resolucion,
-      renovar,
-      vencimiento,
+    const { 
+      id,
+      marca, 
+      acta, 
+      resolucion, 
+      renovar, 
+      vencimiento, 
       titular,
-      anotaciones = [],
-      oposicion = []
-    } = body;
+      anotacion = [],
+      oposicion = [],
+      clases = [],
+      tipoMarca
+    } = await request.json();
 
-    // Validate required fields
-    if (!marca || !acta || !resolucion || !renovar || !vencimiento || !titular.fullName || !titular.email || !titular.phone) {
-      return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
-    }
-
-    // Validate marca length
-    if (marca.length > 20) {
-      return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
-    }
-
-    // Validate acta and resolucion format (only numbers up to 8 digits)
-    if (!/^\d{1,8}$/.test(acta)) {
-      return NextResponse.json({ message: 'El acta debe ser un número de hasta 8 dígitos' }, { status: 400 });
-    }
-    if (!/^\d{1,8}$/.test(resolucion)) {
-      return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
-    }
-
-    // Ensure arrays are properly initialized
-    const cleanedAnotaciones = Array.isArray(anotaciones) 
-      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
+    // Clean and validate anotaciones
+    const cleanedAnotaciones = Array.isArray(anotacion) 
+      ? anotacion.map(note => {
+          if (typeof note === 'string') return note.trim();
+          return note.text.trim();
+        }).filter(note => note !== '')
       : [];
+
+    // Clean and validate oposiciones
     const cleanedOposicion = Array.isArray(oposicion) 
       ? oposicion.map(op => {
           if (typeof op === 'string') {
@@ -152,6 +134,7 @@ export async function PUT(request: Request) {
     const oposicionJsonString = `[${cleanedOposicion.map(op => 
       JSON.stringify({ text: op.text, completed: op.completed })
     ).join(',')}]`;
+    const clasesArray = `{${clases.join(',')}}`;
 
     // Update the marca
     await sql`
@@ -167,6 +150,8 @@ export async function PUT(request: Request) {
         titular_telefono = ${titular.phone},
         anotaciones = ${anotacionesArray}::text[],
         oposicion = ${oposicionJsonString}::jsonb,
+        tipo_marca = ${tipoMarca},
+        clases = ${clasesArray}::integer[],
         updated_at = NOW()
       WHERE id = ${id} AND user_email = ${session.user.email}
     `;
@@ -182,45 +167,32 @@ export async function PUT(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const {
-      marca,
-      acta,
-      resolucion,
-      renovar,
-      vencimiento,
+    const { 
+      marca, 
+      acta, 
+      resolucion, 
+      renovar, 
+      vencimiento, 
       titular,
-      anotaciones = [],
-      oposicion = []
-    } = body;
+      anotacion = [],
+      oposicion = [],
+      clases = [],
+      tipoMarca
+    } = await request.json();
 
-    // Validate required fields
-    if (!marca || !acta || !resolucion || !renovar || !vencimiento || !titular.fullName || !titular.email || !titular.phone) {
-      return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
-    }
-
-    // Validate marca length
-    if (marca.length > 20) {
-      return NextResponse.json({ message: 'La marca no puede tener más de 20 caracteres' }, { status: 400 });
-    }
-
-    // Validate acta and resolucion format (only numbers up to 8 digits)
-    if (!/^\d{1,8}$/.test(acta)) {
-      return NextResponse.json({ message: 'El acta debe ser un número de hasta 8 dígitos' }, { status: 400 });
-    }
-    if (!/^\d{1,8}$/.test(resolucion)) {
-      return NextResponse.json({ message: 'La resolución debe ser un número de hasta 8 dígitos' }, { status: 400 });
-    }
-
-    // Ensure arrays are properly initialized
-    const cleanedAnotaciones = Array.isArray(anotaciones) 
-      ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
+    // Clean and validate anotaciones
+    const cleanedAnotaciones = Array.isArray(anotacion) 
+      ? anotacion.map(note => {
+          if (typeof note === 'string') return note.trim();
+          return note.text.trim();
+        }).filter(note => note !== '')
       : [];
+
+    // Clean and validate oposiciones
     const cleanedOposicion = Array.isArray(oposicion) 
       ? oposicion.map(op => {
           if (typeof op === 'string') {
@@ -238,6 +210,7 @@ export async function POST(request: Request) {
     const oposicionJsonString = `[${cleanedOposicion.map(op => 
       JSON.stringify({ text: op.text, completed: op.completed })
     ).join(',')}]`;
+    const clasesArray = `{${clases.join(',')}}`;
 
     // Insert the new marca
     const result = await sql`
@@ -252,6 +225,8 @@ export async function POST(request: Request) {
         titular_telefono,
         anotaciones,
         oposicion,
+        tipo_marca,
+        clases,
         user_email
       ) VALUES (
         ${marca},
@@ -264,6 +239,8 @@ export async function POST(request: Request) {
         ${titular.phone},
         ${anotacionesArray}::text[],
         ${oposicionJsonString}::jsonb,
+        ${tipoMarca},
+        ${clasesArray}::integer[],
         ${session.user.email}
       )
       RETURNING id
