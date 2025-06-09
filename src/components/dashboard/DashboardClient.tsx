@@ -13,6 +13,8 @@ export default function DashboardClient() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
+  const [editingAnotacionMarcaId, setEditingAnotacionMarcaId] = useState<string | null>(null);
+  const [newAnotacion, setNewAnotacion] = useState('');
   const timeRangeRef = useRef<HTMLDivElement>(null);
 
   const timeRangeOptions = [
@@ -149,6 +151,66 @@ export default function DashboardClient() {
     setIsTimeRangeOpen(false);
   };
 
+  const handleAddAnotacion = async (marcaId: string) => {
+    if (!newAnotacion.trim()) return;
+
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const updatedAnotaciones = [...(marca.anotaciones || []), newAnotacion.trim()];
+      
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          anotaciones: updatedAnotaciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar anotaciones');
+
+      setNewAnotacion('');
+      setEditingAnotacionMarcaId(null);
+      await fetchMarcas(); // Refresh the data
+      toast.success('Anotación agregada exitosamente');
+    } catch (error) {
+      console.error('Error adding anotacion:', error);
+      toast.error('Error al agregar la anotación');
+    }
+  };
+
+  const handleDeleteAnotacion = async (marcaId: string, anotacionIndex: number) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const updatedAnotaciones = marca.anotaciones.filter((_, index) => index !== anotacionIndex);
+      
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          anotaciones: updatedAnotaciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar anotación');
+
+      await fetchMarcas(); // Refresh the data
+      toast.success('Anotación eliminada exitosamente');
+    } catch (error) {
+      console.error('Error deleting anotacion:', error);
+      toast.error('Error al eliminar la anotación');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -198,7 +260,13 @@ export default function DashboardClient() {
                       </svg>
                     </button>
                     {isTimeRangeOpen && (
-                      <div ref={timeRangeRef} className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 transform transition-all duration-200 ease-in-out">
+                      <div 
+                        ref={timeRangeRef} 
+                        className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 
+                          transform origin-top-right transition-all duration-200 ease-out
+                          animate-in fade-in slide-in-from-top-2 zoom-in-95
+                          data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:slide-out-to-top-2 data-[state=closed]:zoom-out-95"
+                      >
                         <div className="py-1" role="menu" aria-orientation="vertical">
                           {timeRangeOptions.map((option) => (
                             <button
@@ -469,15 +537,74 @@ export default function DashboardClient() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {marca.anotaciones && marca.anotaciones.length > 0 ? (
-                              <ul className="list-disc list-inside">
-                                {marca.anotaciones.map((anotacion, index) => (
-                                  <li key={index} className="truncate max-w-xs">{anotacion}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <span className="text-gray-400">Sin anotaciones</span>
-                            )}
+                            <div className="space-y-2">
+                              {marca.anotaciones && marca.anotaciones.length > 0 ? (
+                                <ul className="space-y-2">
+                                  {marca.anotaciones.map((anotacion, index) => (
+                                    <li key={index} className="flex items-center justify-between group">
+                                      <span className="truncate max-w-xs">{anotacion}</span>
+                                      <button
+                                        onClick={() => handleDeleteAnotacion(marca.id, index)}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full"
+                                        title="Eliminar anotación"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : null}
+                              
+                              {editingAnotacionMarcaId === marca.id ? (
+                                <div className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={newAnotacion}
+                                    onChange={(e) => setNewAnotacion(e.target.value)}
+                                    placeholder="Nueva anotación..."
+                                    className="flex-1 text-sm border-0 border-b border-gray-300 focus:ring-0 focus:border-indigo-500"
+                                    onKeyPress={(e) => {
+                                      if (e.key === 'Enter') {
+                                        handleAddAnotacion(marca.id);
+                                      }
+                                    }}
+                                  />
+                                  <button
+                                    onClick={() => handleAddAnotacion(marca.id)}
+                                    className="p-1 text-green-600 hover:bg-green-50 rounded-full transition-colors duration-200"
+                                    title="Guardar anotación"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingAnotacionMarcaId(null);
+                                      setNewAnotacion('');
+                                    }}
+                                    className="p-1 text-gray-600 hover:bg-gray-50 rounded-full transition-colors duration-200"
+                                    title="Cancelar"
+                                  >
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setEditingAnotacionMarcaId(marca.id)}
+                                  className="text-indigo-600 hover:text-indigo-800 text-sm flex items-center space-x-1"
+                                >
+                                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                  </svg>
+                                  <span>{marca.anotaciones?.length ? 'Agregar otra' : 'Agregar anotación'}</span>
+                                </button>
+                              )}
+                            </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
                             {marca.oposicion && marca.oposicion.length > 0 ? (
