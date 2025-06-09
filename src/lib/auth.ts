@@ -1,6 +1,5 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaClient } from '@prisma/client';
 import { compare } from 'bcryptjs';
 import { sql } from '@vercel/postgres';
 
@@ -25,8 +24,6 @@ declare module 'next-auth/jwt' {
     email: string;
   }
 }
-
-const prisma = new PrismaClient();
 
 export const authOptions: NextAuthOptions = {
   pages: {
