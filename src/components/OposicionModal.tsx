@@ -19,6 +19,7 @@ export default function OposicionModal({ isOpen, onClose, onSubmit, initialData 
     onSubmit({
       text,
       date: new Date().toISOString(),
+      completed: false
     });
     onClose();
   };
