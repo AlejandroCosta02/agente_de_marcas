@@ -61,7 +61,11 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         resolucion: initialData.resolucion,
         renovar: initialData.renovar ? new Date(initialData.renovar).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         vencimiento: initialData.vencimiento ? new Date(initialData.vencimiento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        titular: initialData.titular || { fullName: '', email: '', phone: '' },
+        titular: {
+          fullName: initialData.titular?.fullName || '',
+          email: initialData.titular?.email || '',
+          phone: initialData.titular?.phone || ''
+        },
         oposicion: initialData.oposicion || [],
         anotacion: initialData.anotacion || [],
         clases: initialData.clases || [],

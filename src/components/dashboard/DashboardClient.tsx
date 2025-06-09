@@ -87,7 +87,15 @@ export default function DashboardClient() {
   }, [fetchMarcas]);
 
   const handleEdit = (marca: Marca) => {
-    setSelectedMarca(marca);
+    console.log('Editing marca:', marca);
+    setSelectedMarca({
+      ...marca,
+      titular: {
+        fullName: marca.titular?.fullName || '',
+        email: marca.titular?.email || '',
+        phone: marca.titular?.phone || ''
+      }
+    });
     setIsModalOpen(true);
   };
 
@@ -465,7 +473,7 @@ export default function DashboardClient() {
                                 <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Marca</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acta</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Resolución</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Titular</th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombre Completo</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tipo</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clases</th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fechas</th>

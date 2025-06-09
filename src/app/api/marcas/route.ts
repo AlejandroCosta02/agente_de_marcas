@@ -94,9 +94,9 @@ export async function GET() {
         return {
           ...marca,
           titular: {
-            fullName: marca.titular_nombre,
-            email: marca.titular_email,
-            phone: marca.titular_telefono
+            fullName: marca.titular_nombre || '',
+            email: marca.titular_email || '',
+            phone: marca.titular_telefono || ''
           },
           anotacion: Array.isArray(marca.anotacion) 
             ? marca.anotacion.map((text: string) => ({ 
@@ -172,23 +172,27 @@ export async function DELETE(request: Request) {
 export async function PUT(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    const { 
-      id,
-      marca, 
-      acta, 
-      resolucion, 
-      renovar, 
-      vencimiento, 
-      titular,
-      anotacion = [],
-      oposicion = [],
-      clases = [],
-      tipoMarca
-    } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ message: 'ID no proporcionado' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { marca, acta, resolucion, renovar, vencimiento, titular, anotaciones, oposicion, tipoMarca, clases } = body;
+
+    // Validate required fields
+    if (!marca || !acta || !resolucion || !titular || !titular.fullName || !titular.email || !titular.phone) {
+      return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
+    }
+
+    // Clean arrays
+    const cleanedAnotaciones = Array.isArray(anotaciones) ? anotaciones : [];
+    const cleanedOposicion = Array.isArray(oposicion) ? oposicion : [];
 
     const pool = createPool();
 
@@ -204,27 +208,6 @@ export async function PUT(request: Request) {
     if (verifyResult.rows[0].user_email !== session.user.email) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
-
-    // Clean and validate anotaciones
-    const cleanedAnotaciones = Array.isArray(anotacion) 
-      ? anotacion.map(note => {
-          if (typeof note === 'string') return note.trim();
-          return note.text.trim();
-        }).filter(note => note !== '')
-      : [];
-
-    // Clean and validate oposiciones
-    const cleanedOposicion = Array.isArray(oposicion) 
-      ? oposicion.map(op => {
-          if (typeof op === 'string') {
-            return { text: op.trim(), completed: false };
-          }
-          return {
-            text: op.text.trim(),
-            completed: !!op.completed
-          };
-        }).filter(op => op.text !== '')
-      : [];
 
     // Update the marca
     await pool.query(`
@@ -244,6 +227,7 @@ export async function PUT(request: Request) {
         clases = $12::integer[],
         updated_at = NOW()
       WHERE id = $13 AND user_email = $14
+      RETURNING *
     `, [
       marca,
       parseInt(acta, 10),
