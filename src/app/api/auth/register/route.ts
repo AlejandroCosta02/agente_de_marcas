@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
-import { neon } from '@neondatabase/serverless';
+import { createPool } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 
 if (!process.env.POSTGRES_URL) {
   throw new Error('Please define the POSTGRES_URL environment variable');
 }
-
-const sql = neon(process.env.POSTGRES_URL);
 
 export async function POST(req: Request) {
   try {
@@ -19,12 +17,15 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if user already exists
-    const existingUsers = await sql`
-      SELECT * FROM users WHERE email = ${email}
-    `;
+    const pool = createPool();
 
-    if (existingUsers.length > 0) {
+    // Check if user already exists
+    const existingUsers = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (existingUsers.rows.length > 0) {
       return NextResponse.json(
         { message: 'El usuario ya existe' },
         { status: 400 }
@@ -35,11 +36,12 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create user
-    const [user] = await sql`
-      INSERT INTO users (name, email, password)
-      VALUES (${name}, ${email}, ${hashedPassword})
-      RETURNING id, name, email
-    `;
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, name, email',
+      [name, email, hashedPassword]
+    );
+
+    const user = result.rows[0];
 
     return NextResponse.json(
       { message: 'Usuario registrado exitosamente', user },

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 
 export async function GET() {
   try {
@@ -19,10 +19,12 @@ export async function GET() {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
+    const pool = createPool();
+
     // Test database connection
     try {
       console.log('Testing database connection...');
-      await sql`SELECT 1`;
+      await pool.query('SELECT 1');
       console.log('Database connection successful');
     } catch (dbError) {
       console.error('Database connection error:', {
@@ -35,7 +37,7 @@ export async function GET() {
 
     // Check if required columns exist
     try {
-      const columnsExist = await sql`
+      const columnsExist = await pool.query(`
         SELECT EXISTS (
           SELECT 1 
           FROM information_schema.columns 
@@ -48,7 +50,7 @@ export async function GET() {
           WHERE table_name = 'marcas' 
           AND column_name = 'clases'
         ) as has_clases;
-      `;
+      `);
 
       if (!columnsExist.rows[0].has_tipo_marca || !columnsExist.rows[0].has_clases) {
         return NextResponse.json({ 
@@ -62,7 +64,7 @@ export async function GET() {
     }
 
     console.log('Fetching marcas for user:', session.user.email);
-    const marcas = await sql`
+    const result = await pool.query(`
       SELECT 
         m.id,
         m.marca,
@@ -80,13 +82,13 @@ export async function GET() {
         m.created_at as "createdAt",
         m.updated_at as "updatedAt"
       FROM marcas m
-      WHERE m.user_email = ${session.user.email}
+      WHERE m.user_email = $1
       ORDER BY m.created_at DESC
-    `;
+    `, [session.user.email]);
     
-    console.log('Raw marcas data:', JSON.stringify(marcas.rows[0], null, 2));
+    console.log('Raw marcas data:', JSON.stringify(result.rows[0], null, 2));
 
-    const formattedMarcas = marcas.rows.map(marca => {
+    const formattedMarcas = result.rows.map(marca => {
       try {
         console.log('Processing marca:', marca.id);
         return {
@@ -104,7 +106,7 @@ export async function GET() {
               ? Object.values(marca.oposicion)
               : [],
           clases: Array.isArray(marca.clases) 
-            ? marca.clases.map(Number).filter(n => !isNaN(n))
+            ? marca.clases.map((n: number) => Number(n)).filter((n: number) => !isNaN(n))
             : [],
           tipoMarca: marca.tipoMarca || 'denominativa'
         };
@@ -121,53 +123,38 @@ export async function GET() {
     console.log('Successfully formatted marcas data');
     return NextResponse.json(formattedMarcas);
   } catch (error) {
-    console.error('Detailed error in GET /api/marcas:', {
-      error: error,
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
-      type: error instanceof Error ? error.constructor.name : typeof error
-    });
-    
-    return NextResponse.json({ 
-      message: 'Error interno del servidor',
-      details: error instanceof Error ? error.message : 'Error desconocido',
-      type: error instanceof Error ? error.constructor.name : typeof error
-    }, { status: 500 });
+    console.error('Error fetching marcas:', error);
+    return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
-
-    if (!session || !session.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ message: 'ID de marca no proporcionado' }, { status: 400 });
-    }
+    const { id } = await request.json();
+    const pool = createPool();
 
     // First verify the marca belongs to the user
-    const verifyResult = await sql`
-      SELECT user_email FROM marcas WHERE id = ${id}
-    `;
+    const verifyResult = await pool.query(`
+      SELECT user_email FROM marcas WHERE id = $1
+    `, [id]);
 
     if (verifyResult.rows.length === 0) {
       return NextResponse.json({ message: 'Marca no encontrada' }, { status: 404 });
     }
 
     if (verifyResult.rows[0].user_email !== session.user.email) {
-      return NextResponse.json({ message: 'No autorizado para eliminar esta marca' }, { status: 403 });
+      return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
     // Delete the marca
-    await sql`
-      DELETE FROM marcas WHERE id = ${id} AND user_email = ${session.user.email}
-    `;
+    await pool.query(`
+      DELETE FROM marcas WHERE id = $1 AND user_email = $2
+    `, [id, session.user.email]);
 
     return NextResponse.json({ message: 'Marca eliminada exitosamente' });
   } catch (error) {
@@ -198,6 +185,21 @@ export async function PUT(request: Request) {
       tipoMarca
     } = await request.json();
 
+    const pool = createPool();
+
+    // First verify the marca belongs to the user
+    const verifyResult = await pool.query(`
+      SELECT user_email FROM marcas WHERE id = $1
+    `, [id]);
+
+    if (verifyResult.rows.length === 0) {
+      return NextResponse.json({ message: 'Marca no encontrada' }, { status: 404 });
+    }
+
+    if (verifyResult.rows[0].user_email !== session.user.email) {
+      return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
+    }
+
     // Clean and validate anotaciones
     const cleanedAnotaciones = Array.isArray(anotacion) 
       ? anotacion.map(note => {
@@ -219,32 +221,40 @@ export async function PUT(request: Request) {
         }).filter(op => op.text !== '')
       : [];
 
-    // Convert arrays to PostgreSQL format
-    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-    const oposicionJsonString = `[${cleanedOposicion.map(op => 
-      JSON.stringify({ text: op.text, completed: op.completed })
-    ).join(',')}]`;
-    const clasesArray = `{${clases.join(',')}}`;
-
     // Update the marca
-    await sql`
+    await pool.query(`
       UPDATE marcas 
       SET 
-        marca = ${marca},
-        acta = ${parseInt(acta, 10)},
-        resolucion = ${parseInt(resolucion, 10)},
-        renovar = ${renovar},
-        vencimiento = ${vencimiento},
-        titular_nombre = ${titular.fullName},
-        titular_email = ${titular.email},
-        titular_telefono = ${titular.phone},
-        anotaciones = ${anotacionesArray}::text[],
-        oposicion = ${oposicionJsonString}::jsonb,
-        tipo_marca = ${tipoMarca},
-        clases = ${clasesArray}::integer[],
+        marca = $1,
+        acta = $2,
+        resolucion = $3,
+        renovar = $4,
+        vencimiento = $5,
+        titular_nombre = $6,
+        titular_email = $7,
+        titular_telefono = $8,
+        anotaciones = $9::text[],
+        oposicion = $10::jsonb,
+        tipo_marca = $11,
+        clases = $12::integer[],
         updated_at = NOW()
-      WHERE id = ${id} AND user_email = ${session.user.email}
-    `;
+      WHERE id = $13 AND user_email = $14
+    `, [
+      marca,
+      parseInt(acta, 10),
+      parseInt(resolucion, 10),
+      renovar,
+      vencimiento,
+      titular.fullName,
+      titular.email,
+      titular.phone,
+      cleanedAnotaciones,
+      JSON.stringify(cleanedOposicion),
+      tipoMarca,
+      clases,
+      id,
+      session.user.email
+    ]);
 
     return NextResponse.json({ message: 'Marca actualizada exitosamente' });
   } catch (error) {
@@ -295,15 +305,10 @@ export async function POST(request: Request) {
         }).filter(op => op.text !== '')
       : [];
 
-    // Convert arrays to PostgreSQL format
-    const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-    const oposicionJsonString = `[${cleanedOposicion.map(op => 
-      JSON.stringify({ text: op.text, completed: op.completed })
-    ).join(',')}]`;
-    const clasesArray = `{${clases.join(',')}}`;
+    const pool = createPool();
 
     // Insert the new marca
-    const result = await sql`
+    const result = await pool.query(`
       INSERT INTO marcas (
         marca,
         acta,
@@ -319,22 +324,24 @@ export async function POST(request: Request) {
         clases,
         user_email
       ) VALUES (
-        ${marca},
-        ${parseInt(acta, 10)},
-        ${parseInt(resolucion, 10)},
-        ${renovar},
-        ${vencimiento},
-        ${titular.fullName},
-        ${titular.email},
-        ${titular.phone},
-        ${anotacionesArray}::text[],
-        ${oposicionJsonString}::jsonb,
-        ${tipoMarca},
-        ${clasesArray}::integer[],
-        ${session.user.email}
+        $1, $2, $3, $4, $5, $6, $7, $8, $9::text[], $10::jsonb, $11, $12::integer[], $13
       )
       RETURNING id
-    `;
+    `, [
+      marca,
+      parseInt(acta, 10),
+      parseInt(resolucion, 10),
+      renovar,
+      vencimiento,
+      titular.fullName,
+      titular.email,
+      titular.phone,
+      cleanedAnotaciones,
+      JSON.stringify(cleanedOposicion),
+      tipoMarca,
+      clases,
+      session.user.email
+    ]);
 
     return NextResponse.json({ 
       message: 'Marca creada exitosamente',

@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 
 async function runUsersMigration() {
   try {
-    await sql`
+    const pool = createPool();
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
         email VARCHAR(255) UNIQUE NOT NULL,
@@ -14,7 +15,7 @@ async function runUsersMigration() {
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
-    `;
+    `);
     console.log('Users table created or verified');
     return true;
   } catch (error) {
@@ -25,18 +26,20 @@ async function runUsersMigration() {
 
 async function runMarcasMigration() {
   try {
+    const pool = createPool();
+    
     // First check if the table exists
-    const tableExists = await sql`
+    const tableExists = await pool.query(`
       SELECT EXISTS (
         SELECT 1 
         FROM information_schema.tables 
         WHERE table_name = 'marcas'
       );
-    `;
+    `);
 
     if (!tableExists.rows[0].exists) {
       // Create the table with all columns if it doesn't exist
-      await sql`
+      await pool.query(`
         CREATE TABLE marcas (
           id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
           marca VARCHAR(20) NOT NULL,
@@ -55,7 +58,7 @@ async function runMarcasMigration() {
           created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
-      `;
+      `);
       console.log('Created marcas table with all columns');
       return true;
     }
@@ -64,51 +67,51 @@ async function runMarcasMigration() {
     console.log('Checking for missing columns...');
 
     // Check for tipo_marca column
-    const tipoMarcaExists = await sql`
+    const tipoMarcaExists = await pool.query(`
       SELECT EXISTS (
         SELECT 1 
         FROM information_schema.columns 
         WHERE table_name = 'marcas' 
         AND column_name = 'tipo_marca'
       );
-    `;
+    `);
 
     if (!tipoMarcaExists.rows[0].exists) {
-      await sql`
+      await pool.query(`
         ALTER TABLE marcas 
         ADD COLUMN tipo_marca VARCHAR(255) DEFAULT 'denominativa';
-      `;
+      `);
       console.log('Added tipo_marca column');
     }
 
     // Check for clases column
-    const clasesExists = await sql`
+    const clasesExists = await pool.query(`
       SELECT EXISTS (
         SELECT 1 
         FROM information_schema.columns 
         WHERE table_name = 'marcas' 
         AND column_name = 'clases'
       );
-    `;
+    `);
 
     if (!clasesExists.rows[0].exists) {
-      await sql`
+      await pool.query(`
         ALTER TABLE marcas 
         ADD COLUMN clases INTEGER[] DEFAULT ARRAY[]::INTEGER[];
-      `;
+      `);
       console.log('Added clases column');
     }
 
     // Check oposicion column type
-    const oposicionType = await sql`
+    const oposicionType = await pool.query(`
       SELECT data_type 
       FROM information_schema.columns 
       WHERE table_name = 'marcas' 
       AND column_name = 'oposicion';
-    `;
+    `);
 
     if (oposicionType.rows[0]?.data_type !== 'jsonb') {
-      await sql`
+      await pool.query(`
         ALTER TABLE marcas 
         ALTER COLUMN oposicion TYPE JSONB 
         USING CASE 
@@ -116,7 +119,7 @@ async function runMarcasMigration() {
           WHEN oposicion = ARRAY[]::TEXT[] THEN '[]'::jsonb
           ELSE json_build_array(json_build_object('text', oposicion[1], 'completed', false))::jsonb
         END;
-      `;
+      `);
       console.log('Updated oposicion column to JSONB');
     }
 

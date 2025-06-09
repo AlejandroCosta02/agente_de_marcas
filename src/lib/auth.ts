@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 
 declare module 'next-auth' {
   interface Session {
@@ -44,11 +44,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const result = await sql`
-            SELECT id, email, name, password
-            FROM users
-            WHERE email = ${credentials.email}
-          `;
+          const pool = createPool();
+          const result = await pool.query(
+            'SELECT id, email, name, password FROM users WHERE email = $1',
+            [credentials.email]
+          );
 
           const user = result.rows[0];
 
