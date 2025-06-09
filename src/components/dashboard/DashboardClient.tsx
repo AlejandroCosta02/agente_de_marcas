@@ -15,7 +15,7 @@ export default function DashboardClient() {
   const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
   const [editingAnotacionMarcaId, setEditingAnotacionMarcaId] = useState<string | null>(null);
   const [newAnotacion, setNewAnotacion] = useState('');
-  const [expandedAnotaciones, setExpandedAnotaciones] = useState<{[key: string]: boolean}>({});
+  const [viewingAnotacion, setViewingAnotacion] = useState<{text: string; marcaId: string; index: number} | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
 
   const timeRangeOptions = [
@@ -210,14 +210,6 @@ export default function DashboardClient() {
       console.error('Error deleting anotacion:', error);
       toast.error('Error al eliminar la anotación');
     }
-  };
-
-  const toggleAnotacionExpand = (marcaId: string, index: number) => {
-    const key = `${marcaId}-${index}`;
-    setExpandedAnotaciones(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
   };
 
   return (
@@ -549,44 +541,26 @@ export default function DashboardClient() {
                             <div className="space-y-2">
                               {marca.anotaciones && marca.anotaciones.length > 0 ? (
                                 <ul className="space-y-2">
-                                  {marca.anotaciones.map((anotacion, index) => {
-                                    const isExpanded = expandedAnotaciones[`${marca.id}-${index}`];
-                                    const isLongText = anotacion.length > 50;
-                                    return (
-                                      <li key={index} className="group">
-                                        <div className="flex items-center justify-between">
-                                          <div className="flex-1 mr-2">
-                                            <div 
-                                              onClick={() => isLongText && toggleAnotacionExpand(marca.id, index)}
-                                              className={`${isLongText ? 'cursor-pointer hover:text-gray-900' : ''} ${
-                                                isExpanded ? 'whitespace-pre-wrap break-words' : 'truncate'
-                                              }`}
-                                              title={isLongText && !isExpanded ? "Click para expandir" : ""}
-                                            >
-                                              {isExpanded ? anotacion : (isLongText ? `${anotacion.slice(0, 50)}...` : anotacion)}
-                                            </div>
-                                            {isLongText && (
-                                              <button
-                                                onClick={() => toggleAnotacionExpand(marca.id, index)}
-                                                className="text-xs text-indigo-600 hover:text-indigo-800 mt-1"
-                                              >
-                                                {isExpanded ? 'Ver menos' : 'Ver más'}
-                                              </button>
-                                            )}
-                                          </div>
-                                          <button
-                                            onClick={() => handleDeleteAnotacion(marca.id, index)}
-                                            className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full flex-shrink-0"
-                                            title="Eliminar anotación"
-                                          >
-                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                          </button>
-                                        </div>
-                                      </li>
-                                    );
-                                  })}
+                                  {marca.anotaciones.map((anotacion, index) => (
+                                    <li key={index} className="flex items-center justify-between group">
+                                      <div 
+                                        onClick={() => setViewingAnotacion({ text: anotacion, marcaId: marca.id, index })}
+                                        className="truncate cursor-pointer hover:text-gray-900 flex-1 mr-2"
+                                        title="Click para ver completo"
+                                      >
+                                        {anotacion.length > 50 ? `${anotacion.slice(0, 50)}...` : anotacion}
+                                      </div>
+                                      <button
+                                        onClick={() => handleDeleteAnotacion(marca.id, index)}
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-red-50 text-red-600 rounded-full flex-shrink-0"
+                                        title="Eliminar anotación"
+                                      >
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </li>
+                                  ))}
                                 </ul>
                               ) : null}
                               
@@ -722,6 +696,47 @@ export default function DashboardClient() {
         onSubmit={handleSubmit}
         initialData={selectedMarca}
       />
+
+      {/* Anotacion Modal */}
+      {viewingAnotacion && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Anotación</h3>
+              <button
+                onClick={() => setViewingAnotacion(null)}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none"
+              >
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="px-6 py-4">
+              <div className="whitespace-pre-wrap break-words text-gray-700">
+                {viewingAnotacion.text}
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  handleDeleteAnotacion(viewingAnotacion.marcaId, viewingAnotacion.index);
+                  setViewingAnotacion(null);
+                }}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Eliminar
+              </button>
+              <button
+                onClick={() => setViewingAnotacion(null)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
