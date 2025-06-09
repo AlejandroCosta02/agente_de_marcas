@@ -212,6 +212,91 @@ export default function DashboardClient() {
     }
   };
 
+  const handleToggleOposicion = async (marcaId: string, index: number) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const updatedOposiciones = [...marca.oposicion];
+      updatedOposiciones[index] = {
+        ...updatedOposiciones[index],
+        completed: !updatedOposiciones[index].completed
+      };
+
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          oposicion: updatedOposiciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al actualizar oposición');
+
+      // Update local state
+      setMarcas((prevMarcas) =>
+        prevMarcas.map((m) => {
+          if (m.id === marcaId) {
+            return {
+              ...m,
+              oposicion: updatedOposiciones
+            };
+          }
+          return m;
+        })
+      );
+
+      toast.success('Estado de oposición actualizado');
+    } catch (error) {
+      console.error('Error updating oposicion:', error);
+      toast.error('Error al actualizar la oposición');
+    }
+  };
+
+  const handleAddOposicion = async (marcaId: string, text: string) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const newOposicion = { text, completed: false };
+      const updatedOposiciones = [...marca.oposicion, newOposicion];
+
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          oposicion: updatedOposiciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al agregar oposición');
+
+      // Update local state
+      setMarcas((prevMarcas) =>
+        prevMarcas.map((m) => {
+          if (m.id === marcaId) {
+            return {
+              ...m,
+              oposicion: updatedOposiciones
+            };
+          }
+          return m;
+        })
+      );
+
+      toast.success('Oposición agregada exitosamente');
+    } catch (error) {
+      console.error('Error adding oposicion:', error);
+      toast.error('Error al agregar la oposición');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -621,15 +706,51 @@ export default function DashboardClient() {
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">
-                            {marca.oposicion && marca.oposicion.length > 0 ? (
-                              <ul className="list-disc list-inside">
-                                {marca.oposicion.map((op, index) => (
-                                  <li key={index} className="truncate max-w-xs">{op}</li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <span className="text-gray-400">Sin oposiciones</span>
-                            )}
+                            <div className="space-y-2">
+                              {marca.oposicion && marca.oposicion.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {marca.oposicion.map((op, index) => (
+                                    <li key={index} className="group">
+                                      <div className="flex items-center justify-between pb-1">
+                                        <div 
+                                          className={`truncate flex-1 mr-2 ${op.completed ? 'line-through text-gray-400' : ''}`}
+                                          title={op.text}
+                                        >
+                                          {op.text.length > 20 ? `${op.text.slice(0, 20)}...` : op.text}
+                                        </div>
+                                        <button
+                                          onClick={() => handleToggleOposicion(marca.id, index)}
+                                          className={`transition-all duration-200 px-2 py-1 rounded-md text-sm
+                                            ${op.completed 
+                                              ? 'bg-green-50 text-green-600 hover:bg-green-100' 
+                                              : 'bg-gray-50 text-gray-600 hover:bg-gray-100'}`}
+                                        >
+                                          {op.completed ? 'Realizado' : 'Marcar'}
+                                        </button>
+                                      </div>
+                                      {index < marca.oposicion.length - 1 && (
+                                        <div className="border-b border-gray-200 my-1"></div>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : null}
+                              
+                              <button
+                                onClick={() => {
+                                  const text = prompt('Nueva oposición:');
+                                  if (text?.trim()) {
+                                    handleAddOposicion(marca.id, text.trim());
+                                  }
+                                }}
+                                className="text-indigo-600 hover:text-indigo-800 text-sm flex items-center space-x-1"
+                              >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span>{marca.oposicion?.length ? 'Agregar otra' : 'Agregar oposición'}</span>
+                              </button>
+                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex items-center justify-end space-x-3">

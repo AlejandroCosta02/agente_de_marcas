@@ -4,17 +4,26 @@ export interface Titular {
   phone: string;
 }
 
+export interface Oposicion {
+  text: string;
+  completed: boolean;
+}
+
 export interface Marca {
   id: string;
+  nombre: string;
   marca: string;
-  acta: number;
-  resolucion: number;
+  acta: string;
+  clase: string;
+  estado: string;
+  resolucion: string;
   renovar: string;
   vencimiento: string;
-  titular: Titular;
   anotaciones: string[];
-  oposicion: string[];
+  oposicion: Oposicion[];
   user_email: string;
+  titular: Titular;
+  titularId: string;
   created_at: string;
   updated_at: string;
 }

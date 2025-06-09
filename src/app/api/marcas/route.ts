@@ -136,12 +136,22 @@ export async function PUT(request: Request) {
       ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
       : [];
     const cleanedOposicion = Array.isArray(oposicion) 
-      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
+      ? oposicion.map(op => {
+          if (typeof op === 'string') {
+            return { text: op.trim(), completed: false };
+          }
+          return {
+            text: op.text.trim(),
+            completed: !!op.completed
+          };
+        }).filter(op => op.text !== '')
       : [];
 
     // Convert arrays to PostgreSQL format
     const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
+    const oposicionJsonString = `[${cleanedOposicion.map(op => 
+      JSON.stringify({ text: op.text, completed: op.completed })
+    ).join(',')}]`;
 
     // Update the marca
     await sql`
@@ -156,7 +166,7 @@ export async function PUT(request: Request) {
         titular_email = ${titular.email},
         titular_telefono = ${titular.phone},
         anotaciones = ${anotacionesArray}::text[],
-        oposicion = ${oposicionArray}::text[],
+        oposicion = ${oposicionJsonString}::jsonb,
         updated_at = NOW()
       WHERE id = ${id} AND user_email = ${session.user.email}
     `;
@@ -212,14 +222,24 @@ export async function POST(request: Request) {
       ? anotaciones.filter(note => note && note.trim() !== '').map(note => note.trim())
       : [];
     const cleanedOposicion = Array.isArray(oposicion) 
-      ? oposicion.filter(op => op && op.trim() !== '').map(op => op.trim())
+      ? oposicion.map(op => {
+          if (typeof op === 'string') {
+            return { text: op.trim(), completed: false };
+          }
+          return {
+            text: op.text.trim(),
+            completed: !!op.completed
+          };
+        }).filter(op => op.text !== '')
       : [];
 
     // Convert arrays to PostgreSQL format
     const anotacionesArray = `{${cleanedAnotaciones.map(note => `"${note.replace(/"/g, '\\"')}"`).join(',')}}`;
-    const oposicionArray = `{${cleanedOposicion.map(op => `"${op.replace(/"/g, '\\"')}"`).join(',')}}`;
+    const oposicionJsonString = `[${cleanedOposicion.map(op => 
+      JSON.stringify({ text: op.text, completed: op.completed })
+    ).join(',')}]`;
 
-    // Create the marca
+    // Insert the new marca
     const result = await sql`
       INSERT INTO marcas (
         marca,
@@ -243,33 +263,16 @@ export async function POST(request: Request) {
         ${titular.email},
         ${titular.phone},
         ${anotacionesArray}::text[],
-        ${oposicionArray}::text[],
+        ${oposicionJsonString}::jsonb,
         ${session.user.email}
       )
-      RETURNING *
+      RETURNING id
     `;
 
-    // Transform the response to match the frontend structure
-    const transformedResult = {
-      id: result.rows[0].id,
-      marca: result.rows[0].marca,
-      acta: result.rows[0].acta,
-      resolucion: result.rows[0].resolucion,
-      renovar: result.rows[0].renovar,
-      vencimiento: result.rows[0].vencimiento,
-      titular: {
-        fullName: result.rows[0].titular_nombre,
-        email: result.rows[0].titular_email,
-        phone: result.rows[0].titular_telefono
-      },
-      anotaciones: result.rows[0].anotaciones || [],
-      oposicion: result.rows[0].oposicion || [],
-      user_email: result.rows[0].user_email,
-      created_at: result.rows[0].created_at,
-      updated_at: result.rows[0].updated_at
-    };
-
-    return NextResponse.json(transformedResult);
+    return NextResponse.json({ 
+      message: 'Marca creada exitosamente',
+      id: result.rows[0].id
+    });
   } catch (error) {
     console.error('Error creating marca:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';

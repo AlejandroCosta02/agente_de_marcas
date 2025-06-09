@@ -7,9 +7,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Titular {
@@ -32,7 +31,7 @@ model Marca {
   renovar     DateTime
   vencimiento DateTime
   anotaciones String[]
-  oposicion   String[]
+  oposicion   Json[]
   user_email  String
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
