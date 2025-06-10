@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaCalendarPlus, FaPlus } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 
@@ -192,186 +192,73 @@ export default function DashboardClient() {
     }
   };
 
-  const handleAddAnotacion = async (marcaId: string, text: string) => {
+  const handleAddAnotacion = async (marca: Marca) => {
     try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
+      const text = prompt('Nueva anotación:');
+      if (!text?.trim()) return;
 
-      const newAnotacion = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: text.trim(),
-        date: new Date().toISOString()
-      };
-
-      const updatedAnotaciones = [...marca.anotacion, newAnotacion];
-
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/marcas/${marca.id}/anotaciones`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...marca,
-          anotacion: updatedAnotaciones,
-        }),
+        body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) throw new Error('Error al actualizar anotaciones');
-
-      setMarcas(prevMarcas =>
-        prevMarcas.map(m =>
-          m.id === marcaId
-            ? { ...m, anotacion: updatedAnotaciones }
-            : m
-        )
-      );
+      if (!response.ok) throw new Error('Error al agregar anotación');
 
       toast.success('Anotación agregada exitosamente');
+      fetchMarcas();
     } catch (error) {
       console.error('Error adding anotacion:', error);
-      toast.error('Error al agregar la anotación');
+      toast.error('Error al agregar anotación');
     }
   };
 
-  const handleDeleteAnotacion = async (marcaId: string, index: number) => {
+  const handleDelete = async (marca: Marca) => {
+    if (!window.confirm('¿Estás seguro de que deseas eliminar esta marca?')) return;
+
     try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
-
-      const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
-      
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...marca,
-          anotacion: updatedAnotaciones,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al eliminar anotación');
-
-      setMarcas(prevMarcas =>
-        prevMarcas.map(m =>
-          m.id === marcaId
-            ? { ...m, anotacion: updatedAnotaciones }
-            : m
-        )
-      );
-
-      toast.success('Anotación eliminada exitosamente');
-    } catch (error) {
-      console.error('Error deleting anotacion:', error);
-      toast.error('Error al eliminar la anotación');
-    }
-  };
-
-  const handleDelete = async (marcaId: string) => {
-    try {
-      const response = await fetch(`/api/marcas`, {
+      const response = await fetch(`/api/marcas/${marca.id}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ id: marcaId }),
       });
 
       if (!response.ok) throw new Error('Error al eliminar marca');
 
-      setMarcas(prevMarcas => prevMarcas.filter(m => m.id !== marcaId));
       toast.success('Marca eliminada exitosamente');
+      fetchMarcas();
     } catch (error) {
       console.error('Error deleting marca:', error);
       toast.error('Error al eliminar la marca');
     }
   };
 
-  const handleAddOposicion = async (marcaId: string, text: string) => {
+  const handleAddOposicion = async (marca: Marca) => {
     try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
+      const text = prompt('Nueva oposición:');
+      if (!text?.trim()) return;
 
-      const newOposicion: Oposicion = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: text.trim(),
-        date: new Date().toISOString(),
-        completed: false
-      };
-
-      const updatedOposiciones = [...marca.oposicion, newOposicion];
-
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
+      const response = await fetch(`/api/marcas/${marca.id}/oposiciones`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...marca,
-          oposicion: updatedOposiciones,
-        }),
+        body: JSON.stringify({ text }),
       });
 
       if (!response.ok) throw new Error('Error al agregar oposición');
 
-      setMarcas((prevMarcas) =>
-        prevMarcas.map((m) => {
-          if (m.id === marcaId) {
-            return {
-              ...m,
-              oposicion: updatedOposiciones
-            };
-          }
-          return m;
-        })
-      );
-
       toast.success('Oposición agregada exitosamente');
+      fetchMarcas();
     } catch (error) {
       console.error('Error adding oposicion:', error);
-      toast.error('Error al agregar la oposición');
+      toast.error('Error al agregar oposición');
     }
   };
 
-  const handleDeleteOposicion = async (marcaId: string, index: number) => {
-    try {
-      const marca = marcas.find(m => m.id === marcaId);
-      if (!marca) return;
-
-      const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
-      
-      const response = await fetch(`/api/marcas?id=${marcaId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...marca,
-          oposicion: updatedOposiciones,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al eliminar oposición');
-
-      setMarcas(prevMarcas =>
-        prevMarcas.map(m =>
-          m.id === marcaId
-            ? { ...m, oposicion: updatedOposiciones }
-            : m
-        )
-      );
-
-      toast.success('Oposición eliminada exitosamente');
-    } catch (error) {
-      console.error('Error deleting oposicion:', error);
-      toast.error('Error al eliminar la oposición');
-    }
-  };
-
-  const truncateText = (text: string, maxLength: number = 20) => {
-    if (!text) return '';
-    return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
+  const truncateText = (text: string, maxLength: number = 30) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
   };
 
   return (
@@ -606,7 +493,7 @@ export default function DashboardClient() {
                                     <div className="flex justify-center items-center space-x-2">
                                       <span>{marca.oposicion.length}</span>
                                       <button
-                                        onClick={() => handleAddOposicion(marca.id, '')}
+                                        onClick={() => handleAddOposicion(marca)}
                                         className="text-indigo-600 hover:text-indigo-900"
                                       >
                                         <FaPlus className="h-4 w-4" />
@@ -617,7 +504,7 @@ export default function DashboardClient() {
                                     <div className="flex justify-center items-center space-x-2">
                                       <span>{marca.anotacion.length}</span>
                                       <button
-                                        onClick={() => handleAddAnotacion(marca.id, '')}
+                                        onClick={() => handleAddAnotacion(marca)}
                                         className="text-indigo-600 hover:text-indigo-900"
                                       >
                                         <FaPlus className="h-4 w-4" />
@@ -633,7 +520,7 @@ export default function DashboardClient() {
                                         <FaEdit className="h-5 w-5" />
                                       </button>
                                       <button
-                                        onClick={() => handleDelete(marca.id)}
+                                        onClick={() => handleDelete(marca)}
                                         className="text-red-600 hover:text-red-900"
                                       >
                                         <FaTrash className="h-5 w-5" />
