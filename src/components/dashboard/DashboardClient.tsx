@@ -8,6 +8,7 @@ import OposicionModal from '@/components/modals/OposicionModal';
 import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 
 interface ViewTextModalState {
@@ -438,6 +439,18 @@ export default function DashboardClient() {
 
               {/* Table Section */}
               <div className="mt-8">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-lg font-medium text-gray-900">Lista de Marcas</h2>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setIsModalOpen(true)}
+                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                  >
+                    <FaPlus className="h-4 w-4 mr-2" />
+                    Agregar Marca
+                  </motion.button>
+                </div>
                 <div className="flow-root">
                   <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                     <div className="inline-block min-w-full align-middle">
