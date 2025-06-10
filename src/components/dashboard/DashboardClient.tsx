@@ -8,9 +8,7 @@ import OposicionModal from '@/components/modals/OposicionModal';
 import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
-import Link from 'next/link';
+
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -286,33 +284,6 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
     setOposicionModalOpen(true);
   };
 
-  const handleDeleteOposicion = (marcaId: string, index: number) => {
-    const marca = marcas.find(m => m.id === marcaId);
-    if (!marca) return;
-
-    const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
-    fetch(`/api/marcas?id=${marcaId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...marca,
-        oposicion: updatedOposiciones,
-      }),
-    }).then(response => {
-      if (response.ok) {
-        fetchMarcas();
-        toast.success('Oposición eliminada exitosamente');
-      } else {
-        throw new Error('Error al eliminar oposición');
-      }
-    }).catch(error => {
-      console.error('Error deleting oposicion:', error);
-      toast.error('Error al eliminar la oposición');
-    });
-  };
-
   const truncateText = (text: string, maxLength: number = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -584,35 +555,6 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                               <svg className="h-4 w-4" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                               </svg>
-                                            </button>
-                                            <button
-                                              onClick={() => {
-                                                const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
-                                                fetch(`/api/marcas?id=${marca.id}`, {
-                                                  method: 'PUT',
-                                                  headers: {
-                                                    'Content-Type': 'application/json',
-                                                  },
-                                                  body: JSON.stringify({
-                                                    ...marca,
-                                                    oposicion: updatedOposiciones,
-                                                  }),
-                                                }).then(response => {
-                                                  if (response.ok) {
-                                                    fetchMarcas();
-                                                    toast.success('Oposición eliminada exitosamente');
-                                                  } else {
-                                                    throw new Error('Error al eliminar oposición');
-                                                  }
-                                                }).catch(error => {
-                                                  console.error('Error deleting oposicion:', error);
-                                                  toast.error('Error al eliminar la oposición');
-                                                });
-                                              }}
-                                              className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                              title="Eliminar oposición"
-                                            >
-                                              <FaTrash className="h-4 w-4" />
                                             </button>
                                           </div>
                                         </div>
