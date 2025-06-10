@@ -525,16 +525,36 @@ export default function DashboardClient() {
                           <table className="min-w-full divide-y divide-gray-100">
                             <thead>
                               <tr className="bg-gray-50">
-                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Marca</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acta</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Resolución</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Nombre Completo</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Tipo</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Clases</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Fechas</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Oposiciones</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Anotaciones</th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Acciones</th>
+                                <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                                  Marca
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Acta
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Resolución
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Titular
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Tipo
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Clases
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Fechas
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                                  Oposiciones
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                                  Anotaciones
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                                  Acciones
+                                </th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
@@ -605,6 +625,23 @@ export default function DashboardClient() {
                                             </button>
                                           </div>
                                         ))}
+                                        <div className="flex justify-center">
+                                          <button
+                                            onClick={() => {
+                                              const text = prompt('Nueva oposición:');
+                                              if (text?.trim()) {
+                                                handleAddOposicion(marca.id, text);
+                                              }
+                                            }}
+                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                            title="Agregar otra oposición"
+                                          >
+                                            <FaPlus className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex justify-center">
                                         <button
                                           onClick={() => {
                                             const text = prompt('Nueva oposición:');
@@ -613,24 +650,11 @@ export default function DashboardClient() {
                                             }
                                           }}
                                           className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar otra oposición"
+                                          title="Agregar oposición"
                                         >
                                           <FaPlus className="h-4 w-4" />
                                         </button>
                                       </div>
-                                    ) : (
-                                      <button
-                                        onClick={() => {
-                                          const text = prompt('Nueva oposición:');
-                                          if (text?.trim()) {
-                                            handleAddOposicion(marca.id, text);
-                                          }
-                                        }}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar oposición"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
                                     )}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
@@ -656,6 +680,23 @@ export default function DashboardClient() {
                                             </button>
                                           </div>
                                         ))}
+                                        <div className="flex justify-center">
+                                          <button
+                                            onClick={() => {
+                                              const text = prompt('Nueva anotación:');
+                                              if (text?.trim()) {
+                                                handleAddAnotacion(marca.id, text);
+                                              }
+                                            }}
+                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                            title="Agregar otra anotación"
+                                          >
+                                            <FaPlus className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex justify-center">
                                         <button
                                           onClick={() => {
                                             const text = prompt('Nueva anotación:');
@@ -664,28 +705,15 @@ export default function DashboardClient() {
                                             }
                                           }}
                                           className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar otra anotación"
+                                          title="Agregar anotación"
                                         >
                                           <FaPlus className="h-4 w-4" />
                                         </button>
                                       </div>
-                                    ) : (
-                                      <button
-                                        onClick={() => {
-                                          const text = prompt('Nueva anotación:');
-                                          if (text?.trim()) {
-                                            handleAddAnotacion(marca.id, text);
-                                          }
-                                        }}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar anotación"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
                                     )}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    <div className="flex space-x-3">
+                                    <div className="flex justify-center space-x-3">
                                       <button
                                         onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
                                         className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
