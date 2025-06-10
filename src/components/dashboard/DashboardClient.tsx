@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 
@@ -279,9 +279,23 @@ export default function DashboardClient() {
     }
   };
 
-  const truncateText = (text: string, maxLength: number = 30) => {
+  const truncateText = (text: string, maxLength: number = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  };
+
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString();
+  };
+
+  const addToGoogleCalendar = (marca: Marca, type: 'renovar' | 'vencimiento') => {
+    const date = type === 'renovar' ? marca.renovar : marca.vencimiento;
+    const title = `${type === 'renovar' ? 'Renovar' : 'Vencimiento'} marca: ${marca.marca}`;
+    const description = `Marca: ${marca.marca}\nTitular: ${marca.titular.fullName}\nEmail: ${marca.titular.email}\nTeléfono: ${marca.titular.phone}`;
+    
+    const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date.split('T')[0].replace(/-/g, '')}/${date.split('T')[0].replace(/-/g, '')}&details=${encodeURIComponent(description)}`;
+    
+    window.open(googleCalendarUrl, '_blank');
   };
 
   return (
@@ -486,14 +500,28 @@ export default function DashboardClient() {
                                     {marca.titular.fullName}
                                   </td>
                                   <td className="px-3 py-4 text-sm text-gray-500">
-                                    <div className="space-y-1">
-                                      <div>
-                                        <span className="font-medium text-gray-700">Renovar:</span>{' '}
-                                        {new Date(marca.renovar).toLocaleDateString()}
+                                    <div className="space-y-2">
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-gray-700 font-medium">Renovar:</span>
+                                        <span>{formatDate(marca.renovar)}</span>
+                                        <button
+                                          onClick={() => addToGoogleCalendar(marca, 'renovar')}
+                                          className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                          title="Agregar a Google Calendar"
+                                        >
+                                          <FaCalendarPlus className="h-4 w-4" />
+                                        </button>
                                       </div>
-                                      <div>
-                                        <span className="font-medium text-gray-700">Vencimiento:</span>{' '}
-                                        {new Date(marca.vencimiento).toLocaleDateString()}
+                                      <div className="flex items-center space-x-2">
+                                        <span className="text-gray-700 font-medium">Vencimiento:</span>
+                                        <span>{formatDate(marca.vencimiento)}</span>
+                                        <button
+                                          onClick={() => addToGoogleCalendar(marca, 'vencimiento')}
+                                          className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                          title="Agregar a Google Calendar"
+                                        >
+                                          <FaCalendarPlus className="h-4 w-4" />
+                                        </button>
                                       </div>
                                     </div>
                                   </td>
