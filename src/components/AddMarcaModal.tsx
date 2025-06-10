@@ -354,10 +354,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                             <div
                               key={clase}
                               onClick={() => handleClaseSelect(clase)}
-                              className={`p-2 text-center cursor-pointer rounded text-gray-900 ${
+                              className={`p-2 text-center cursor-pointer rounded font-medium ${
                                 formData.clases.includes(clase)
-                                  ? 'bg-indigo-100 text-indigo-700'
-                                  : 'hover:bg-gray-100'
+                                  ? 'bg-indigo-100 text-indigo-600 font-semibold'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                               }`}
                             >
                               {clase}
