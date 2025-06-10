@@ -13,8 +13,8 @@ export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState(30);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<number>(7); // Default to 1 week (7 days)
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<{ isOpen: boolean; title: string; content: string }>({
@@ -26,6 +26,11 @@ export default function DashboardClient() {
   const router = useRouter();
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
+
+  const totalMarcas = marcas.length;
+  const marcasConOposiciones = marcas.filter(marca => 
+    Array.isArray(marca.oposicion) && marca.oposicion.length > 0
+  ).length;
 
   const timeRangeOptions = [
     { days: 30, label: '30 días' },
@@ -132,18 +137,6 @@ export default function DashboardClient() {
       toast.error(error instanceof Error ? error.message : 'Error al guardar la marca');
     }
   };
-
-  // Calculate statistics
-  const totalMarcas = marcas.length;
-  const marcasConOposiciones = marcas.filter(m => Array.isArray(m.oposicion) && m.oposicion.length > 0).length;
-  const proximosVencer = marcas.filter(m => {
-    if (!m.updatedAt) return false;
-    const vencimiento = new Date(m.updatedAt);
-    vencimiento.setFullYear(vencimiento.getFullYear() + 10); // Trademark validity is 10 years
-    const hoy = new Date();
-    const diasRestantes = Math.ceil((vencimiento.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    return diasRestantes <= selectedTimeRange;
-  }).length;
 
   const handleSort = () => {
     const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
