@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaCheck } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -16,11 +16,6 @@ interface ViewTextModalState {
   isOpen: boolean;
   title: string;
   content: string;
-}
-
-interface SortConfig {
-  key: string | null;
-  direction: 'asc' | 'desc';
 }
 
 export default function DashboardClient({ initialMarcas }: { initialMarcas: Marca[] }) {
@@ -37,7 +32,6 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
   const [isOposicionModalOpen, setOposicionModalOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -497,11 +491,11 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                 <FaSort className={`h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
                               </button>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Oposiciones
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[250px]">Oposiciones</div>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Anotaciones
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[250px]">Anotaciones</div>
                             </th>
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                               <span className="sr-only">Acciones</span>
@@ -562,34 +556,60 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                 </div>
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
-                                <div className="min-w-[250px] space-y-2">
+                                <div className="min-w-[250px]">
                                   {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-1">
                                       {marca.oposicion.map((op, index) => (
-                                        <div key={index} className="flex items-start space-x-2 group">
+                                        <div key={index} className="flex items-center space-x-2">
                                           <button
                                             onClick={() => setViewTextModal({
                                               isOpen: true,
                                               title: 'Oposición',
                                               content: op.text
                                             })}
-                                            className="flex-grow text-left text-gray-600 hover:text-gray-900"
+                                            className={`text-left ${op.completed ? 'text-green-600' : 'text-gray-600'} hover:text-gray-900 flex-grow`}
                                           >
-                                            <div className="line-clamp-2 group-hover:text-indigo-600 transition-colors duration-200">
-                                              {op.text}
-                                            </div>
+                                            {truncateText(op.text)}
                                           </button>
-                                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                          <div className="flex space-x-1">
                                             <button
                                               onClick={() => handleToggleOposicion(marca.id, index)}
-                                              className={`${op.completed ? 'text-green-600' : 'text-gray-400'} hover:scale-110 transition-all duration-200`}
+                                              className={`${
+                                                op.completed
+                                                  ? 'text-green-600 hover:text-green-800'
+                                                  : 'text-gray-400 hover:text-gray-600'
+                                              } transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-gray-100`}
                                               title={op.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
                                             >
-                                              <FaCheck className="h-4 w-4" />
+                                              <svg className="h-4 w-4" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                              </svg>
                                             </button>
                                             <button
-                                              onClick={() => handleDeleteOposicion(marca.id, index)}
-                                              className="text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200"
+                                              onClick={() => {
+                                                const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+                                                fetch(`/api/marcas?id=${marca.id}`, {
+                                                  method: 'PUT',
+                                                  headers: {
+                                                    'Content-Type': 'application/json',
+                                                  },
+                                                  body: JSON.stringify({
+                                                    ...marca,
+                                                    oposicion: updatedOposiciones,
+                                                  }),
+                                                }).then(response => {
+                                                  if (response.ok) {
+                                                    fetchMarcas();
+                                                    toast.success('Oposición eliminada exitosamente');
+                                                  } else {
+                                                    throw new Error('Error al eliminar oposición');
+                                                  }
+                                                }).catch(error => {
+                                                  console.error('Error deleting oposicion:', error);
+                                                  toast.error('Error al eliminar la oposición');
+                                                });
+                                              }}
+                                              className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
                                               title="Eliminar oposición"
                                             >
                                               <FaTrash className="h-4 w-4" />
@@ -597,15 +617,6 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                           </div>
                                         </div>
                                       ))}
-                                      <div className="flex justify-center pt-1">
-                                        <button
-                                          onClick={() => handleAddOposicion(marca)}
-                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar otra oposición"
-                                        >
-                                          <FaPlus className="h-4 w-4" />
-                                        </button>
-                                      </div>
                                     </div>
                                   ) : (
                                     <div className="flex justify-center">
@@ -621,22 +632,20 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                 </div>
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
-                                <div className="min-w-[250px] space-y-2">
+                                <div className="min-w-[250px]">
                                   {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-1">
                                       {marca.anotacion.map((note, index) => (
-                                        <div key={index} className="flex items-start space-x-2 group">
+                                        <div key={index} className="flex items-center space-x-2">
                                           <button
                                             onClick={() => setViewTextModal({
                                               isOpen: true,
                                               title: 'Anotación',
                                               content: note.text
                                             })}
-                                            className="flex-grow text-left text-gray-600 hover:text-gray-900"
+                                            className="text-left text-gray-600 hover:text-gray-900 flex-grow"
                                           >
-                                            <div className="line-clamp-2 group-hover:text-indigo-600 transition-colors duration-200">
-                                              {note.text}
-                                            </div>
+                                            {truncateText(note.text)}
                                           </button>
                                           <button
                                             onClick={() => {
@@ -662,22 +671,13 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
                                                 toast.error('Error al eliminar la anotación');
                                               });
                                             }}
-                                            className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100"
+                                            className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
                                             title="Eliminar anotación"
                                           >
                                             <FaTrash className="h-4 w-4" />
                                           </button>
                                         </div>
                                       ))}
-                                      <div className="flex justify-center pt-1">
-                                        <button
-                                          onClick={() => handleAddAnotacion(marca)}
-                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar otra anotación"
-                                        >
-                                          <FaPlus className="h-4 w-4" />
-                                        </button>
-                                      </div>
                                     </div>
                                   ) : (
                                     <div className="flex justify-center">
