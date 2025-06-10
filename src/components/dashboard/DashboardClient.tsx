@@ -591,9 +591,38 @@ export default function DashboardClient() {
                                                 title: 'Anotación',
                                                 content: note.text
                                               })}
-                                              className="text-left text-gray-600 hover:text-gray-900"
+                                              className="text-left text-gray-600 hover:text-gray-900 flex-grow"
                                             >
                                               {truncateText(note.text)}
+                                            </button>
+                                            <button
+                                              onClick={() => {
+                                                const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
+                                                fetch(`/api/marcas?id=${marca.id}`, {
+                                                  method: 'PUT',
+                                                  headers: {
+                                                    'Content-Type': 'application/json',
+                                                  },
+                                                  body: JSON.stringify({
+                                                    ...marca,
+                                                    anotaciones: updatedAnotaciones.map(note => note.text),
+                                                  }),
+                                                }).then(response => {
+                                                  if (response.ok) {
+                                                    fetchMarcas();
+                                                    toast.success('Anotación eliminada exitosamente');
+                                                  } else {
+                                                    throw new Error('Error al eliminar anotación');
+                                                  }
+                                                }).catch(error => {
+                                                  console.error('Error deleting anotacion:', error);
+                                                  toast.error('Error al eliminar la anotación');
+                                                });
+                                              }}
+                                              className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
+                                              title="Eliminar anotación"
+                                            >
+                                              <FaTrash className="h-4 w-4" />
                                             </button>
                                           </div>
                                         ))}
