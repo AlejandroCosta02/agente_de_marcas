@@ -7,9 +7,14 @@ export async function runMigrations() {
       -- Update marca column to allow longer names
       ALTER TABLE marcas
       ALTER COLUMN marca TYPE VARCHAR(255);
+
+      -- Remove acta and resolucion columns
+      ALTER TABLE marcas
+      DROP COLUMN IF EXISTS acta,
+      DROP COLUMN IF EXISTS resolucion;
     `;
     
-    console.log('✅ Successfully updated marca column length');
+    console.log('✅ Successfully updated database schema');
     return { success: true, message: 'Migration completed successfully' };
   } catch (error) {
     console.error('❌ Migration error:', error);

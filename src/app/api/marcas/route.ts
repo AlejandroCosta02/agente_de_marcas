@@ -68,8 +68,6 @@ export async function GET() {
       SELECT 
         m.id,
         m.marca,
-        m.acta,
-        m.resolucion,
         m.renovar,
         m.vencimiento,
         m.titular_nombre,
@@ -183,10 +181,10 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { marca, acta, resolucion, renovar, vencimiento, titular, anotaciones, oposicion, tipoMarca, clases } = body;
+    const { marca, renovar, vencimiento, titular, anotaciones, oposicion, tipoMarca, clases } = body;
 
     // Validate required fields
-    if (!marca || !acta || !resolucion || !titular || !titular.fullName || !titular.email || !titular.phone) {
+    if (!marca || !renovar || !vencimiento || !titular || !titular.fullName || !titular.email || !titular.phone) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
@@ -214,24 +212,20 @@ export async function PUT(request: Request) {
       UPDATE marcas 
       SET 
         marca = $1,
-        acta = $2,
-        resolucion = $3,
-        renovar = $4,
-        vencimiento = $5,
-        titular_nombre = $6,
-        titular_email = $7,
-        titular_telefono = $8,
-        anotaciones = $9::text[],
-        oposicion = $10::jsonb,
-        tipo_marca = $11,
-        clases = $12::integer[],
+        renovar = $2,
+        vencimiento = $3,
+        titular_nombre = $4,
+        titular_email = $5,
+        titular_telefono = $6,
+        anotaciones = $7::text[],
+        oposicion = $8::jsonb,
+        tipo_marca = $9,
+        clases = $10::integer[],
         updated_at = NOW()
-      WHERE id = $13 AND user_email = $14
+      WHERE id = $11 AND user_email = $12
       RETURNING *
     `, [
       marca,
-      parseInt(acta, 10),
-      parseInt(resolucion, 10),
       renovar,
       vencimiento,
       titular.fullName,
@@ -262,8 +256,6 @@ export async function POST(request: Request) {
 
     const { 
       marca, 
-      acta, 
-      resolucion, 
       renovar, 
       vencimiento, 
       titular,
@@ -300,8 +292,6 @@ export async function POST(request: Request) {
     const result = await pool.query(`
       INSERT INTO marcas (
         marca,
-        acta,
-        resolucion,
         renovar,
         vencimiento,
         titular_nombre,
@@ -313,13 +303,11 @@ export async function POST(request: Request) {
         clases,
         user_email
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9::text[], $10::jsonb, $11, $12::integer[], $13
+        $1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10::integer[], $11
       )
       RETURNING id
     `, [
       marca,
-      parseInt(acta, 10),
-      parseInt(resolucion, 10),
       renovar,
       vencimiento,
       titular.fullName,

@@ -30,8 +30,6 @@ const TIPOS_MARCA: TipoMarca[] = [
 export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }: AddMarcaModalProps) {
   const [formData, setFormData] = useState<MarcaSubmissionData>({
     marca: '',
-    acta: '',
-    resolucion: '',
     renovar: new Date().toISOString().split('T')[0],
     vencimiento: new Date().toISOString().split('T')[0],
     titular: {
@@ -57,8 +55,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     if (initialData) {
       setFormData({
         marca: initialData.marca,
-        acta: initialData.acta,
-        resolucion: initialData.resolucion,
         renovar: initialData.renovar ? new Date(initialData.renovar).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         vencimiento: initialData.vencimiento ? new Date(initialData.vencimiento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         titular: {
@@ -76,8 +72,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       // Reset form when opening for a new marca
       setFormData({
         marca: '',
-        acta: '',
-        resolucion: '',
         renovar: new Date().toISOString().split('T')[0],
         vencimiento: new Date().toISOString().split('T')[0],
         titular: {
@@ -102,16 +96,12 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       newErrors.marca = 'El nombre es requerido';
     }
 
-    if (!formData.acta) {
-      newErrors.acta = 'El acta es requerida';
-    } else if (!/^\d{1,8}$/.test(formData.acta)) {
-      newErrors.acta = 'El acta debe ser un número de hasta 8 dígitos';
+    if (!formData.renovar) {
+      newErrors.renovar = 'La fecha de renovación es requerida';
     }
 
-    if (!formData.resolucion) {
-      newErrors.resolucion = 'La resolución es requerida';
-    } else if (!/^\d{1,8}$/.test(formData.resolucion)) {
-      newErrors.resolucion = 'La resolución debe ser un número de hasta 8 dígitos';
+    if (!formData.vencimiento) {
+      newErrors.vencimiento = 'La fecha de vencimiento es requerida';
     }
 
     if (!formData.titular.fullName) {
@@ -253,54 +243,37 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       type="text"
                       value={formData.marca}
                       onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                      required
+                      className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                     />
                     {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Acta</label>
-                    <input
-                      type="text"
-                      value={formData.acta}
-                      onChange={(e) => setFormData({ ...formData, acta: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                      required
-                    />
-                    {errors.acta && <p className="mt-1 text-sm text-red-600">{errors.acta}</p>}
-                  </div>
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Fecha de Renovación <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.renovar}
+                        onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
+                        className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
+                      />
+                      {errors.renovar && <p className="mt-1 text-sm text-red-600">{errors.renovar}</p>}
+                    </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Resolución</label>
-                    <input
-                      type="text"
-                      value={formData.resolucion}
-                      onChange={(e) => setFormData({ ...formData, resolucion: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                      required
-                    />
-                    {errors.resolucion && <p className="mt-1 text-sm text-red-600">{errors.resolucion}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Fecha de Renovación</label>
-                    <input
-                      type="date"
-                      value={formData.renovar}
-                      onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Fecha de Vencimiento</label>
-                    <input
-                      type="date"
-                      value={formData.vencimiento}
-                      onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                    />
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Fecha de Vencimiento <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.vencimiento}
+                        onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
+                        className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
+                      />
+                      {errors.vencimiento && <p className="mt-1 text-sm text-red-600">{errors.vencimiento}</p>}
+                    </div>
                   </div>
 
                   <div className="space-y-4">
