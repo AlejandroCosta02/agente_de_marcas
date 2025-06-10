@@ -268,6 +268,26 @@ export default function DashboardClient() {
     }
   };
 
+  const handleDelete = async (marcaId: string) => {
+    try {
+      const response = await fetch(`/api/marcas`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: marcaId }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar marca');
+
+      setMarcas(prevMarcas => prevMarcas.filter(m => m.id !== marcaId));
+      toast.success('Marca eliminada exitosamente');
+    } catch (error) {
+      console.error('Error deleting marca:', error);
+      toast.error('Error al eliminar la marca');
+    }
+  };
+
   const handleAddOposicion = async (marcaId: string, text: string) => {
     try {
       const marca = marcas.find(m => m.id === marcaId);
@@ -621,6 +641,16 @@ export default function DashboardClient() {
                                         className="text-indigo-600 hover:text-indigo-900"
                                       >
                                         Editar
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (window.confirm('¿Estás seguro de que deseas eliminar esta marca?')) {
+                                            handleDelete(marca.id);
+                                          }
+                                        }}
+                                        className="text-red-600 hover:text-red-900"
+                                      >
+                                        Eliminar
                                       </button>
                                     </div>
                                   </td>
