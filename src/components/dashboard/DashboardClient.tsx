@@ -16,9 +16,9 @@ interface ViewTextModalState {
   content: string;
 }
 
-export default function DashboardClient({ initialMarcas }: { initialMarcas: Marca[] }) {
+export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [marcas, setMarcas] = useState<Marca[]>(initialMarcas);
+  const [marcas, setMarcas] = useState<Marca[]>([]);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(30);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);

@@ -73,7 +73,7 @@ export async function GET() {
         m.titular_nombre,
         m.titular_email,
         m.titular_telefono,
-        m.anotaciones as anotacion,
+        m.anotaciones,
         m.oposicion,
         COALESCE(m.tipo_marca, 'denominativa') as "tipoMarca",
         COALESCE(m.clases, ARRAY[]::INTEGER[]) as clases,
@@ -96,8 +96,8 @@ export async function GET() {
             email: marca.titular_email || '',
             phone: marca.titular_telefono || ''
           },
-          anotacion: Array.isArray(marca.anotacion) 
-            ? marca.anotacion.map((text: string) => ({ 
+          anotacion: Array.isArray(marca.anotaciones) 
+            ? marca.anotaciones.map((text: string) => ({ 
                 id: Math.random().toString(36).substr(2, 9), 
                 text,
                 date: new Date().toISOString()
@@ -181,7 +181,7 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { marca, renovar, vencimiento, titular, anotaciones, oposicion, tipoMarca, clases } = body;
+    const { marca, renovar, vencimiento, titular, anotacion, oposicion, tipoMarca, clases } = body;
 
     // Validate required fields
     if (!marca || !renovar || !vencimiento || !titular || !titular.fullName || !titular.email || !titular.phone) {
@@ -189,7 +189,9 @@ export async function PUT(request: Request) {
     }
 
     // Clean arrays
-    const cleanedAnotaciones = Array.isArray(anotaciones) ? anotaciones : [];
+    const cleanedAnotaciones = Array.isArray(anotacion) 
+      ? anotacion.map(note => note.text).filter(text => text !== '')
+      : [];
     const cleanedOposicion = Array.isArray(oposicion) ? oposicion : [];
 
     const pool = createPool();
