@@ -441,7 +441,7 @@ export default function DashboardClient() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                          {marcas.map((marca, index) => (
+                          {marcas.map((marca) => (
                             <tr 
                               key={marca.id}
                               className="hover:bg-gray-50 transition-colors duration-200"
