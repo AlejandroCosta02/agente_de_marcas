@@ -5,9 +5,22 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaCheck } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+interface ViewTextModalState {
+  isOpen: boolean;
+  title: string;
+  content: string;
+}
+
+interface SortConfig {
+  key: string | null;
+  direction: 'asc' | 'desc';
+}
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,15 +30,13 @@ export default function DashboardClient() {
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
-  const [viewTextModal, setViewTextModal] = useState<{ isOpen: boolean; title: string; content: string }>({
-    isOpen: false,
-    title: '',
-    content: ''
-  });
+  const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
   const [needsMigration, setNeedsMigration] = useState(false);
   const router = useRouter();
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
+  const [isOposicionModalOpen, setOposicionModalOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -275,39 +286,36 @@ export default function DashboardClient() {
     }
   };
 
-  const handleAddOposicion = async (marca: Marca) => {
-    try {
-      const text = prompt('Nueva oposición:');
-      if (!text?.trim()) return;
+  const handleAddOposicion = (marca: Marca) => {
+    setSelectedMarca(marca);
+    setOposicionModalOpen(true);
+  };
 
-      const newOposicion = {
-        id: Math.random().toString(36).substr(2, 9),
-        text: text.trim(),
-        date: new Date().toISOString(),
-        completed: false
-      };
+  const handleDeleteOposicion = (marcaId: string, index: number) => {
+    const marca = marcas.find(m => m.id === marcaId);
+    if (!marca) return;
 
-      const updatedOposiciones = [...marca.oposicion, newOposicion];
-
-      const response = await fetch(`/api/marcas?id=${marca.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...marca,
-          oposicion: updatedOposiciones,
-        }),
-      });
-
-      if (!response.ok) throw new Error('Error al agregar oposición');
-
-      toast.success('Oposición agregada exitosamente');
-      fetchMarcas();
-    } catch (error) {
-      console.error('Error adding oposicion:', error);
-      toast.error('Error al agregar oposición');
-    }
+    const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+    fetch(`/api/marcas?id=${marcaId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...marca,
+        oposicion: updatedOposiciones,
+      }),
+    }).then(response => {
+      if (response.ok) {
+        fetchMarcas();
+        toast.success('Oposición eliminada exitosamente');
+      } else {
+        throw new Error('Error al eliminar oposición');
+      }
+    }).catch(error => {
+      console.error('Error deleting oposicion:', error);
+      toast.error('Error al eliminar la oposición');
+    });
   };
 
   const truncateText = (text: string, maxLength: number = 50) => {
@@ -553,37 +561,85 @@ export default function DashboardClient() {
                                 </div>
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
-                                {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {marca.oposicion.map((op, index) => (
-                                      <div key={index} className="flex items-center space-x-2">
-                                        <button
-                                          onClick={() => setViewTextModal({
-                                            isOpen: true,
-                                            title: 'Oposición',
-                                            content: op.text
-                                          })}
-                                          className={`text-left ${op.completed ? 'text-green-600' : 'text-gray-600'} hover:text-gray-900 flex-grow`}
-                                        >
-                                          {truncateText(op.text)}
-                                        </button>
-                                        <div className="flex space-x-1">
+                                <div className="min-w-[250px] space-y-2">
+                                  {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
+                                    <div className="space-y-3">
+                                      {marca.oposicion.map((op, index) => (
+                                        <div key={index} className="flex items-start space-x-2 group">
                                           <button
-                                            onClick={() => handleToggleOposicion(marca.id, index)}
-                                            className={`${
-                                              op.completed
-                                                ? 'text-green-600 hover:text-green-800'
-                                                : 'text-gray-400 hover:text-gray-600'
-                                            } transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-gray-100`}
-                                            title={op.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
+                                            onClick={() => setViewTextModal({
+                                              isOpen: true,
+                                              title: 'Oposición',
+                                              content: op.text
+                                            })}
+                                            className="flex-grow text-left text-gray-600 hover:text-gray-900"
                                           >
-                                            <svg className="h-4 w-4" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
-                                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                            </svg>
+                                            <div className="line-clamp-2 group-hover:text-indigo-600 transition-colors duration-200">
+                                              {op.text}
+                                            </div>
+                                          </button>
+                                          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                            <button
+                                              onClick={() => handleToggleOposicion(marca.id, index)}
+                                              className={`${op.completed ? 'text-green-600' : 'text-gray-400'} hover:scale-110 transition-all duration-200`}
+                                              title={op.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
+                                            >
+                                              <FaCheck className="h-4 w-4" />
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteOposicion(marca.id, index)}
+                                              className="text-red-600 hover:text-red-800 hover:scale-110 transition-all duration-200"
+                                              title="Eliminar oposición"
+                                            >
+                                              <FaTrash className="h-4 w-4" />
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      <div className="flex justify-center pt-1">
+                                        <button
+                                          onClick={() => handleAddOposicion(marca)}
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar otra oposición"
+                                        >
+                                          <FaPlus className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="flex justify-center">
+                                      <button
+                                        onClick={() => handleAddOposicion(marca)}
+                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                        title="Agregar oposición"
+                                      >
+                                        <FaPlus className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <div className="min-w-[250px] space-y-2">
+                                  {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
+                                    <div className="space-y-3">
+                                      {marca.anotacion.map((note, index) => (
+                                        <div key={index} className="flex items-start space-x-2 group">
+                                          <button
+                                            onClick={() => setViewTextModal({
+                                              isOpen: true,
+                                              title: 'Anotación',
+                                              content: note.text
+                                            })}
+                                            className="flex-grow text-left text-gray-600 hover:text-gray-900"
+                                          >
+                                            <div className="line-clamp-2 group-hover:text-indigo-600 transition-colors duration-200">
+                                              {note.text}
+                                            </div>
                                           </button>
                                           <button
                                             onClick={() => {
-                                              const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+                                              const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
                                               fetch(`/api/marcas?id=${marca.id}`, {
                                                 method: 'PUT',
                                                 headers: {
@@ -591,117 +647,49 @@ export default function DashboardClient() {
                                                 },
                                                 body: JSON.stringify({
                                                   ...marca,
-                                                  oposicion: updatedOposiciones,
+                                                  anotaciones: updatedAnotaciones.map(note => note.text),
                                                 }),
                                               }).then(response => {
                                                 if (response.ok) {
                                                   fetchMarcas();
-                                                  toast.success('Oposición eliminada exitosamente');
+                                                  toast.success('Anotación eliminada exitosamente');
                                                 } else {
-                                                  throw new Error('Error al eliminar oposición');
+                                                  throw new Error('Error al eliminar anotación');
                                                 }
                                               }).catch(error => {
-                                                console.error('Error deleting oposicion:', error);
-                                                toast.error('Error al eliminar la oposición');
+                                                console.error('Error deleting anotacion:', error);
+                                                toast.error('Error al eliminar la anotación');
                                               });
                                             }}
-                                            className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                            title="Eliminar oposición"
+                                            className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100"
+                                            title="Eliminar anotación"
                                           >
                                             <FaTrash className="h-4 w-4" />
                                           </button>
                                         </div>
+                                      ))}
+                                      <div className="flex justify-center pt-1">
+                                        <button
+                                          onClick={() => handleAddAnotacion(marca)}
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar otra anotación"
+                                        >
+                                          <FaPlus className="h-4 w-4" />
+                                        </button>
                                       </div>
-                                    ))}
-                                    <div className="flex justify-center">
-                                      <button
-                                        onClick={() => handleAddOposicion(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar otra oposición"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
                                     </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex justify-center">
-                                    <button
-                                      onClick={() => handleAddOposicion(marca)}
-                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                      title="Agregar oposición"
-                                    >
-                                      <FaPlus className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                )}
-                              </td>
-                              <td className="px-3 py-4 text-sm text-gray-500">
-                                {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
-                                  <div className="space-y-1">
-                                    {marca.anotacion.map((note, index) => (
-                                      <div key={index} className="flex items-center space-x-2">
-                                        <button
-                                          onClick={() => setViewTextModal({
-                                            isOpen: true,
-                                            title: 'Anotación',
-                                            content: note.text
-                                          })}
-                                          className="text-left text-gray-600 hover:text-gray-900 flex-grow"
-                                        >
-                                          {truncateText(note.text)}
-                                        </button>
-                                        <button
-                                          onClick={() => {
-                                            const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
-                                            fetch(`/api/marcas?id=${marca.id}`, {
-                                              method: 'PUT',
-                                              headers: {
-                                                'Content-Type': 'application/json',
-                                              },
-                                              body: JSON.stringify({
-                                                ...marca,
-                                                anotaciones: updatedAnotaciones.map(note => note.text),
-                                              }),
-                                            }).then(response => {
-                                              if (response.ok) {
-                                                fetchMarcas();
-                                                toast.success('Anotación eliminada exitosamente');
-                                              } else {
-                                                throw new Error('Error al eliminar anotación');
-                                              }
-                                            }).catch(error => {
-                                              console.error('Error deleting anotacion:', error);
-                                              toast.error('Error al eliminar la anotación');
-                                            });
-                                          }}
-                                          className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                          title="Eliminar anotación"
-                                        >
-                                          <FaTrash className="h-4 w-4" />
-                                        </button>
-                                      </div>
-                                    ))}
+                                  ) : (
                                     <div className="flex justify-center">
                                       <button
                                         onClick={() => handleAddAnotacion(marca)}
                                         className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar otra anotación"
+                                        title="Agregar anotación"
                                       >
                                         <FaPlus className="h-4 w-4" />
                                       </button>
                                     </div>
-                                  </div>
-                                ) : (
-                                  <div className="flex justify-center">
-                                    <button
-                                      onClick={() => handleAddAnotacion(marca)}
-                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                      title="Agregar anotación"
-                                    >
-                                      <FaPlus className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </td>
                               <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div className="flex justify-center space-x-2">
