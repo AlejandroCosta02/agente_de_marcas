@@ -29,7 +29,6 @@ export default function DashboardClient({ initialMarcas }: { initialMarcas: Marc
   const router = useRouter();
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
-  const [isOposicionModalOpen, setOposicionModalOpen] = useState(false);
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
