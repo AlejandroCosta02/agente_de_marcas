@@ -10,6 +10,7 @@ import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -22,9 +23,9 @@ interface SortConfig {
   direction: 'asc' | 'desc';
 }
 
-export default function DashboardClient() {
+export default function DashboardClient({ initialMarcas }: { initialMarcas: Marca[] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [marcas, setMarcas] = useState<Marca[]>(initialMarcas);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(30);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
