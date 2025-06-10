@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 
@@ -24,13 +24,15 @@ export default function DashboardClient() {
   });
   const [needsMigration, setNeedsMigration] = useState(false);
   const router = useRouter();
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortedMarcas, setSortedMarcas] = useState(marcas);
 
   const timeRangeOptions = [
-    { label: 'Una semana', days: 7 },
-    { label: '3 Semanas', days: 21 },
-    { label: '1 mes', days: 30 },
-    { label: '2 meses', days: 60 },
-    { label: '3 meses', days: 90 },
+    { days: 30, label: '30 días' },
+    { days: 60, label: '60 días' },
+    { days: 90, label: '90 días' },
+    { days: 180, label: '6 meses' },
+    { days: 365, label: '1 año' }
   ];
 
   useEffect(() => {
@@ -143,9 +145,45 @@ export default function DashboardClient() {
     return diasRestantes <= selectedTimeRange;
   }).length;
 
+  const handleSort = () => {
+    const newDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    setSortDirection(newDirection);
+    
+    const sorted = [...marcas].sort((a, b) => {
+      const dateA = new Date(a.renovar).getTime();
+      const dateB = new Date(b.renovar).getTime();
+      return newDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+    
+    setSortedMarcas(sorted);
+  };
+
+  useEffect(() => {
+    setSortedMarcas(marcas);
+  }, [marcas]);
+
   const handleTimeRangeSelect = (days: number) => {
     setSelectedTimeRange(days);
     setIsTimeRangeOpen(false);
+    localStorage.setItem('notificationTimeRange', days.toString());
+  };
+
+  useEffect(() => {
+    const savedRange = localStorage.getItem('notificationTimeRange');
+    if (savedRange) {
+      setSelectedTimeRange(parseInt(savedRange));
+    }
+  }, []);
+
+  const calculateProximosVencer = () => {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + selectedTimeRange);
+    
+    return sortedMarcas.filter(marca => {
+      const renovarDate = new Date(marca.renovar);
+      return renovarDate >= today && renovarDate <= futureDate;
+    }).length;
   };
 
   const handleToggleOposicion = async (marcaId: string, index: number) => {
@@ -348,12 +386,18 @@ export default function DashboardClient() {
                     <div className="text-right flex items-start space-x-2">
                       <div>
                         <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
-                        <p className="text-3xl font-bold text-white">{proximosVencer}</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="text-3xl font-bold text-white">{calculateProximosVencer()}</p>
+                          <span className="text-sm text-white opacity-75">
+                            en {selectedTimeRange} días
+                          </span>
+                        </div>
                       </div>
                       <div className="relative">
                         <button
                           onClick={() => setIsTimeRangeOpen(!isTimeRangeOpen)}
                           className="p-1.5 bg-yellow-600 bg-opacity-30 rounded-full hover:bg-opacity-50 transition-all duration-200"
+                          title="Configurar período de notificación"
                         >
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -362,8 +406,9 @@ export default function DashboardClient() {
                         </button>
                         {isTimeRangeOpen && (
                           <div 
-                            ref={timeRangeRef} 
-                            className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50"
+                            ref={timeRangeRef}
+                            className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50 
+                              transform origin-top-right transition-all duration-200 ease-out"
                           >
                             <div className="py-1" role="menu" aria-orientation="vertical">
                               {timeRangeOptions.map((option) => (
@@ -428,6 +473,13 @@ export default function DashboardClient() {
                             </th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
                               Fechas
+                              <button
+                                onClick={handleSort}
+                                className="ml-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                title={`Ordenar por fecha de renovación ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
+                              >
+                                <FaSort className={`h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
+                              </button>
                             </th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
                               Oposiciones
@@ -441,7 +493,7 @@ export default function DashboardClient() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                          {marcas.map((marca) => (
+                          {sortedMarcas.map((marca) => (
                             <tr 
                               key={marca.id}
                               className="hover:bg-gray-50 transition-colors duration-200"
