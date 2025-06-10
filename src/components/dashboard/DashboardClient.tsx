@@ -197,12 +197,23 @@ export default function DashboardClient() {
       const text = prompt('Nueva anotación:');
       if (!text?.trim()) return;
 
-      const response = await fetch(`/api/marcas/${marca.id}/anotaciones`, {
-        method: 'POST',
+      const newAnotacion = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: text.trim(),
+        date: new Date().toISOString()
+      };
+
+      const updatedAnotaciones = [...marca.anotacion, newAnotacion];
+
+      const response = await fetch(`/api/marcas?id=${marca.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          ...marca,
+          anotacion: updatedAnotaciones,
+        }),
       });
 
       if (!response.ok) throw new Error('Error al agregar anotación');
@@ -238,12 +249,24 @@ export default function DashboardClient() {
       const text = prompt('Nueva oposición:');
       if (!text?.trim()) return;
 
-      const response = await fetch(`/api/marcas/${marca.id}/oposiciones`, {
-        method: 'POST',
+      const newOposicion = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: text.trim(),
+        date: new Date().toISOString(),
+        completed: false
+      };
+
+      const updatedOposiciones = [...marca.oposicion, newOposicion];
+
+      const response = await fetch(`/api/marcas?id=${marca.id}`, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({
+          ...marca,
+          oposicion: updatedOposiciones,
+        }),
       });
 
       if (!response.ok) throw new Error('Error al agregar oposición');
