@@ -22,6 +22,7 @@ export default function DashboardClient() {
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [selectedTimeRange, setSelectedTimeRange] = useState(30);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
+  const [oposicionModalOpen, setOposicionModalOpen] = useState(false);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
@@ -289,7 +290,11 @@ export default function DashboardClient() {
   };
 
   const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString();
+    return new Date(date).toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   const addToGoogleCalendar = (marca: Marca, type: 'renovar' | 'vencimiento') => {
@@ -439,27 +444,29 @@ export default function DashboardClient() {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 whitespace-nowrap">
-                              Marca
+                            <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
+                              <div className="min-w-[150px]">Marca</div>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Tipo
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[100px]">Tipo</div>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Clases
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[100px]">Clases</div>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Titular
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[150px]">Titular</div>
                             </th>
-                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 whitespace-nowrap">
-                              Fechas
-                              <button
-                                onClick={handleSort}
-                                className="ml-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-                                title={`Ordenar por fecha de renovación ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
-                              >
-                                <FaSort className={`h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
-                              </button>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[200px]">
+                                Fechas
+                                <button
+                                  onClick={handleSort}
+                                  className="ml-2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+                                  title={`Ordenar por fecha de renovación ${sortDirection === 'asc' ? 'descendente' : 'ascendente'}`}
+                                >
+                                  <FaSort className={`h-4 w-4 ${sortDirection === 'desc' ? 'transform rotate-180' : ''}`} />
+                                </button>
+                              </div>
                             </th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                               <div className="min-w-[250px]">Oposiciones</div>
@@ -468,7 +475,9 @@ export default function DashboardClient() {
                               <div className="min-w-[250px]">Anotaciones</div>
                             </th>
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                              <span className="sr-only">Acciones</span>
+                              <div className="min-w-[150px]">
+                                <span className="sr-only">Acciones</span>
+                              </div>
                             </th>
                           </tr>
                         </thead>
@@ -478,29 +487,35 @@ export default function DashboardClient() {
                               key={marca.id}
                               className="hover:bg-gray-50 transition-colors duration-200"
                             >
-                              <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
-                                <button
-                                  onClick={() => handleEdit(marca)}
-                                  className="hover:text-indigo-600 transition-colors duration-200"
-                                >
-                                  {truncateText(marca.marca, 20)}
-                                </button>
+                              <td className="py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
+                                <div className="min-w-[150px]">
+                                  <button
+                                    onClick={() => handleEdit(marca)}
+                                    className="hover:text-indigo-600 transition-colors duration-200"
+                                  >
+                                    {truncateText(marca.marca, 20)}
+                                  </button>
+                                </div>
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.tipoMarca}
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <div className="min-w-[100px]">
+                                  {marca.tipoMarca}
+                                </div>
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                <div className="space-y-1">
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <div className="min-w-[100px] space-y-1">
                                   {formatClases(marca.clases).map((row, index) => (
                                     <div key={index}>{row}</div>
                                   ))}
                                 </div>
                               </td>
-                              <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.titular.fullName}
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <div className="min-w-[150px]">
+                                  {marca.titular.fullName}
+                                </div>
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
-                                <div className="space-y-2">
+                                <div className="min-w-[200px] space-y-2">
                                   <div className="flex items-center space-x-2">
                                     <span className="text-gray-700 font-medium">Renovar:</span>
                                     <span>{formatDate(marca.renovar)}</span>
@@ -588,35 +603,6 @@ export default function DashboardClient() {
                                           >
                                             {truncateText(note.text)}
                                           </button>
-                                          <button
-                                            onClick={() => {
-                                              const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
-                                              fetch(`/api/marcas?id=${marca.id}`, {
-                                                method: 'PUT',
-                                                headers: {
-                                                  'Content-Type': 'application/json',
-                                                },
-                                                body: JSON.stringify({
-                                                  ...marca,
-                                                  anotaciones: updatedAnotaciones.map(note => note.text),
-                                                }),
-                                              }).then(response => {
-                                                if (response.ok) {
-                                                  fetchMarcas();
-                                                  toast.success('Anotación eliminada exitosamente');
-                                                } else {
-                                                  throw new Error('Error al eliminar anotación');
-                                                }
-                                              }).catch(error => {
-                                                console.error('Error deleting anotacion:', error);
-                                                toast.error('Error al eliminar la anotación');
-                                              });
-                                            }}
-                                            className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                            title="Eliminar anotación"
-                                          >
-                                            <FaTrash className="h-4 w-4" />
-                                          </button>
                                         </div>
                                       ))}
                                     </div>
@@ -633,8 +619,8 @@ export default function DashboardClient() {
                                   )}
                                 </div>
                               </td>
-                              <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                <div className="flex justify-center space-x-2">
+                              <td className="relative py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                <div className="min-w-[150px] flex justify-center space-x-2">
                                   <button
                                     onClick={() => window.open(`https://wa.me/${marca.titular.phone}`, '_blank')}
                                     className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
@@ -697,12 +683,16 @@ export default function DashboardClient() {
 
       {selectedOposicion && (
         <OposicionModal
-          isOpen={!!selectedOposicion}
-          onClose={() => setSelectedOposicion(null)}
+          isOpen={oposicionModalOpen}
+          onClose={() => {
+            setOposicionModalOpen(false);
+            setSelectedOposicion(null);
+          }}
           oposicion={selectedOposicion.oposicion}
           onComplete={() => {
             handleToggleOposicion(selectedOposicion.marcaId, selectedOposicion.index);
             setSelectedOposicion(null);
+            setOposicionModalOpen(false);
           }}
         />
       )}
