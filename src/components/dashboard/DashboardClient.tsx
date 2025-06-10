@@ -522,20 +522,11 @@ export default function DashboardClient() {
                     <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                       <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                         <div className="overflow-hidden">
-                          <table className="min-w-full divide-y divide-gray-100">
+                          <table className="min-w-full divide-y divide-gray-300">
                             <thead>
-                              <tr className="bg-gray-50">
+                              <tr>
                                 <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">
                                   Marca
-                                </th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Acta
-                                </th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Resolución
-                                </th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Titular
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                   Tipo
@@ -544,7 +535,13 @@ export default function DashboardClient() {
                                   Clases
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Fechas
+                                  Titular
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Renovar
+                                </th>
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                                  Vencimiento
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
                                   Oposiciones
@@ -557,9 +554,9 @@ export default function DashboardClient() {
                                 </th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-gray-200">
+                            <tbody className="divide-y divide-gray-200 bg-white">
                               {marcas.map((marca) => (
-                                <tr key={marca.id} className="hover:bg-gray-50">
+                                <tr key={marca.id}>
                                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                                     <button
                                       onClick={() => setViewTextModal({
@@ -573,185 +570,71 @@ export default function DashboardClient() {
                                     </button>
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {marca.acta}
+                                    {marca.tipoMarca}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {marca.resolucion}
-                                  </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-900">
-                                    {marca.titular?.fullName || '-'}
+                                    {marca.clases.join(", ")}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : '-'}
-                                  </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {Array.isArray(marca.clases) && marca.clases.length > 0 ? (
-                                      <div className="flex flex-col space-y-1">
-                                        {Array.from({ length: Math.ceil(marca.clases.length / 4) }, (_, i) => (
-                                          <div key={i} className="flex space-x-2">
-                                            {marca.clases.slice(i * 4, (i + 1) * 4).map((clase, index) => (
-                                              <span key={index}>
-                                                {clase}{index < (marca.clases.slice(i * 4, (i + 1) * 4).length - 1) ? ',' : ''}
-                                              </span>
-                                            ))}
-                                          </div>
-                                        ))}
-                                      </div>
-                                    ) : '-'}
-                                  </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    <div className="flex flex-col space-y-2">
-                                      <div className="flex items-center space-x-2">
-                                        <FaCalendarPlus className="text-purple-500" />
-                                        <span>Renovar: {marca.renovar ? new Date(marca.renovar).toLocaleDateString() : '-'}</span>
-                                      </div>
-                                      <div className="flex items-center space-x-2">
-                                        <FaCalendarPlus className="text-orange-500" />
-                                        <span>Vence: {marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString() : '-'}</span>
+                                    <div className="flex flex-col">
+                                      <span>{marca.titular.fullName}</span>
+                                      <div className="flex space-x-2 mt-1">
+                                        <a
+                                          href={`https://wa.me/${marca.titular.phone}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="text-gray-400 hover:text-gray-500"
+                                        >
+                                          <FaWhatsapp className="h-5 w-5" />
+                                        </a>
+                                        <a
+                                          href={`mailto:${marca.titular.email}`}
+                                          className="text-gray-400 hover:text-gray-500"
+                                        >
+                                          <FaEnvelope className="h-5 w-5" />
+                                        </a>
                                       </div>
                                     </div>
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
-                                      <div className="space-y-1">
-                                        {marca.oposicion.map((op, index) => (
-                                          <div key={op.id || index} className="flex items-center space-x-2">
-                                            <button
-                                              onClick={() => setViewTextModal({
-                                                isOpen: true,
-                                                title: 'Oposición',
-                                                content: op.text
-                                              })}
-                                              className="text-left text-gray-600 hover:text-gray-900"
-                                            >
-                                              {truncateText(op.text)}
-                                            </button>
-                                            <button
-                                              onClick={() => handleDeleteOposicion(marca.id, index)}
-                                              className="text-red-600 hover:text-red-900"
-                                            >
-                                              ×
-                                            </button>
-                                          </div>
-                                        ))}
-                                        <div className="flex justify-center">
-                                          <button
-                                            onClick={() => {
-                                              const text = prompt('Nueva oposición:');
-                                              if (text?.trim()) {
-                                                handleAddOposicion(marca.id, text);
-                                              }
-                                            }}
-                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                            title="Agregar otra oposición"
-                                          >
-                                            <FaPlus className="h-4 w-4" />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="flex justify-center">
-                                        <button
-                                          onClick={() => {
-                                            const text = prompt('Nueva oposición:');
-                                            if (text?.trim()) {
-                                              handleAddOposicion(marca.id, text);
-                                            }
-                                          }}
-                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar oposición"
-                                        >
-                                          <FaPlus className="h-4 w-4" />
-                                        </button>
-                                      </div>
-                                    )}
+                                    {new Date(marca.renovar).toLocaleDateString()}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
-                                      <div className="space-y-1">
-                                        {marca.anotacion.map((note, index) => (
-                                          <div key={note.id || index} className="flex items-center space-x-2">
-                                            <button
-                                              onClick={() => setViewTextModal({
-                                                isOpen: true,
-                                                title: 'Anotación',
-                                                content: note.text
-                                              })}
-                                              className="text-left text-gray-600 hover:text-gray-900"
-                                            >
-                                              {truncateText(note.text)}
-                                            </button>
-                                            <button
-                                              onClick={() => handleDeleteAnotacion(marca.id, index)}
-                                              className="text-red-600 hover:text-red-900"
-                                            >
-                                              ×
-                                            </button>
-                                          </div>
-                                        ))}
-                                        <div className="flex justify-center">
-                                          <button
-                                            onClick={() => {
-                                              const text = prompt('Nueva anotación:');
-                                              if (text?.trim()) {
-                                                handleAddAnotacion(marca.id, text);
-                                              }
-                                            }}
-                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                            title="Agregar otra anotación"
-                                          >
-                                            <FaPlus className="h-4 w-4" />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      <div className="flex justify-center">
-                                        <button
-                                          onClick={() => {
-                                            const text = prompt('Nueva anotación:');
-                                            if (text?.trim()) {
-                                              handleAddAnotacion(marca.id, text);
-                                            }
-                                          }}
-                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                          title="Agregar anotación"
-                                        >
-                                          <FaPlus className="h-4 w-4" />
-                                        </button>
-                                      </div>
-                                    )}
+                                    {new Date(marca.vencimiento).toLocaleDateString()}
                                   </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    <div className="flex justify-center space-x-3">
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
+                                    <div className="flex justify-center items-center space-x-2">
+                                      <span>{marca.oposicion.length}</span>
                                       <button
-                                        onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
-                                        className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
-                                        title="Enviar WhatsApp"
+                                        onClick={() => handleAddOposicion(marca.id, '')}
+                                        className="text-indigo-600 hover:text-indigo-900"
                                       >
-                                        <FaWhatsapp className="h-5 w-5" />
+                                        <FaPlus className="h-4 w-4" />
                                       </button>
+                                    </div>
+                                  </td>
+                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
+                                    <div className="flex justify-center items-center space-x-2">
+                                      <span>{marca.anotacion.length}</span>
                                       <button
-                                        onClick={() => window.location.href = `mailto:${marca.titular?.email}`}
-                                        className="text-blue-600 hover:text-blue-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
-                                        title="Enviar Email"
+                                        onClick={() => handleAddAnotacion(marca.id, '')}
+                                        className="text-indigo-600 hover:text-indigo-900"
                                       >
-                                        <FaEnvelope className="h-5 w-5" />
+                                        <FaPlus className="h-4 w-4" />
                                       </button>
+                                    </div>
+                                  </td>
+                                  <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
+                                    <div className="flex justify-center space-x-2">
                                       <button
                                         onClick={() => handleEdit(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100"
-                                        title="Editar Marca"
+                                        className="text-indigo-600 hover:text-indigo-900"
                                       >
                                         <FaEdit className="h-5 w-5" />
                                       </button>
                                       <button
-                                        onClick={() => {
-                                          if (window.confirm('¿Estás seguro de que deseas eliminar esta marca?')) {
-                                            handleDelete(marca.id);
-                                          }
-                                        }}
-                                        className="text-red-600 hover:text-red-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                        title="Eliminar Marca"
+                                        onClick={() => handleDelete(marca.id)}
+                                        className="text-red-600 hover:text-red-900"
                                       >
                                         <FaTrash className="h-5 w-5" />
                                       </button>
