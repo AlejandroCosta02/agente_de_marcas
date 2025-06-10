@@ -505,10 +505,54 @@ export default function DashboardClient() {
                                                 title: 'Oposición',
                                                 content: op.text
                                               })}
-                                              className="text-left text-gray-600 hover:text-gray-900"
+                                              className={`text-left ${op.completed ? 'text-green-600' : 'text-gray-600'} hover:text-gray-900 flex-grow`}
                                             >
                                               {truncateText(op.text)}
                                             </button>
+                                            <div className="flex space-x-1">
+                                              <button
+                                                onClick={() => handleToggleOposicion(marca.id, index)}
+                                                className={`${
+                                                  op.completed
+                                                    ? 'text-green-600 hover:text-green-800'
+                                                    : 'text-gray-400 hover:text-gray-600'
+                                                } transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-gray-100`}
+                                                title={op.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
+                                              >
+                                                <svg className="h-4 w-4" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                              </button>
+                                              <button
+                                                onClick={() => {
+                                                  const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+                                                  fetch(`/api/marcas?id=${marca.id}`, {
+                                                    method: 'PUT',
+                                                    headers: {
+                                                      'Content-Type': 'application/json',
+                                                    },
+                                                    body: JSON.stringify({
+                                                      ...marca,
+                                                      oposicion: updatedOposiciones,
+                                                    }),
+                                                  }).then(response => {
+                                                    if (response.ok) {
+                                                      fetchMarcas();
+                                                      toast.success('Oposición eliminada exitosamente');
+                                                    } else {
+                                                      throw new Error('Error al eliminar oposición');
+                                                    }
+                                                  }).catch(error => {
+                                                    console.error('Error deleting oposicion:', error);
+                                                    toast.error('Error al eliminar la oposición');
+                                                  });
+                                                }}
+                                                className="text-red-600 hover:text-red-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
+                                                title="Eliminar oposición"
+                                              >
+                                                <FaTrash className="h-4 w-4" />
+                                              </button>
+                                            </div>
                                           </div>
                                         ))}
                                         <div className="flex justify-center">
