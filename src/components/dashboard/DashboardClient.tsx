@@ -430,10 +430,10 @@ export default function DashboardClient() {
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                   Vencimiento
                                 </th>
-                                <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                   Oposiciones
                                 </th>
-                                <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
+                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                   Anotaciones
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900">
@@ -463,25 +463,7 @@ export default function DashboardClient() {
                                     {marca.clases.join(", ")}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    <div className="flex flex-col">
-                                      <span>{marca.titular.fullName}</span>
-                                      <div className="flex space-x-2 mt-1">
-                                        <a
-                                          href={`https://wa.me/${marca.titular.phone}`}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="text-gray-400 hover:text-gray-500"
-                                        >
-                                          <FaWhatsapp className="h-5 w-5" />
-                                        </a>
-                                        <a
-                                          href={`mailto:${marca.titular.email}`}
-                                          className="text-gray-400 hover:text-gray-500"
-                                        >
-                                          <FaEnvelope className="h-5 w-5" />
-                                        </a>
-                                      </div>
-                                    </div>
+                                    {marca.titular.fullName}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {new Date(marca.renovar).toLocaleDateString()}
@@ -489,39 +471,111 @@ export default function DashboardClient() {
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {new Date(marca.vencimiento).toLocaleDateString()}
                                   </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
-                                    <div className="flex justify-center items-center space-x-2">
-                                      <span>{marca.oposicion.length}</span>
-                                      <button
-                                        onClick={() => handleAddOposicion(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
-                                    </div>
+                                  <td className="px-3 py-4 text-sm text-gray-500">
+                                    {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {marca.oposicion.map((op, index) => (
+                                          <div key={index} className="flex items-center space-x-2">
+                                            <button
+                                              onClick={() => setViewTextModal({
+                                                isOpen: true,
+                                                title: 'Oposición',
+                                                content: op.text
+                                              })}
+                                              className="text-left text-gray-600 hover:text-gray-900"
+                                            >
+                                              {truncateText(op.text)}
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <div className="flex justify-center">
+                                          <button
+                                            onClick={() => handleAddOposicion(marca)}
+                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                            title="Agregar otra oposición"
+                                          >
+                                            <FaPlus className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex justify-center">
+                                        <button
+                                          onClick={() => handleAddOposicion(marca)}
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar oposición"
+                                        >
+                                          <FaPlus className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    )}
                                   </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 text-center">
-                                    <div className="flex justify-center items-center space-x-2">
-                                      <span>{marca.anotacion.length}</span>
-                                      <button
-                                        onClick={() => handleAddAnotacion(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
-                                    </div>
+                                  <td className="px-3 py-4 text-sm text-gray-500">
+                                    {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {marca.anotacion.map((note, index) => (
+                                          <div key={index} className="flex items-center space-x-2">
+                                            <button
+                                              onClick={() => setViewTextModal({
+                                                isOpen: true,
+                                                title: 'Anotación',
+                                                content: note.text
+                                              })}
+                                              className="text-left text-gray-600 hover:text-gray-900"
+                                            >
+                                              {truncateText(note.text)}
+                                            </button>
+                                          </div>
+                                        ))}
+                                        <div className="flex justify-center">
+                                          <button
+                                            onClick={() => handleAddAnotacion(marca)}
+                                            className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                            title="Agregar otra anotación"
+                                          >
+                                            <FaPlus className="h-4 w-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="flex justify-center">
+                                        <button
+                                          onClick={() => handleAddAnotacion(marca)}
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar anotación"
+                                        >
+                                          <FaPlus className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    )}
                                   </td>
                                   <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                     <div className="flex justify-center space-x-2">
                                       <button
+                                        onClick={() => window.open(`https://wa.me/${marca.titular.phone}`, '_blank')}
+                                        className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
+                                        title="Enviar WhatsApp"
+                                      >
+                                        <FaWhatsapp className="h-5 w-5" />
+                                      </button>
+                                      <button
+                                        onClick={() => window.location.href = `mailto:${marca.titular.email}`}
+                                        className="text-blue-600 hover:text-blue-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                        title="Enviar Email"
+                                      >
+                                        <FaEnvelope className="h-5 w-5" />
+                                      </button>
+                                      <button
                                         onClick={() => handleEdit(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900"
+                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100"
+                                        title="Editar Marca"
                                       >
                                         <FaEdit className="h-5 w-5" />
                                       </button>
                                       <button
                                         onClick={() => handleDelete(marca)}
-                                        className="text-red-600 hover:text-red-900"
+                                        className="text-red-600 hover:text-red-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
+                                        title="Eliminar Marca"
                                       >
                                         <FaTrash className="h-5 w-5" />
                                       </button>
