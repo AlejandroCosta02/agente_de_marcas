@@ -100,8 +100,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
     if (!formData.marca) {
       newErrors.marca = 'El nombre es requerido';
-    } else if (formData.marca.length > 20) {
-      newErrors.marca = 'El nombre no puede tener más de 20 caracteres';
     }
 
     if (!formData.acta) {
@@ -248,7 +246,9 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">Nombre</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Marca <span className="text-red-500">*</span>
+                    </label>
                     <input
                       type="text"
                       value={formData.marca}

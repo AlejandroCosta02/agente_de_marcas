@@ -561,7 +561,16 @@ export default function DashboardClient() {
                               {marcas.map((marca) => (
                                 <tr key={marca.id} className="hover:bg-gray-50">
                                   <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                    {marca.marca}
+                                    <button
+                                      onClick={() => setViewTextModal({
+                                        isOpen: true,
+                                        title: 'Nombre de la Marca',
+                                        content: marca.marca
+                                      })}
+                                      className="text-left hover:text-indigo-600 transition-colors duration-200"
+                                    >
+                                      {truncateText(marca.marca, 20)}
+                                    </button>
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {marca.acta}
