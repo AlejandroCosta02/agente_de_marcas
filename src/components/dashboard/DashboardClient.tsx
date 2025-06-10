@@ -521,7 +521,19 @@ export default function DashboardClient() {
                                     {marca.tipoMarca ? marca.tipoMarca.charAt(0).toUpperCase() + marca.tipoMarca.slice(1) : '-'}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {Array.isArray(marca.clases) && marca.clases.length > 0 ? marca.clases.join(', ') : '-'}
+                                    {Array.isArray(marca.clases) && marca.clases.length > 0 ? (
+                                      <div className="flex flex-col space-y-1">
+                                        {Array.from({ length: Math.ceil(marca.clases.length / 4) }, (_, i) => (
+                                          <div key={i} className="flex space-x-2">
+                                            {marca.clases.slice(i * 4, (i + 1) * 4).map((clase, index) => (
+                                              <span key={index}>
+                                                {clase}{index < (marca.clases.slice(i * 4, (i + 1) * 4).length - 1) ? ',' : ''}
+                                              </span>
+                                            ))}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : '-'}
                                   </td>
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     <div className="flex flex-col space-y-2">
