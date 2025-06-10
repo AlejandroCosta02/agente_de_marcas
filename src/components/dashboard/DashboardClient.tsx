@@ -329,6 +329,20 @@ export default function DashboardClient() {
     window.open(googleCalendarUrl, '_blank');
   };
 
+  const formatClases = (clases: number[]) => {
+    return clases
+      .sort((a, b) => a - b)
+      .reduce((rows: string[], clase, index) => {
+        const rowIndex = Math.floor(index / 3);
+        if (!rows[rowIndex]) {
+          rows[rowIndex] = clase.toString();
+        } else {
+          rows[rowIndex] += `, ${clase}`;
+        }
+        return rows;
+      }, []);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -503,7 +517,11 @@ export default function DashboardClient() {
                                 {marca.tipoMarca}
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                {marca.clases.join(", ")}
+                                <div className="space-y-1">
+                                  {formatClases(marca.clases).map((row, index) => (
+                                    <div key={index}>{row}</div>
+                                  ))}
+                                </div>
                               </td>
                               <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                 {marca.titular.fullName}
