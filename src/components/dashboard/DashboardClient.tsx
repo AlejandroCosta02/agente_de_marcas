@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaCalendarPlus } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaCalendarPlus, FaPlus } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 
@@ -612,9 +612,10 @@ export default function DashboardClient() {
                                               handleAddOposicion(marca.id, text);
                                             }
                                           }}
-                                          className="text-indigo-600 hover:text-indigo-900 text-sm"
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar otra oposición"
                                         >
-                                          + Agregar otra
+                                          <FaPlus className="h-4 w-4" />
                                         </button>
                                       </div>
                                     ) : (
@@ -625,9 +626,10 @@ export default function DashboardClient() {
                                             handleAddOposicion(marca.id, text);
                                           }
                                         }}
-                                        className="text-indigo-600 hover:text-indigo-900"
+                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                        title="Agregar oposición"
                                       >
-                                        + Agregar oposición
+                                        <FaPlus className="h-4 w-4" />
                                       </button>
                                     )}
                                   </td>
@@ -661,9 +663,10 @@ export default function DashboardClient() {
                                               handleAddAnotacion(marca.id, text);
                                             }
                                           }}
-                                          className="text-indigo-600 hover:text-indigo-900 text-sm"
+                                          className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                          title="Agregar otra anotación"
                                         >
-                                          + Agregar otra
+                                          <FaPlus className="h-4 w-4" />
                                         </button>
                                       </div>
                                     ) : (
@@ -674,9 +677,10 @@ export default function DashboardClient() {
                                             handleAddAnotacion(marca.id, text);
                                           }
                                         }}
-                                        className="text-indigo-600 hover:text-indigo-900"
+                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                        title="Agregar anotación"
                                       >
-                                        + Agregar anotación
+                                        <FaPlus className="h-4 w-4" />
                                       </button>
                                     )}
                                   </td>
