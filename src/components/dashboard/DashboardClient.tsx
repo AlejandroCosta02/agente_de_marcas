@@ -515,28 +515,32 @@ export default function DashboardClient() {
                                 </div>
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
-                                <div className="min-w-[200px] space-y-2">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-gray-700 font-medium">Renovar:</span>
-                                    <span>{formatDate(marca.renovar)}</span>
-                                    <button
-                                      onClick={() => addToGoogleCalendar(marca, 'renovar')}
-                                      className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
-                                      title="Agregar a Google Calendar"
-                                    >
-                                      <FaCalendarPlus className="h-4 w-4" />
-                                    </button>
+                                <div className="min-w-[200px] flex flex-col space-y-4">
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-700 font-medium mb-1">Renovar:</span>
+                                    <div className="flex items-center space-x-2 pl-2">
+                                      <span>{formatDate(marca.renovar)}</span>
+                                      <button
+                                        onClick={() => addToGoogleCalendar(marca, 'renovar')}
+                                        className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                        title="Agregar a Google Calendar"
+                                      >
+                                        <FaCalendarPlus className="h-4 w-4" />
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-gray-700 font-medium">Vencimiento:</span>
-                                    <span>{formatDate(marca.vencimiento)}</span>
-                                    <button
-                                      onClick={() => addToGoogleCalendar(marca, 'vencimiento')}
-                                      className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
-                                      title="Agregar a Google Calendar"
-                                    >
-                                      <FaCalendarPlus className="h-4 w-4" />
-                                    </button>
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-700 font-medium mb-1">Vencimiento:</span>
+                                    <div className="flex items-center space-x-2 pl-2">
+                                      <span>{formatDate(marca.vencimiento)}</span>
+                                      <button
+                                        onClick={() => addToGoogleCalendar(marca, 'vencimiento')}
+                                        className="text-blue-600 hover:text-blue-800 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                        title="Agregar a Google Calendar"
+                                      >
+                                        <FaCalendarPlus className="h-4 w-4" />
+                                      </button>
+                                    </div>
                                   </div>
                                 </div>
                               </td>
