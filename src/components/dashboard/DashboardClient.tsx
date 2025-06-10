@@ -5,7 +5,7 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaCalendarPlus } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaCalendarPlus } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 
@@ -626,21 +626,24 @@ export default function DashboardClient() {
                                     <div className="flex space-x-3">
                                       <button
                                         onClick={() => window.open(`https://wa.me/${marca.titular?.phone.replace(/\D/g, '')}`, '_blank')}
-                                        className="text-green-600 hover:text-green-900"
+                                        className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
+                                        title="Enviar WhatsApp"
                                       >
                                         <FaWhatsapp className="h-5 w-5" />
                                       </button>
                                       <button
                                         onClick={() => window.location.href = `mailto:${marca.titular?.email}`}
-                                        className="text-blue-600 hover:text-blue-900"
+                                        className="text-blue-600 hover:text-blue-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-blue-100"
+                                        title="Enviar Email"
                                       >
                                         <FaEnvelope className="h-5 w-5" />
                                       </button>
                                       <button
                                         onClick={() => handleEdit(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900"
+                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100"
+                                        title="Editar Marca"
                                       >
-                                        Editar
+                                        <FaEdit className="h-5 w-5" />
                                       </button>
                                       <button
                                         onClick={() => {
@@ -648,9 +651,10 @@ export default function DashboardClient() {
                                             handleDelete(marca.id);
                                           }
                                         }}
-                                        className="text-red-600 hover:text-red-900"
+                                        className="text-red-600 hover:text-red-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
+                                        title="Eliminar Marca"
                                       >
-                                        Eliminar
+                                        <FaTrash className="h-5 w-5" />
                                       </button>
                                     </div>
                                   </td>
