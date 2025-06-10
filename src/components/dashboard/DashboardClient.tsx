@@ -334,6 +334,41 @@ export default function DashboardClient() {
     }
   };
 
+  const handleDeleteOposicion = async (marcaId: string, index: number) => {
+    try {
+      const marca = marcas.find(m => m.id === marcaId);
+      if (!marca) return;
+
+      const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+      
+      const response = await fetch(`/api/marcas?id=${marcaId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          oposicion: updatedOposiciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar oposición');
+
+      setMarcas(prevMarcas =>
+        prevMarcas.map(m =>
+          m.id === marcaId
+            ? { ...m, oposicion: updatedOposiciones }
+            : m
+        )
+      );
+
+      toast.success('Oposición eliminada exitosamente');
+    } catch (error) {
+      console.error('Error deleting oposicion:', error);
+      toast.error('Error al eliminar la oposición');
+    }
+  };
+
   const truncateText = (text: string, maxLength: number = 20) => {
     if (!text) return '';
     return text.length > maxLength ? `${text.substring(0, maxLength)}...` : text;
@@ -552,24 +587,35 @@ export default function DashboardClient() {
                                       <div className="space-y-1">
                                         {marca.oposicion.map((op, index) => (
                                           <div key={op.id || index} className="flex items-center space-x-2">
-                                            <input
-                                              type="checkbox"
-                                              checked={op.completed}
-                                              onChange={() => handleToggleOposicion(marca.id, index)}
-                                              className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                            />
                                             <button
                                               onClick={() => setViewTextModal({
                                                 isOpen: true,
                                                 title: 'Oposición',
                                                 content: op.text
                                               })}
-                                              className={`text-left ${op.completed ? 'line-through text-gray-400' : 'text-gray-600 hover:text-gray-900'}`}
+                                              className="text-left text-gray-600 hover:text-gray-900"
                                             >
                                               {truncateText(op.text)}
                                             </button>
+                                            <button
+                                              onClick={() => handleDeleteOposicion(marca.id, index)}
+                                              className="text-red-600 hover:text-red-900"
+                                            >
+                                              ×
+                                            </button>
                                           </div>
                                         ))}
+                                        <button
+                                          onClick={() => {
+                                            const text = prompt('Nueva oposición:');
+                                            if (text?.trim()) {
+                                              handleAddOposicion(marca.id, text);
+                                            }
+                                          }}
+                                          className="text-indigo-600 hover:text-indigo-900 text-sm"
+                                        >
+                                          + Agregar otra
+                                        </button>
                                       </div>
                                     ) : (
                                       <button
