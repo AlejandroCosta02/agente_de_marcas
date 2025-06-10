@@ -212,7 +212,7 @@ export default function DashboardClient() {
         },
         body: JSON.stringify({
           ...marca,
-          anotacion: updatedAnotaciones,
+          anotaciones: updatedAnotaciones.map(note => note.text),
         }),
       });
 
@@ -448,10 +448,7 @@ export default function DashboardClient() {
                                   Titular
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Renovar
-                                </th>
-                                <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                  Vencimiento
+                                  Fechas
                                 </th>
                                 <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
                                   Oposiciones
@@ -488,11 +485,17 @@ export default function DashboardClient() {
                                   <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                                     {marca.titular.fullName}
                                   </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {new Date(marca.renovar).toLocaleDateString()}
-                                  </td>
-                                  <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                    {new Date(marca.vencimiento).toLocaleDateString()}
+                                  <td className="px-3 py-4 text-sm text-gray-500">
+                                    <div className="space-y-1">
+                                      <div>
+                                        <span className="font-medium text-gray-700">Renovar:</span>{' '}
+                                        {new Date(marca.renovar).toLocaleDateString()}
+                                      </div>
+                                      <div>
+                                        <span className="font-medium text-gray-700">Vencimiento:</span>{' '}
+                                        {new Date(marca.vencimiento).toLocaleDateString()}
+                                      </div>
+                                    </div>
                                   </td>
                                   <td className="px-3 py-4 text-sm text-gray-500">
                                     {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
