@@ -266,8 +266,12 @@ export default function DashboardClient() {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta marca?')) return;
 
     try {
-      const response = await fetch(`/api/marcas/${marca.id}`, {
+      const response = await fetch('/api/marcas', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: marca.id }),
       });
 
       if (!response.ok) throw new Error('Error al eliminar marca');
