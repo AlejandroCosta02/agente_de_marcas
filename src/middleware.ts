@@ -11,18 +11,19 @@ export default withAuth(
       console.log('Middleware - Token state:', { exists: !!token });
       
       const isAuth = !!token;
-      const isAuthPage = req.nextUrl.pathname.startsWith('/login');
+      const isAuthPage = req.nextUrl.pathname.startsWith('/auth/');
       const isApiRequest = req.nextUrl.pathname.startsWith('/api/');
       const isMigratePage = req.nextUrl.pathname.startsWith('/migrate');
+      const isRootPage = req.nextUrl.pathname === '/';
 
-      // Allow access to auth page only if not authenticated
-      if (isAuthPage || isMigratePage) {
+      // Allow access to auth pages only if not authenticated
+      if (isAuthPage || isMigratePage || isRootPage) {
         if (isAuth) {
-          console.log('Middleware - Redirecting authenticated user from auth/migrate page to dashboard');
+          console.log('Middleware - Redirecting authenticated user to dashboard');
           return NextResponse.redirect(new URL('/dashboard', req.url));
         }
-        console.log('Middleware - Allowing access to auth/migrate page for unauthenticated user');
-        return null;
+        console.log('Middleware - Allowing access to auth page for unauthenticated user');
+        return NextResponse.next();
       }
 
       if (!isAuth) {
@@ -38,7 +39,7 @@ export default withAuth(
 
         console.log('Middleware - Redirecting to login with from:', from);
         return NextResponse.redirect(
-          new URL(`/?from=${encodeURIComponent(from)}`, req.url)
+          new URL(`/auth/login?from=${encodeURIComponent(from)}`, req.url)
         );
       }
 
@@ -55,7 +56,7 @@ export default withAuth(
         return NextResponse.json({ message: 'Error interno del servidor' }, { status: 500 });
       }
       
-      return NextResponse.redirect(new URL('/?error=ServerError', req.url));
+      return NextResponse.redirect(new URL('/auth/login?error=ServerError', req.url));
     }
   },
   {
@@ -67,10 +68,11 @@ export default withAuth(
 
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/api/marcas/:path*',
     '/api/migrations/:path*',
-    '/login',
+    '/auth/:path*',
     '/migrate'
   ],
 }; 

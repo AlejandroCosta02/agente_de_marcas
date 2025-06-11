@@ -322,6 +322,31 @@ export default function DashboardClient() {
       }, []);
   };
 
+  const handleDeleteAnotacion = async (marca: Marca, index: number) => {
+    try {
+      const updatedAnotaciones = marca.anotacion.filter((_, i) => i !== index);
+
+      const response = await fetch(`/api/marcas?id=${marca.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          anotacion: updatedAnotaciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar anotación');
+
+      toast.success('Anotación eliminada exitosamente');
+      fetchMarcas();
+    } catch (error) {
+      console.error('Error deleting anotacion:', error);
+      toast.error('Error al eliminar anotación');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -485,7 +510,9 @@ export default function DashboardClient() {
                               <div className="min-w-[250px]">Oposiciones</div>
                             </th>
                             <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                              <div className="min-w-[250px]">Anotaciones</div>
+                              <div className="min-w-[250px] flex items-center justify-between">
+                                <span>Anotaciones</span>
+                              </div>
                             </th>
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                               <div className="min-w-[150px]">
@@ -606,6 +633,15 @@ export default function DashboardClient() {
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
                                 <div className="min-w-[250px]">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <button
+                                      onClick={() => handleAddAnotacion(marca)}
+                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                      title="Agregar anotación"
+                                    >
+                                      <FaPlus className="h-4 w-4" />
+                                    </button>
+                                  </div>
                                   {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
                                     <div className="space-y-1">
                                       {marca.anotacion.map((note, index) => (
@@ -620,18 +656,19 @@ export default function DashboardClient() {
                                           >
                                             {truncateText(note.text)}
                                           </button>
+                                          <button
+                                            onClick={() => handleDeleteAnotacion(marca, index)}
+                                            className="text-red-600 hover:text-red-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
+                                            title="Eliminar anotación"
+                                          >
+                                            <FaTrash className="h-4 w-4" />
+                                          </button>
                                         </div>
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="flex justify-center">
-                                      <button
-                                        onClick={() => handleAddAnotacion(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar anotación"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
+                                    <div className="text-gray-400 text-sm italic">
+                                      No hay anotaciones
                                     </div>
                                   )}
                                 </div>
