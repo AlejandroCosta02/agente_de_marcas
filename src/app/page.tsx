@@ -7,8 +7,8 @@ export default async function Home() {
   const session = await getServerSession(authOptions);
 
   return (
-    <>
-      <main className="bg-gradient-to-b from-blue-900 to-black text-white">
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-grow bg-gradient-to-b from-blue-900 to-black text-white">
         <div className="container mx-auto px-4 py-16">
           <nav className="flex justify-between items-center mb-16">
             <h1 className="text-2xl font-bold">Agente de Marcas</h1>
@@ -85,6 +85,6 @@ export default async function Home() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
