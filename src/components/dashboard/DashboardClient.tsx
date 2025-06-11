@@ -636,38 +636,41 @@ export default function DashboardClient() {
                                   <div className="flex items-center justify-between mb-2">
                                     <button
                                       onClick={() => handleAddAnotacion(marca)}
-                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
+                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-105 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-50 inline-flex items-center gap-1 text-xs"
                                       title="Agregar anotación"
                                     >
-                                      <FaPlus className="h-4 w-4" />
+                                      <FaPlus className="h-3 w-3" />
+                                      <span>Agregar</span>
                                     </button>
                                   </div>
                                   {Array.isArray(marca.anotacion) && marca.anotacion.length > 0 ? (
                                     <div className="space-y-1">
                                       {marca.anotacion.map((note, index) => (
-                                        <div key={index} className="flex items-center space-x-2">
+                                        <div key={index} className="flex items-center justify-between group bg-gray-50 hover:bg-gray-100 rounded-md p-1.5 transition-all duration-200">
                                           <button
                                             onClick={() => setViewTextModal({
                                               isOpen: true,
                                               title: 'Anotación',
                                               content: note.text
                                             })}
-                                            className="text-left text-gray-600 hover:text-gray-900 flex-grow"
+                                            className="text-left text-gray-600 hover:text-gray-900 flex-grow text-xs truncate mr-2"
                                           >
                                             {truncateText(note.text)}
                                           </button>
-                                          <button
-                                            onClick={() => handleDeleteAnotacion(marca, index)}
-                                            className="text-red-600 hover:text-red-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-100"
-                                            title="Eliminar anotación"
-                                          >
-                                            <FaTrash className="h-4 w-4" />
-                                          </button>
+                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                            <button
+                                              onClick={() => handleDeleteAnotacion(marca, index)}
+                                              className="text-red-500 hover:text-red-700 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-50"
+                                              title="Eliminar anotación"
+                                            >
+                                              <FaTrash className="h-3 w-3" />
+                                            </button>
+                                          </div>
                                         </div>
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="text-gray-400 text-sm italic">
+                                    <div className="text-gray-400 text-xs italic">
                                       No hay anotaciones
                                     </div>
                                   )}
