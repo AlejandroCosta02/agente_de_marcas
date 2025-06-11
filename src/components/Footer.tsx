@@ -52,7 +52,7 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link href="/" className="text-gray-600 hover:text-gray-900">
-                  Inicio🔴
+                  Inicio
                 </Link>
               </li>
               <li>
