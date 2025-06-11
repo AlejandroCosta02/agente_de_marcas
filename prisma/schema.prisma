@@ -23,21 +23,20 @@ model Titular {
 }
 
 model Marca {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  status      String
-  oposicion   Json[]   @default([])
-  anotacion   Json[]   @default([])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  user_email  String
-  clases      Int[]    @default([])
-  tipoMarca   String
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-  titular     Titular  @relation(fields: [titularId], references: [id])
-  titularId   String
+  id              String   @id @default(uuid())
+  marca           String
+  renovar         DateTime
+  vencimiento     DateTime
+  oposicion       Json[]   @default([])
+  anotaciones     String[] @default([])
+  clases          Int[]    @default([])
+  user_email      String
+  tipo_marca      String
+  titular_nombre  String
+  titular_email   String
+  titular_telefono String
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 
   @@index([user_email])
 }
