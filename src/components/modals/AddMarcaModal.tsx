@@ -4,36 +4,23 @@ import { useState } from 'react';
 import { Titular, TipoMarca } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface MarcaFormData {
+interface FormData {
   marca: string;
-  acta: string;
-  resolucion: string;
   renovar: string;
   vencimiento: string;
-  titular: Titular;
-  anotaciones: string[];
-  oposicion: string;
-  tipoMarca: TipoMarca;
-  clases: number[];
-}
-
-interface MarcaSubmissionData {
-  marca: string;
-  acta: number;
-  resolucion: number;
-  renovar: string;
-  vencimiento: string;
-  titular: Titular;
-  anotaciones: string[];
-  oposicion: string;
-  tipoMarca: TipoMarca;
+  titular: {
+    fullName: string;
+    email: string;
+    phone: string;
+  };
+  anotacion: string[];
+  oposicion: string[];
+  tipoMarca: string;
   clases: number[];
 }
 
 interface FormErrors {
   marca?: string;
-  acta?: string;
-  resolucion?: string;
   renovar?: string;
   vencimiento?: string;
   titular?: {
@@ -41,13 +28,12 @@ interface FormErrors {
     email?: string;
     phone?: string;
   };
-  tipoMarca?: string;
 }
 
 interface AddMarcaModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: MarcaSubmissionData) => void;
+  onSubmit: (data: FormData) => void;
 }
 
 const TIPOS_MARCA: TipoMarca[] = [
@@ -64,19 +50,17 @@ const TIPOS_MARCA: TipoMarca[] = [
 ];
 
 export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaModalProps) {
-  const [formData, setFormData] = useState<MarcaFormData>({
+  const [formData, setFormData] = useState<FormData>({
     marca: '',
-    acta: '',
-    resolucion: '',
-    renovar: new Date().toISOString().split('T')[0],
-    vencimiento: new Date().toISOString().split('T')[0],
+    renovar: '',
+    vencimiento: '',
     titular: {
       fullName: '',
       email: '',
       phone: ''
     },
-    anotaciones: [''],
-    oposicion: '',
+    anotacion: [],
+    oposicion: [],
     tipoMarca: 'denominativa',
     clases: []
   });
@@ -84,33 +68,53 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
   const [showClasesDropdown, setShowClasesDropdown] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate form
-    const newErrors = validateForm();
+    const newErrors: FormErrors = {};
+    
+    if (!formData.marca) newErrors.marca = 'El nombre de la marca es requerido';
+    if (!formData.renovar) newErrors.renovar = 'La fecha de renovación es requerida';
+    if (!formData.vencimiento) newErrors.vencimiento = 'La fecha de vencimiento es requerida';
+    if (!formData.titular.fullName) newErrors.titular = { ...newErrors.titular, fullName: 'El nombre del titular es requerido' };
+    if (!formData.titular.email) newErrors.titular = { ...newErrors.titular, email: 'El email del titular es requerido' };
+    if (!formData.titular.phone) newErrors.titular = { ...newErrors.titular, phone: 'El teléfono del titular es requerido' };
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    // Convert string numbers to actual numbers before submitting
-    const submissionData = {
-      ...formData,
-      acta: parseInt(formData.acta, 10),
-      resolucion: parseInt(formData.resolucion, 10)
-    };
+    // Clear errors
+    setErrors({});
 
-    onSubmit(submissionData);
-    onClose();
+    // Submit form
+    try {
+      await onSubmit(formData);
+      onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    }
   };
 
-  const handleNumberChange = (field: 'acta' | 'resolucion', value: string) => {
-    setFormData(prevData => ({
-      ...prevData,
-      [field]: value
-    }));
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    if (name.startsWith('titular.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        titular: {
+          ...prev.titular,
+          [field]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleClaseSelect = (clase: number) => {
@@ -120,27 +124,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
         ? prev.clases.filter(c => c !== clase)
         : [...prev.clases, clase].sort((a, b) => a - b)
     }));
-  };
-
-  const validateForm = () => {
-    const newErrors: FormErrors = {};
-
-    if (!formData.marca) {
-      newErrors.marca = 'El nombre es requerido';
-    } else if (formData.marca.length > 20) {
-      newErrors.marca = 'El nombre no puede tener más de 20 caracteres';
-    }
-
-    if (!formData.acta) newErrors.acta = 'El acta es requerido';
-    if (!formData.resolucion) newErrors.resolucion = 'La resolución es requerida';
-    if (!formData.renovar) newErrors.renovar = 'La fecha de renovación es requerida';
-    if (!formData.vencimiento) newErrors.vencimiento = 'La fecha de vencimiento es requerida';
-    if (!formData.titular.fullName) newErrors.titular = { ...newErrors.titular, fullName: 'El nombre es requerido' };
-    if (!formData.titular.email) newErrors.titular = { ...newErrors.titular, email: 'El email es requerido' };
-    if (!formData.titular.phone) newErrors.titular = { ...newErrors.titular, phone: 'El teléfono es requerido' };
-    if (!formData.tipoMarca) newErrors.tipoMarca = 'El tipo de marca es requerido';
-
-    return newErrors;
   };
 
   return (
@@ -181,13 +164,13 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                 {/* Marca */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Marca <span className="text-red-500">*</span>
+                    Nombre de la Marca <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    maxLength={20}
+                    name="marca"
                     value={formData.marca}
-                    onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                   />
                   {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
@@ -251,66 +234,39 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                   )}
                 </div>
 
-                {/* Acta */}
+                {/* Renovar */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Acta n.º <span className="text-red-500">*</span>
+                    Fecha de Renovación <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    value={formData.acta}
-                    onChange={(e) => handleNumberChange('acta', e.target.value)}
+                    type="date"
+                    name="renovar"
+                    value={formData.renovar}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                   />
-                  {errors.acta && <p className="mt-1 text-sm text-red-600">{errors.acta}</p>}
+                  {errors.renovar && <p className="mt-1 text-sm text-red-600">{errors.renovar}</p>}
                 </div>
 
-                {/* Resolución */}
+                {/* Vencimiento */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
-                    Resolución <span className="text-red-500">*</span>
+                    Fecha de Vencimiento <span className="text-red-500">*</span>
                   </label>
                   <input
-                    type="number"
-                    value={formData.resolucion}
-                    onChange={(e) => handleNumberChange('resolucion', e.target.value)}
+                    type="date"
+                    name="vencimiento"
+                    value={formData.vencimiento}
+                    onChange={handleInputChange}
                     className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                   />
-                  {errors.resolucion && <p className="mt-1 text-sm text-red-600">{errors.resolucion}</p>}
+                  {errors.vencimiento && <p className="mt-1 text-sm text-red-600">{errors.vencimiento}</p>}
                 </div>
 
-                {/* Fechas */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Renovar <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.renovar}
-                      onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
-                      className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
-                    />
-                    {errors.renovar && <p className="mt-1 text-sm text-red-600">{errors.renovar}</p>}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Vencimiento <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.vencimiento}
-                      onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
-                      className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
-                    />
-                    {errors.vencimiento && <p className="mt-1 text-sm text-red-600">{errors.vencimiento}</p>}
-                  </div>
-                </div>
-
-                {/* Titular */}
+                {/* Titular Information */}
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium text-gray-900">Titular</h3>
+                  <h3 className="text-lg font-medium text-gray-900">Información del Titular</h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="sm:col-span-2">
                       <label className="block text-sm font-medium text-gray-700">
@@ -318,11 +274,9 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                       </label>
                       <input
                         type="text"
+                        name="titular.fullName"
                         value={formData.titular.fullName}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, fullName: e.target.value }
-                        })}
+                        onChange={handleInputChange}
                         className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                       />
                     </div>
@@ -333,11 +287,9 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                       </label>
                       <input
                         type="email"
+                        name="titular.email"
                         value={formData.titular.email}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, email: e.target.value }
-                        })}
+                        onChange={handleInputChange}
                         className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                       />
                     </div>
@@ -348,11 +300,9 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                       </label>
                       <input
                         type="tel"
+                        name="titular.phone"
                         value={formData.titular.phone}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, phone: e.target.value }
-                        })}
+                        onChange={handleInputChange}
                         className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                       />
                     </div>
@@ -367,30 +317,30 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                       type="button"
                       onClick={() => setFormData(prev => ({
                         ...prev,
-                        anotaciones: [...prev.anotaciones, '']
+                        anotacion: [...prev.anotacion, '']
                       }))}
                       className="text-sm text-indigo-600 hover:text-indigo-500 cursor-pointer"
                     >
                       + Agregar anotación
                     </button>
                   </div>
-                  {formData.anotaciones.map((anotacion, index) => (
+                  {formData.anotacion.map((anotacion, index) => (
                     <div key={index} className="flex gap-2 mt-2">
                       <input
                         type="text"
                         value={anotacion}
                         onChange={(e) => {
-                          const newAnotaciones = [...formData.anotaciones];
+                          const newAnotaciones = [...formData.anotacion];
                           newAnotaciones[index] = e.target.value;
-                          setFormData({ ...formData, anotaciones: newAnotaciones });
+                          setFormData({ ...formData, anotacion: newAnotaciones });
                         }}
                         className="flex-1 text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          const newAnotaciones = formData.anotaciones.filter((_, i) => i !== index);
-                          setFormData({ ...formData, anotaciones: newAnotaciones });
+                          const newAnotaciones = formData.anotacion.filter((_, i) => i !== index);
+                          setFormData({ ...formData, anotacion: newAnotaciones });
                         }}
                         className="text-red-500 hover:text-red-700 cursor-pointer"
                       >
@@ -406,8 +356,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit }: AddMarcaMod
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Oposición</label>
                   <textarea
-                    value={formData.oposicion}
-                    onChange={(e) => setFormData({ ...formData, oposicion: e.target.value })}
+                    value={formData.oposicion.join('\n')}
+                    onChange={(e) => setFormData({ ...formData, oposicion: e.target.value.split('\n') })}
                     rows={3}
                     className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
                   />
