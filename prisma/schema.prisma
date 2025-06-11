@@ -11,17 +11,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Titular {
-  id          String   @id @default(cuid())
-  nombre      String
-  direccion   String
-  email       String?
-  phone       String?
-  marcas      Marca[]
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-}
-
 model Marca {
   id              String   @id @default(uuid())
   marca           String
