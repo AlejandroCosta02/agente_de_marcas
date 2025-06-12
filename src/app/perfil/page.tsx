@@ -16,18 +16,17 @@ const initialProfile = {
 
 export default function PerfilPage() {
   const [profile, setProfile] = useState(initialProfile);
-  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
+    
     fetch("/api/profile")
       .then((res) => res.json())
       .then((data) => {
         if (data && data.profile) setProfile(data.profile);
       })
       .catch(() => toast.error("Error al cargar el perfil"))
-      .finally(() => setLoading(false));
+      .finally(() => setSaving(false));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
