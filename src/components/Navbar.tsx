@@ -1,9 +1,12 @@
 'use client';
 
 import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { FaUserCircle } from 'react-icons/fa';
 
 export default function Navbar() {
   const { data: session } = useSession();
+  const router = useRouter();
 
   return (
     <nav className="bg-white shadow-sm">
@@ -30,10 +33,12 @@ export default function Navbar() {
           
           <div className="flex items-center space-x-4">
             <button
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors cursor-pointer"
-              title="Usuario actual"
+              onClick={() => router.push('/perfil')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer group"
+              title="Ver perfil"
             >
-              {session?.user?.name || 'Usuario'}
+              <FaUserCircle className="mr-2 h-5 w-5 text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+              <span>{session?.user?.name || 'Usuario'}</span>
             </button>
             <button
               onClick={() => signOut({ callbackUrl: '/' })}
