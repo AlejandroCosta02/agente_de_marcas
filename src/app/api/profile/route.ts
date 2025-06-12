@@ -6,6 +6,7 @@ import { createPool } from '@vercel/postgres';
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user?.email) {
+    console.error('No session or user email found', { session });
     return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
   }
   const pool = createPool();
