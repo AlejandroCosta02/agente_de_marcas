@@ -28,6 +28,7 @@ export default function LoginForm() {
         return;
       }
 
+      toast.success('Inicio de sesión exitoso');
       router.push('/dashboard');
       router.refresh();
     } catch (error) {

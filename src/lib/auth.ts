@@ -2,6 +2,9 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { compare } from 'bcryptjs';
 import { createPool } from '@vercel/postgres';
+import { NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { withAuth } from 'next-auth/middleware';
 
 declare module 'next-auth' {
   interface Session {
@@ -97,12 +100,55 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id;
-        session.user.email = token.email;
+        const pool = createPool();
+        const result = await pool.query(
+          'SELECT id, email, name FROM users WHERE email = $1',
+          [token.email]
+        );
+        const user = result.rows[0];
+        if (user) {
+          session.user.id = user.id;
+          session.user.email = user.email;
+          session.user.name = user.name;
+        }
       }
       return session;
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
+};
+
+export default withAuth(
+  async function middleware(req) {
+    const token = await getToken({ req });
+    const isAuth = !!token;
+    const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth/');
+
+    // Allow NextAuth API routes
+    if (isApiAuthRoute) {
+      return NextResponse.next();
+    }
+
+    // If not authenticated, redirect to login
+    if (!isAuth) {
+      return NextResponse.redirect(new URL('/auth/login', req.url));
+    }
+
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token,
+    },
+  }
+);
+
+export const config = {
+  matcher: [
+    '/dashboard/:path*',
+    '/api/marcas/:path*',
+    '/api/migrations/:path*',
+    '/migrate'
+  ],
 }; 

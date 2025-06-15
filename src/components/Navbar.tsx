@@ -1,15 +1,19 @@
-'use client';
+"use client";
 
 import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
 
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: "/" });
+  };
+
   return (
-    <nav className="bg-white shadow-sm">
+    <nav key={status} className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -41,7 +45,7 @@ export default function Navbar() {
               <span>{session?.user?.name || 'Usuario'}</span>
             </button>
             <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={handleLogout}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
             >
               <svg 
