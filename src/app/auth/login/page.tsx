@@ -5,7 +5,7 @@ import { useEffect } from "react";
 import LoginForm from '@/components/auth/LoginForm';
 
 export default function LoginPage() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   const router = useRouter();
 
   useEffect(() => {

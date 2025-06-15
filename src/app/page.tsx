@@ -1,11 +1,7 @@
 import Link from 'next/link';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import Footer from '@/components/Footer';
 
 export default async function Home() {
-  const session = await getServerSession(authOptions);
-
   return (
     <div className="min-h-screen flex flex-col">
       <main className="flex-grow bg-gradient-to-b from-blue-900 to-black text-white">
