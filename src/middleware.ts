@@ -8,33 +8,46 @@ export default async function middleware(request: NextRequestWithAuth) {
   const isPublicPage = request.nextUrl.pathname === '/';
   const isApiAuthRoute = request.nextUrl.pathname.startsWith('/api/auth');
 
-  // Clear any existing session cookies if accessing auth pages
+  // Always clear session cookies for auth pages
   if (isAuthPage) {
     const response = NextResponse.next();
+    // Clear all auth-related cookies
     response.cookies.delete('next-auth.session-token');
     response.cookies.delete('next-auth.csrf-token');
     response.cookies.delete('next-auth.callback-url');
+    response.cookies.delete('next-auth.session');
+    response.cookies.delete('next-auth.callback-url');
+    response.cookies.delete('next-auth.csrf-token');
+    response.cookies.delete('next-auth.session-token');
+    response.cookies.delete('next-auth.session-token.sig');
+    response.cookies.delete('next-auth.csrf-token.sig');
     return response;
   }
 
-  // Handle authentication state
+  // If no token, handle unauthenticated state
   if (!token) {
-    // If trying to access protected routes without token, redirect to login
-    if (!isAuthPage && !isPublicPage && !isApiAuthRoute) {
-      return NextResponse.redirect(new URL('/auth/login', request.url));
+    // Allow access to public pages and auth pages
+    if (isPublicPage || isAuthPage || isApiAuthRoute) {
+      return NextResponse.next();
     }
-    // Allow access to auth pages and public pages
-    return NextResponse.next();
+    // Redirect to login for all other pages
+    return NextResponse.redirect(new URL('/auth/login', request.url));
   }
 
-  // If authenticated and trying to access auth pages, redirect to dashboard
-  if (isAuthPage) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // If has token, handle authenticated state
+  if (token) {
+    // Redirect to dashboard if trying to access auth pages
+    if (isAuthPage) {
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+    // Allow access to all other pages
+    return NextResponse.next();
   }
 
   return NextResponse.next();
 }
 
+// Configure which routes to run middleware on
 export const config = {
   matcher: [
     /*

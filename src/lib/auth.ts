@@ -1,7 +1,7 @@
 import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { compare } from 'bcryptjs';
 import { createPool } from '@vercel/postgres';
+import bcrypt from 'bcryptjs';
 import { NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { withAuth } from 'next-auth/middleware';
@@ -31,98 +31,77 @@ declare module 'next-auth/jwt' {
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Sign in',
+      name: 'Credentials',
       credentials: {
-        email: {
-          label: 'Email',
-          type: 'email',
-          placeholder: 'example@example.com',
-        },
+        email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials.password) {
-          console.error('Missing credentials');
-          return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error('Credenciales requeridas');
         }
 
-        try {
-          const pool = createPool();
-          const result = await pool.query(
-            'SELECT id, email, name, password FROM users WHERE email = $1',
-            [credentials.email]
-          );
+        const pool = createPool();
+        const { rows } = await pool.query(
+          'SELECT * FROM users WHERE email = $1',
+          [credentials.email]
+        );
 
-          const user = result.rows[0];
-
-          if (!user) {
-            console.error('User not found');
-            return null;
-          }
-
-          const isPasswordValid = await compare(
-            credentials.password,
-            user.password
-          );
-
-          if (!isPasswordValid) {
-            console.error('Invalid password');
-            return null;
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-          };
-        } catch (error) {
-          console.error('Auth error:', error);
-          return null;
+        if (rows.length === 0) {
+          throw new Error('Usuario no encontrado');
         }
+
+        const user = rows[0];
+        const isValid = await bcrypt.compare(credentials.password, user.password);
+
+        if (!isValid) {
+          throw new Error('Contraseña incorrecta');
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        };
       },
     }),
   ],
-  pages: {
-    signIn: '/auth/login',
-    error: '/auth/login',
-  },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60, // 24 hours instead of 30 days
+    maxAge: 24 * 60 * 60, // 24 hours
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
         token.email = user.email;
+        token.name = user.name;
       }
       return token;
     },
     async session({ session, token }) {
-      if (session.user) {
-        const pool = createPool();
-        const result = await pool.query(
-          'SELECT id, email, name FROM users WHERE email = $1',
-          [token.email]
-        );
-        const user = result.rows[0];
-        if (user) {
-          session.user.id = user.id;
-          session.user.email = user.email;
-          session.user.name = user.name;
-        }
+      if (token) {
+        session.user.id = token.id as string;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
       }
       return session;
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  pages: {
+    signIn: '/auth/login',
+    signOut: '/',
+    error: '/auth/login',
+  },
   events: {
     async signOut() {
       // Clear any server-side session data
-      console.log('User signed out');
+      const pool = createPool();
+      await pool.query('DELETE FROM sessions WHERE expires < NOW()');
     },
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 };
 
 export default withAuth(
