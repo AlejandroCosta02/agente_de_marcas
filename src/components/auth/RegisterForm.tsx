@@ -47,7 +47,7 @@ export default function RegisterForm() {
         setError(data.error || 'Error al registrar usuario');
       }
     } catch (error) {
-      setError('Error al conectar con el servidor');
+      setError(error instanceof Error ? error.message : 'Error al conectar con el servidor');
     } finally {
       setLoading(false);
     }

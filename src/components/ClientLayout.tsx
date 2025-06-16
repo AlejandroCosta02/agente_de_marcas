@@ -10,14 +10,11 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session, status } = useSession();
-  const router = useRouter();
+  const { status } = useSession();
 
   useEffect(() => {
-    // Handle session state changes
-    if (status === "unauthenticated") {
-      // Clear any client-side state if needed
-      localStorage.removeItem("selectedTimeRange");
+    if (status === 'authenticated') {
+      window.location.href = '/dashboard';
     }
   }, [status]);
 
