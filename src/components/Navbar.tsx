@@ -10,29 +10,21 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      // First, call the signout API
-      await fetch('/api/auth/signout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      // Then sign out from NextAuth
-      await signOut({ 
-        redirect: false
-      });
-      // Try to clear cookies (client-side, best effort)
+      await signOut({ redirect: false });
+      // Try to clear all possible session cookies for both / and /auth paths
       document.cookie = 'next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
+      document.cookie = 'next-auth.session-token=; Max-Age=0; path=/auth; secure; samesite=lax';
       document.cookie = '__Secure-next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
-      // Clear any local storage
+      document.cookie = '__Secure-next-auth.session-token=; Max-Age=0; path=/auth; secure; samesite=lax';
       localStorage.clear();
       sessionStorage.clear();
-      // Force a complete page reload to login page
-      window.location.href = "/auth/login";
+      // Debug: log cookies after logout
+      console.log('Cookies after logout:', document.cookie);
+      // Redirect to landing page
+      window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if there's an error, try to force reload
-      window.location.href = "/auth/login";
+      window.location.href = '/';
     }
   };
 
