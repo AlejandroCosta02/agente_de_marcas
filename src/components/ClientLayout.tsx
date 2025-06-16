@@ -9,7 +9,7 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { status, data: session } = useSession();
+  const { status } = useSession();
 
   useEffect(() => {
     // Clear any stored session data on mount
