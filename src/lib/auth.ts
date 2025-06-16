@@ -96,36 +96,36 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
 };
 
-export default withAuth(
-  async function middleware(req) {
-    const token = await getToken({ req });
-    const isAuth = !!token;
-    const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth/');
+// export default withAuth(
+//   async function middleware(req) {
+//     const token = await getToken({ req });
+//     const isAuth = !!token;
+//     const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth/');
 
-    // Allow NextAuth API routes
-    if (isApiAuthRoute) {
-      return NextResponse.next();
-    }
+//     // Allow NextAuth API routes
+//     if (isApiAuthRoute) {
+//       return NextResponse.next();
+//     }
 
-    // If not authenticated, redirect to login
-    if (!isAuth) {
-      return NextResponse.redirect(new URL('/auth/login', req.url));
-    }
+//     // If not authenticated, redirect to login
+//     if (!isAuth) {
+//       return NextResponse.redirect(new URL('/auth/login', req.url));
+//     }
 
-    return NextResponse.next();
-  },
-  {
-    callbacks: {
-      authorized: ({ token }) => !!token,
-    },
-  }
-);
+//     return NextResponse.next();
+//   },
+//   {
+//     callbacks: {
+//       authorized: ({ token }) => !!token,
+//     },
+//   }
+// );
 
-export const config = {
-  matcher: [
-    '/dashboard/:path*',
-    '/api/marcas/:path*',
-    '/api/migrations/:path*',
-    '/migrate'
-  ],
-}; 
+// export const config = {
+//   matcher: [
+//     '/dashboard/:path*',
+//     '/api/marcas/:path*',
+//     '/api/migrations/:path*',
+//     '/migrate'
+//   ],
+// }; 
