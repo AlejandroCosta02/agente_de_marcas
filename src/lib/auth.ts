@@ -66,6 +66,11 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
+  pages: {
+    signIn: '/auth/login',
+    signOut: '/',
+    error: '/auth/login',
+  },
   session: {
     strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 hours
@@ -88,20 +93,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  pages: {
-    signIn: '/auth/login',
-    signOut: '/',
-    error: '/auth/login',
-  },
-  events: {
-    async signOut() {
-      // Clear any server-side session data
-      const pool = createPool();
-      await pool.query('DELETE FROM sessions WHERE expires < NOW()');
-    },
-  },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
 };
 
 export default withAuth(
