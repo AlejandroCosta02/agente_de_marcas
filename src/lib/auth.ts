@@ -2,9 +2,6 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { createPool } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
-import { NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { withAuth } from 'next-auth/middleware';
 
 declare module 'next-auth' {
   interface Session {
