@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
+import NavSwitcher from './NavSwitcher';
 
 export default function ClientLayout({
   children,
@@ -11,10 +12,16 @@ export default function ClientLayout({
   const { status } = useSession();
 
   useEffect(() => {
-    if (status === 'authenticated') {
+    // Only redirect if we're on an auth page and authenticated
+    if (status === 'authenticated' && window.location.pathname.startsWith('/auth')) {
       window.location.href = '/dashboard';
     }
   }, [status]);
 
-  return <>{children}</>;
+  return (
+    <>
+      <NavSwitcher />
+      {children}
+    </>
+  );
 } 
