@@ -2,8 +2,6 @@
 
 import { useEffect } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import NavSwitcher from "./NavSwitcher";
 
 export default function ClientLayout({
   children,
@@ -18,10 +16,5 @@ export default function ClientLayout({
     }
   }, [status]);
 
-  return (
-    <>
-      <NavSwitcher />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 } 
