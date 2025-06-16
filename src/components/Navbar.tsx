@@ -17,23 +17,22 @@ export default function Navbar() {
           'Content-Type': 'application/json',
         },
       });
-      
       // Then sign out from NextAuth
       await signOut({ 
-        redirect: false,
-        callbackUrl: "/"
+        redirect: false
       });
-
+      // Try to clear cookies (client-side, best effort)
+      document.cookie = 'next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
+      document.cookie = '__Secure-next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
       // Clear any local storage
       localStorage.clear();
       sessionStorage.clear();
-
-      // Force a complete page reload
-      window.location.href = "/";
+      // Force a complete page reload to login page
+      window.location.href = "/auth/login";
     } catch (error) {
       console.error('Logout error:', error);
       // Even if there's an error, try to force reload
-      window.location.href = "/";
+      window.location.href = "/auth/login";
     }
   };
 
