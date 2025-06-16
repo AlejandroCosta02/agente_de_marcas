@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import NavSwitcher from './NavSwitcher';
 
 export default function ClientLayout({
@@ -17,12 +17,19 @@ export default function ClientLayout({
     sessionStorage.clear();
 
     // Handle authentication state
-    if (status === 'authenticated' && window.location.pathname.startsWith('/auth')) {
-      // If authenticated and on auth page, redirect to dashboard
-      window.location.href = '/dashboard';
-    } else if (status === 'unauthenticated' && !window.location.pathname.startsWith('/auth') && window.location.pathname !== '/') {
-      // If unauthenticated and not on auth page or home page, redirect to login
-      window.location.href = '/auth/login';
+    if (status === 'authenticated') {
+      // If on auth pages, redirect to dashboard
+      if (window.location.pathname.startsWith('/auth')) {
+        window.location.href = '/dashboard';
+      }
+    } else if (status === 'unauthenticated') {
+      // If unauthenticated and trying to access protected routes
+      if (!window.location.pathname.startsWith('/auth') && window.location.pathname !== '/') {
+        // Force sign out to clear any lingering session
+        signOut({ redirect: false }).then(() => {
+          window.location.href = '/auth/login';
+        });
+      }
     }
   }, [status]);
 

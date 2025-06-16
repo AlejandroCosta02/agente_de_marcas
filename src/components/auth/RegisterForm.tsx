@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -15,12 +15,16 @@ export default function RegisterForm() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Reset form fields when component mounts
+  // Reset form fields and clear session on mount
   useEffect(() => {
     setName('');
     setEmail('');
     setPassword('');
     setError('');
+    // Clear any existing session
+    signOut({ redirect: false });
+    localStorage.removeItem('selectedTimeRange');
+    sessionStorage.clear();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +48,7 @@ export default function RegisterForm() {
       if (res.ok) {
         toast.success('Registro exitoso');
         // Clear any existing session data
+        await signOut({ redirect: false });
         localStorage.removeItem('selectedTimeRange');
         sessionStorage.clear();
         // Redirect to login page
