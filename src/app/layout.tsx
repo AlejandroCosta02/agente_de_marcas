@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
-import NavSwitcher from "@/components/NavSwitcher";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,10 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es">
       <body className={inter.className}>
         <NextAuthProvider>
-          <NavSwitcher />
-          <div className="min-h-screen flex flex-col">
-            <main className="flex-grow">{children}</main>
-          </div>
+          <ClientLayout>{children}</ClientLayout>
         </NextAuthProvider>
       </body>
     </html>

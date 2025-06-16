@@ -7,13 +7,20 @@ export default withAuth(
     const token = await getToken({ req });
     const isAuth = !!token;
     const isApiAuthRoute = req.nextUrl.pathname.startsWith('/api/auth/');
+    const isAuthPage = req.nextUrl.pathname.startsWith('/auth/');
+    const isPublicPage = req.nextUrl.pathname === '/';
 
-    // Allow NextAuth API routes
-    if (isApiAuthRoute) {
+    // For auth pages, redirect to dashboard if already authenticated
+    if (isAuthPage && isAuth) {
+      return NextResponse.redirect(new URL('/dashboard', req.url));
+    }
+
+    // For public pages and auth pages, allow access without authentication
+    if (isPublicPage || isAuthPage || isApiAuthRoute) {
       return NextResponse.next();
     }
 
-    // If not authenticated, redirect to login
+    // For all other pages, require authentication
     if (!isAuth) {
       return NextResponse.redirect(new URL('/auth/login', req.url));
     }

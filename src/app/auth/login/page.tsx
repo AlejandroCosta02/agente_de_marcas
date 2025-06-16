@@ -10,12 +10,20 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/dashboard");
+      router.replace("/dashboard");
     }
   }, [status, router]);
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-black flex items-center justify-center p-4">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
   if (status === "authenticated") {
-    return null; // Or a loading spinner/message
+    return null;
   }
 
   return (
