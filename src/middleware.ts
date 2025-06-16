@@ -10,18 +10,13 @@ export default withAuth(
     const isAuthPage = req.nextUrl.pathname.startsWith('/auth/');
     const isPublicPage = req.nextUrl.pathname === '/';
 
-    // For auth pages, redirect to dashboard if already authenticated
-    if (isAuthPage && isAuth) {
+    // If authenticated, redirect away from auth pages
+    if (isAuth && isAuthPage) {
       return NextResponse.redirect(new URL('/dashboard', req.url));
     }
 
-    // For public pages and auth pages, allow access without authentication
-    if (isPublicPage || isAuthPage || isApiAuthRoute) {
-      return NextResponse.next();
-    }
-
-    // For all other pages, require authentication
-    if (!isAuth) {
+    // If not authenticated, only redirect to login if not already on login or register
+    if (!isAuth && !isAuthPage && !isPublicPage && !isApiAuthRoute) {
       return NextResponse.redirect(new URL('/auth/login', req.url));
     }
 
@@ -39,7 +34,6 @@ export const config = {
     '/dashboard/:path*',
     '/api/marcas/:path*',
     '/api/migrations/:path*',
-    '/migrate',
-    '/auth/:path*'
+    '/migrate'
   ],
 };
