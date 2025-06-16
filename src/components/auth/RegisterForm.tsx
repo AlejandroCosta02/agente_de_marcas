@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { useSession } from 'next-auth/react';
 
 export default function RegisterForm() {
   const router = useRouter();
+  const { status } = useSession();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,6 +43,10 @@ export default function RegisterForm() {
 
       if (res.ok) {
         toast.success('Registro exitoso');
+        // Clear any existing session data
+        localStorage.removeItem('selectedTimeRange');
+        sessionStorage.clear();
+        // Redirect to login page
         router.push('/auth/login');
       } else {
         const data = await res.json();
@@ -52,6 +58,12 @@ export default function RegisterForm() {
       setLoading(false);
     }
   };
+
+  // If already authenticated, redirect to dashboard
+  if (status === 'authenticated') {
+    router.push('/dashboard');
+    return null;
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
