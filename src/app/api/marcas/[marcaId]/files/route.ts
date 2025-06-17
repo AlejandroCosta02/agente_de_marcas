@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
 import fs from 'fs';
 import path from 'path';
-import formidable, { File, Fields, Files } from 'formidable';
+import formidable from 'formidable';
 
 export const config = {
   api: {
