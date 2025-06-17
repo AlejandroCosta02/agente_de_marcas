@@ -72,17 +72,21 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
     setError(null);
 
     try {
-      // First, get the upload URL
+      // First, get the upload URL by sending only the filename
       const response = await fetch('/api/blob-upload-url', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filename: selectedFile.name }),
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          contentType: selectedFile.type,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to get upload URL');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to get upload URL');
       }
 
       const { url } = await response.json();
@@ -121,6 +125,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       onUploadComplete();
       onClose();
     } catch (err) {
+      console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsUploading(false);
