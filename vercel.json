@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/blob-upload-url": {
+      "maxDuration": 60
+    }
+  }
+} 
