@@ -9,7 +9,6 @@ import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { signOut } from 'next-auth/react';
 
 
 interface ViewTextModalState {
