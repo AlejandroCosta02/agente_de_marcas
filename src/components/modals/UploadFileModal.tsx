@@ -67,23 +67,34 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     setUploadProgress(0);
     setUploadSuccess(false);
     try {
-      // 1. Upload file to /api/blob-upload-url
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      const uploadRes = await fetch('/api/blob-upload-url', {
+      // 1. Get upload URL from /api/blob-upload-url
+      const res = await fetch('/api/blob-upload-url', {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          contentType: selectedFile.type,
+        }),
       });
-      const uploadData = await uploadRes.json();
-      if (!uploadRes.ok || !uploadData.url) {
-        throw new Error(uploadData.error || 'Error al subir archivo');
+      const data = await res.json();
+      if (!res.ok || !data.uploadUrl) {
+        throw new Error(data.error || 'Error al obtener URL de subida');
       }
-      // 2. Save metadata to /api/marcas/[marcaId]/files
+      // 2. Upload file directly to the blob URL
+      const uploadRes = await fetch(data.uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': selectedFile.type },
+        body: selectedFile,
+      });
+      if (!uploadRes.ok) {
+        throw new Error('Error al subir archivo');
+      }
+      // 3. Save metadata to /api/marcas/[marcaId]/files
       const metaRes = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: uploadData.url,
+          filename: data.blobUrl,
           original_name: selectedFile.name,
           size: selectedFile.size,
         }),
@@ -99,10 +110,10 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       toast.success('Archivo subido exitosamente');
       fetchFiles();
       setTimeout(() => setUploadSuccess(false), 1200);
-    } catch {
+    } catch (err) {
       setUploading(false);
       setUploadProgress(null);
-      toast.error('Error al subir archivo');
+      toast.error(err instanceof Error ? err.message : 'Error al subir archivo');
     }
   };
 

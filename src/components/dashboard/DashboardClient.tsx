@@ -9,7 +9,7 @@ import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import UploadFileModal from '../modals/UploadFileModal';
+import UploadFileModal from '@/app/components/UploadFileModal';
 
 
 interface ViewTextModalState {
@@ -777,6 +777,7 @@ export default function DashboardClient() {
           marcaId={uploadMarcaId}
           isOpen={uploadModalOpen}
           onClose={() => setUploadModalOpen(false)}
+          onUploadComplete={() => setUploadModalOpen(false)}
         />
       )}
     </div>
