@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
-import fs from 'fs';
-import path from 'path';
-
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+import { del } from '@vercel/blob';
 
 export async function DELETE(req: Request, { params }: { params: { marcaId: string; fileId: string; } }): Promise<Response> {
   const pool = createPool();
@@ -16,13 +13,16 @@ export async function DELETE(req: Request, { params }: { params: { marcaId: stri
     return NextResponse.json({ error: 'File not found' }, { status: 404 });
   }
   const filename = rows[0].filename;
-  // Delete file from disk
+  
   try {
-    fs.unlinkSync(path.join(UPLOAD_DIR, filename));
-  } catch {
-    // Ignore if file does not exist
+    // Delete from Vercel Blob
+    await del(filename);
+    
+    // Delete from DB
+    await pool.query('DELETE FROM marca_files WHERE id = $1 AND marca_id = $2', [params.fileId, params.marcaId]);
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return NextResponse.json({ error: 'Error deleting file' }, { status: 500 });
   }
-  // Delete from DB
-  await pool.query('DELETE FROM marca_files WHERE id = $1 AND marca_id = $2', [params.fileId, params.marcaId]);
-  return NextResponse.json({ success: true });
 } 

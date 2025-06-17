@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
-import fs from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
 import formidable from 'formidable';
 import { IncomingMessage } from 'http';
 
@@ -10,8 +9,6 @@ export const config = {
     bodyParser: false,
   },
 };
-
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
 export async function GET(req: Request, { params }: { params: { marcaId: string } }) {
   const pool = createPool();
@@ -23,17 +20,9 @@ export async function GET(req: Request, { params }: { params: { marcaId: string 
 }
 
 export async function POST(req: Request, { params }: { params: { marcaId: string } }) {
-  // Ensure uploads directory exists
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR);
-  }
-
-  // Parse form with formidable
   const form = formidable({
     multiples: false,
     maxFileSize: 2 * 1024 * 1024, // 2MB
-    uploadDir: UPLOAD_DIR,
-    keepExtensions: true,
     filter: (part: { mimetype?: string | null }) => part.mimetype === 'application/pdf',
   });
 
@@ -57,15 +46,24 @@ export async function POST(req: Request, { params }: { params: { marcaId: string
       if (fileType !== 'application/pdf') {
         return resolve(NextResponse.json({ error: 'Only PDF files are allowed.' }, { status: 400 }));
       }
-      const filename = `${Date.now()}-${uploadedFile.originalFilename}`;
-      const filepath = path.join(UPLOAD_DIR, filename);
-      fs.renameSync(uploadedFile.filepath, filepath);
-      const pool = createPool();
-      const { rows } = await pool.query(
-        'INSERT INTO marca_files (marca_id, filename, original_name, size) VALUES ($1, $2, $3, $4) RETURNING id, filename, original_name, size, uploaded_at',
-        [params.marcaId, filename, uploadedFile.originalFilename, fileSize]
-      );
-      resolve(NextResponse.json({ file: rows[0] }));
+
+      try {
+        // Upload to Vercel Blob
+        const blob = await put(uploadedFile.originalFilename || 'file.pdf', uploadedFile.filepath, {
+          access: 'public',
+          addRandomSuffix: true,
+        });
+
+        const pool = createPool();
+        const { rows } = await pool.query(
+          'INSERT INTO marca_files (marca_id, filename, original_name, size) VALUES ($1, $2, $3, $4) RETURNING id, filename, original_name, size, uploaded_at',
+          [params.marcaId, blob.url, uploadedFile.originalFilename, fileSize]
+        );
+        resolve(NextResponse.json({ file: rows[0] }));
+      } catch (error) {
+        console.error('Error uploading file:', error);
+        resolve(NextResponse.json({ error: 'Error uploading file.' }, { status: 500 }));
+      }
     });
   });
 } 
