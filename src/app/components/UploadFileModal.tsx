@@ -68,11 +68,12 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
 
   const handleUpload = async () => {
     if (!selectedFile) return;
-    setIsUploading(true);
-    setError(null);
 
     try {
-      // First, get the upload URL by sending only the filename
+      setIsUploading(true);
+      setError(null);
+
+      // Get the upload URL
       const response = await fetch('/api/blob-upload-url', {
         method: 'POST',
         headers: {
@@ -85,35 +86,36 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get upload URL');
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to get upload URL');
       }
 
-      const { url } = await response.json();
+      const { uploadUrl, blobUrl } = await response.json();
 
-      // Then, upload the file directly to the blob storage
-      const uploadResponse = await fetch(url, {
+      // Upload the file directly to the blob URL
+      const uploadResponse = await fetch(uploadUrl, {
         method: 'PUT',
-        body: selectedFile,
         headers: {
           'Content-Type': selectedFile.type,
         },
+        body: selectedFile,
       });
 
       if (!uploadResponse.ok) {
         throw new Error('Failed to upload file');
       }
 
-      // Finally, save the file metadata
+      // Save the file metadata
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: url.split('?')[0], // Remove query parameters
           filename: selectedFile.name,
+          url: blobUrl,
           size: selectedFile.size,
+          type: selectedFile.type,
         }),
       });
 
@@ -126,7 +128,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       onClose();
     } catch (err) {
       console.error('Upload error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to upload file');
     } finally {
       setIsUploading(false);
     }

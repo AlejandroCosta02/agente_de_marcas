@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { put } from '@vercel/blob';
+import { del, put } from '@vercel/blob';
 
 export async function POST(request: Request) {
   try {
@@ -13,13 +13,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Content type is required' }, { status: 400 });
     }
 
-    const blob = await put(filename, new Blob([], { type: contentType }), {
+    // Create a temporary blob to get the upload URL
+    const tempBlob = await put(filename, new Blob([], { type: contentType }), {
       access: 'public',
       addRandomSuffix: true,
       contentType,
     });
 
-    return NextResponse.json({ url: blob.url });
+    // Return the upload URL and the final blob URL
+    return NextResponse.json({
+      uploadUrl: tempBlob.url,
+      blobUrl: tempBlob.url,
+    });
   } catch (error) {
     console.error('Error generating upload URL:', error);
     return NextResponse.json(
