@@ -99,7 +99,6 @@ export const authOptions: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
-        ...(process.env.VERCEL_ENV === 'production' ? { domain: '.agente-de-marcas.vercel.app' } : {}),
       },
     },
   },
