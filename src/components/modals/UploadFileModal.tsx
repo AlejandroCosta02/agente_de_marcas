@@ -67,39 +67,42 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     setUploadProgress(0);
     setUploadSuccess(false);
     try {
+      // 1. Upload file to /api/blob-upload-url
       const formData = new FormData();
       formData.append('file', selectedFile);
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `/api/marcas/${marcaId}/files`);
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          setUploadProgress(Math.round((event.loaded / event.total) * 100));
-        }
-      };
-      xhr.onload = () => {
-        setUploading(false);
-        setUploadProgress(null);
-        if (xhr.status >= 200 && xhr.status < 300) {
-          setUploadSuccess(true);
-          setSelectedFile(null);
-          if (fileInputRef.current) fileInputRef.current.value = '';
-          toast.success('Archivo subido exitosamente');
-          fetchFiles();
-          setTimeout(() => setUploadSuccess(false), 1200);
-        } else {
-          toast.error('Error al subir archivo');
-        }
-      };
-      xhr.onerror = () => {
-        setUploading(false);
-        setUploadProgress(null);
-        toast.error('Error al subir archivo');
-      };
-      xhr.send(formData);
-    } catch {
+      const uploadRes = await fetch('/api/blob-upload-url', {
+        method: 'POST',
+        body: formData,
+      });
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok || !uploadData.url) {
+        throw new Error(uploadData.error || 'Error al subir archivo');
+      }
+      // 2. Save metadata to /api/marcas/[marcaId]/files
+      const metaRes = await fetch(`/api/marcas/${marcaId}/files`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: uploadData.url,
+          original_name: selectedFile.name,
+          size: selectedFile.size,
+        }),
+      });
+      if (!metaRes.ok) {
+        throw new Error('Error al guardar metadatos del archivo');
+      }
       setUploading(false);
       setUploadProgress(null);
-      toast.error('Error al subir archivo');
+      setUploadSuccess(true);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast.success('Archivo subido exitosamente');
+      fetchFiles();
+      setTimeout(() => setUploadSuccess(false), 1200);
+    } catch (err: any) {
+      setUploading(false);
+      setUploadProgress(null);
+      toast.error(err?.message || 'Error al subir archivo');
     }
   };
 
