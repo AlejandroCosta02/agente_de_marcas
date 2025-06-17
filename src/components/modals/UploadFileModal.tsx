@@ -31,7 +31,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       const res = await fetch(`/api/marcas/${marcaId}/files`);
       const data = await res.json();
       setFiles(data.files || []);
-    } catch (e) {
+    } catch {
       toast.error('Error al cargar archivos');
     } finally {
       setLoading(false);
@@ -40,7 +40,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
 
   useEffect(() => {
     if (isOpen) fetchFiles();
-  }, [isOpen, marcaId]);
+  }, [isOpen, marcaId, fetchFiles]);
 
   // Handle file select
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
