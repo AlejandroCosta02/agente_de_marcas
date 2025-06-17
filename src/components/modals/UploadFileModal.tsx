@@ -83,7 +83,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         try {
           const errorData = await blobRes.json();
           errorMsg = errorData.error || JSON.stringify(errorData);
-        } catch (e) {
+        } catch {
           errorMsg = blobRes.statusText || errorMsg;
         }
         throw new Error(errorMsg);
@@ -106,7 +106,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         try {
           const errorData = await metaRes.json();
           errorMsg = errorData.error || JSON.stringify(errorData);
-        } catch (e) {
+        } catch {
           errorMsg = metaRes.statusText || errorMsg;
         }
         throw new Error(errorMsg);
