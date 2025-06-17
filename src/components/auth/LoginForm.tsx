@@ -22,15 +22,19 @@ export default function LoginForm() {
         password,
         redirect: false,
       });
+      console.log('signIn result:', result);
 
       if (result?.error) {
-        toast.error('Invalid credentials');
+        toast.error(result.error || 'Invalid credentials');
         return;
       }
-
-      toast.success('Inicio de sesión exitoso');
-      router.push('/dashboard');
-      router.refresh();
+      if (result?.ok) {
+        toast.success('Inicio de sesión exitoso');
+        router.push('/dashboard');
+        router.refresh();
+      } else {
+        toast.error('No se pudo iniciar sesión.');
+      }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message);
