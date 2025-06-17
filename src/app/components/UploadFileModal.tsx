@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, DocumentIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { useFormStatus } from 'react-dom';
 import { toast } from 'react-hot-toast';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
