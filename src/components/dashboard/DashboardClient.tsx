@@ -5,10 +5,11 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaUpload } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import UploadFileModal from '../modals/UploadFileModal';
 
 
 interface ViewTextModalState {
@@ -31,6 +32,8 @@ export default function DashboardClient() {
   const router = useRouter();
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
+  const [uploadModalOpen, setUploadModalOpen] = useState(false);
+  const [uploadMarcaId, setUploadMarcaId] = useState<string | null>(null);
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -684,6 +687,16 @@ export default function DashboardClient() {
                               <td className="relative py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div className="min-w-[150px] flex justify-center space-x-2">
                                   <button
+                                    onClick={() => {
+                                      setUploadMarcaId(marca.id);
+                                      setUploadModalOpen(true);
+                                    }}
+                                    className="inline-flex items-center px-2 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 shadow group mr-2 animate-bounce"
+                                    title="Subir archivo PDF"
+                                  >
+                                    <FaUpload className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
+                                  </button>
+                                  <button
                                     onClick={() => window.open(`https://wa.me/${marca.titular.phone}`, '_blank')}
                                     className="text-green-600 hover:text-green-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-green-100"
                                     title="Enviar WhatsApp"
@@ -756,6 +769,14 @@ export default function DashboardClient() {
             setSelectedOposicion(null);
             setOposicionModalOpen(false);
           }}
+        />
+      )}
+
+      {uploadModalOpen && uploadMarcaId && (
+        <UploadFileModal
+          marcaId={uploadMarcaId}
+          isOpen={uploadModalOpen}
+          onClose={() => setUploadModalOpen(false)}
         />
       )}
     </div>
