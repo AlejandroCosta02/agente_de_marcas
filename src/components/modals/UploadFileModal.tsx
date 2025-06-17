@@ -67,37 +67,27 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     setUploadProgress(0);
     setUploadSuccess(false);
     try {
-      // 1. Get upload URL from /api/blob-upload-url
-      const res = await fetch('/api/blob-upload-url', {
+      // Upload file directly to Vercel Blob REST API
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      const blobRes = await fetch('https://blob.vercel-storage.com/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          filename: selectedFile.name,
-          contentType: selectedFile.type,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.uploadUrl) {
-        throw new Error(data.error || 'Error al obtener URL de subida');
-      }
-      // 2. Upload file directly to the blob URL
-      const uploadRes = await fetch(data.uploadUrl, {
-        method: 'PUT',
         headers: {
-          'Content-Type': selectedFile.type,
-          'x-content-length': selectedFile.size.toString(),
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN}`,
         },
-        body: selectedFile,
+        body: formData,
       });
-      if (!uploadRes.ok) {
-        throw new Error('Error al subir archivo');
+      if (!blobRes.ok) {
+        const error = await blobRes.json();
+        throw new Error(error.error || 'Failed to upload to Vercel Blob');
       }
-      // 3. Save metadata to /api/marcas/[marcaId]/files
+      const { url: blobUrl } = await blobRes.json();
+      // Save metadata to /api/marcas/[marcaId]/files
       const metaRes = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          filename: data.blobUrl,
+          filename: blobUrl,
           original_name: selectedFile.name,
           size: selectedFile.size,
         }),

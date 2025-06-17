@@ -73,38 +73,24 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       setIsUploading(true);
       setError(null);
 
-      // Get the upload URL
-      const response = await fetch('/api/blob-upload-url', {
+      // Upload file directly to Vercel Blob REST API
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      const blobRes = await fetch('https://blob.vercel-storage.com/upload', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN}`,
         },
-        body: JSON.stringify({
-          filename: selectedFile.name,
-          contentType: selectedFile.type,
-        }),
+        body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to get upload URL');
+      if (!blobRes.ok) {
+        const error = await blobRes.json();
+        throw new Error(error.error || 'Failed to upload to Vercel Blob');
       }
 
-      const { uploadUrl, blobUrl } = await response.json();
-
-      // Upload the file directly to the blob URL
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': selectedFile.type,
-          'x-content-length': selectedFile.size.toString(),
-        },
-        body: selectedFile,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
-      }
+      const { url: blobUrl } = await blobRes.json();
 
       // Save the file metadata
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
