@@ -46,6 +46,7 @@ export default function DashboardClient() {
   ];
 
   useEffect(() => {
+    console.log('Setting up click outside listener...');
     if (typeof window !== 'undefined') {
       const handleClickOutside = (event: MouseEvent) => {
         if (timeRangeRef.current && !timeRangeRef.current.contains(event.target as Node)) {
