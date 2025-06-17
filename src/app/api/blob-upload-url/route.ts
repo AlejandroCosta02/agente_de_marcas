@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
-import formidable from 'formidable';
-import { IncomingMessage } from 'http';
 
 export const config = {
   api: {
@@ -10,26 +8,21 @@ export const config = {
 };
 
 export async function POST(request: Request) {
-  return await new Promise<Response>((resolve) => {
-    const form = formidable();
-    form.parse(request as unknown as IncomingMessage, async (err, fields, files) => {
-      if (err) {
-        return resolve(NextResponse.json({ error: 'Error parsing file' }, { status: 400 }));
-      }
-      const file = files.file;
-      if (!file) {
-        return resolve(NextResponse.json({ error: 'No file uploaded' }, { status: 400 }));
-      }
-      const uploadedFile = Array.isArray(file) ? file[0] : file;
-      try {
-        const blob = await put(uploadedFile.originalFilename || 'file.pdf', uploadedFile.filepath, {
-          access: 'public',
-          addRandomSuffix: true,
-        });
-        resolve(NextResponse.json({ url: blob.url }));
-      } catch {
-        resolve(NextResponse.json({ error: 'Failed to upload to blob' }, { status: 500 }));
-      }
+  try {
+    const { filename } = await request.json();
+    
+    if (!filename) {
+      return NextResponse.json({ error: 'Filename is required' }, { status: 400 });
+    }
+
+    const blob = await put(filename, '', {
+      access: 'public',
+      addRandomSuffix: true,
     });
-  });
+
+    return NextResponse.json({ url: blob.url });
+  } catch (error) {
+    console.error('Error generating upload URL:', error);
+    return NextResponse.json({ error: 'Failed to generate upload URL' }, { status: 500 });
+  }
 }
