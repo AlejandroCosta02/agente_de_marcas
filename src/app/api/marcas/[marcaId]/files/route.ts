@@ -3,6 +3,7 @@ import { createPool } from '@vercel/postgres';
 import fs from 'fs';
 import path from 'path';
 import formidable from 'formidable';
+import { IncomingMessage } from 'http';
 
 export const config = {
   api: {
@@ -37,7 +38,7 @@ export async function POST(req: Request, { params }: { params: { marcaId: string
   });
 
   return new Promise((resolve) => {
-    form.parse(req as any, async (err, fields, files) => {
+    form.parse(req as unknown as IncomingMessage, async (err, fields, files) => {
       if (err) return resolve(NextResponse.json({ error: 'Error uploading file or file too large.' }, { status: 400 }));
       const file = files.file;
       if (!file) {
