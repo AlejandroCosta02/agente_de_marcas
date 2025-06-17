@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/blob-upload-url": {
+    "src/app/api/blob-upload-url/route": {
       "maxDuration": 60
     }
   }
