@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, DocumentIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
+import { upload } from '@vercel/blob/client';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -73,32 +74,12 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       setIsUploading(true);
       setError(null);
 
-      // Upload file directly to Vercel Blob REST API
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
-      const blobRes = await fetch('https://blob.vercel-storage.com/upload', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_BLOB_READ_WRITE_TOKEN}`,
-        },
-        body: formData,
+      // Upload file using Vercel Blob Client SDK
+      const result = await upload(selectedFile.name, selectedFile, {
+        access: 'public',
+        handleUploadUrl: 'https://api.vercel.com/v2/blob/upload',
       });
-
-      let blobUrl;
-      if (!blobRes.ok) {
-        let errorMsg = 'Failed to upload to Vercel Blob';
-        try {
-          const errorData = await blobRes.json();
-          errorMsg = errorData.error || JSON.stringify(errorData);
-        } catch {
-          errorMsg = blobRes.statusText || errorMsg;
-        }
-        throw new Error(errorMsg);
-      } else {
-        const blobData = await blobRes.json();
-        blobUrl = blobData.url;
-      }
+      const blobUrl = result.url;
 
       // Save the file metadata
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
