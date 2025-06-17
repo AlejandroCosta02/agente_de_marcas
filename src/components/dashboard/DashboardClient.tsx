@@ -691,10 +691,10 @@ export default function DashboardClient() {
                                       setUploadMarcaId(marca.id);
                                       setUploadModalOpen(true);
                                     }}
-                                    className="inline-flex items-center px-2 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-500 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 shadow group mr-2 animate-bounce"
+                                    className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100"
                                     title="Subir archivo PDF"
                                   >
-                                    <FaUpload className="h-4 w-4 mr-1 group-hover:scale-110 transition-transform duration-200" />
+                                    <FaUpload className="h-5 w-5" />
                                   </button>
                                   <button
                                     onClick={() => window.open(`https://wa.me/${marca.titular.phone}`, '_blank')}

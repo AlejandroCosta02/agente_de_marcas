@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
 import { put } from '@vercel/blob';
@@ -10,7 +11,11 @@ export const config = {
   },
 };
 
-export async function GET(req: Request, { params }: { params: { marcaId: string } }) {
+export async function GET(
+  request: Request,
+  context: any
+) {
+  const { params } = context;
   const pool = createPool();
   const { rows } = await pool.query(
     'SELECT id, filename, original_name, size, uploaded_at FROM marca_files WHERE marca_id = $1 ORDER BY uploaded_at DESC',
@@ -19,15 +24,19 @@ export async function GET(req: Request, { params }: { params: { marcaId: string 
   return NextResponse.json({ files: rows });
 }
 
-export async function POST(req: Request, { params }: { params: { marcaId: string } }) {
+export async function POST(
+  request: Request,
+  context: any
+) {
+  const { params } = context;
   const form = formidable({
     multiples: false,
     maxFileSize: 2 * 1024 * 1024, // 2MB
     filter: (part: { mimetype?: string | null }) => part.mimetype === 'application/pdf',
   });
 
-  return new Promise((resolve) => {
-    form.parse(req as unknown as IncomingMessage, async (err, fields, files) => {
+  return await new Promise<Response>((resolve) => {
+    form.parse(request as unknown as IncomingMessage, async (err, fields, files) => {
       if (err) return resolve(NextResponse.json({ error: 'Error uploading file or file too large.' }, { status: 400 }));
       const file = files.file;
       if (!file) {
