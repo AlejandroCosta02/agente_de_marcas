@@ -10,18 +10,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await signOut({ redirect: false });
-      // Try to clear all possible session cookies for both / and /auth paths
-      document.cookie = 'next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
-      document.cookie = 'next-auth.session-token=; Max-Age=0; path=/auth; secure; samesite=lax';
-      document.cookie = '__Secure-next-auth.session-token=; Max-Age=0; path=/; secure; samesite=lax';
-      document.cookie = '__Secure-next-auth.session-token=; Max-Age=0; path=/auth; secure; samesite=lax';
-      localStorage.clear();
-      sessionStorage.clear();
-      // Debug: log cookies after logout
-      console.log('Cookies after logout:', document.cookie);
-      // Redirect to landing page
-      window.location.href = '/';
+      await signOut({ callbackUrl: '/' }); // Let NextAuth handle cookie deletion and redirect
     } catch (error) {
       console.error('Logout error:', error);
       window.location.href = '/';
