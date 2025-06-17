@@ -1,12 +1,6 @@
 import { NextResponse } from 'next/server';
 import { put } from '@vercel/blob';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export async function POST(request: Request) {
   try {
     const { filename } = await request.json();
