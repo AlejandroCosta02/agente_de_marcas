@@ -20,19 +20,19 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
   const [files, setFiles] = useState<MarcaFile[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch files for this marca
   const fetchFiles = async () => {
     setLoading(true);
-    setError(null);
     try {
       const res = await fetch(`/api/marcas/${marcaId}/files`);
       const data = await res.json();
       setFiles(data.files || []);
-    } catch {
-      setError('Error al cargar archivos');
+    } catch (e) {
+      toast.error('Error al cargar archivos');
     } finally {
       setLoading(false);
     }
@@ -40,42 +40,59 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
 
   useEffect(() => {
     if (isOpen) fetchFiles();
-    // eslint-disable-next-line
   }, [isOpen, marcaId]);
 
+  // Handle file select
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedFile(file);
+  };
+
   // Handle file upload
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.type !== 'application/pdf') {
+  const handleUpload = async () => {
+    if (!selectedFile) return;
+    if (selectedFile.type !== 'application/pdf') {
       toast.error('Solo se permiten archivos PDF.');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
+    if (selectedFile.size > 2 * 1024 * 1024) {
       toast.error('El archivo no puede superar los 2MB.');
       return;
     }
     setUploading(true);
-    setError(null);
+    setUploadProgress(0);
     try {
       const formData = new FormData();
-      formData.append('file', file);
-      const res = await fetch(`/api/marcas/${marcaId}/files`, {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || 'Error al subir archivo');
-      } else {
-        toast.success('Archivo subido exitosamente');
-        fetchFiles();
-      }
+      formData.append('file', selectedFile);
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `/api/marcas/${marcaId}/files`);
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        }
+      };
+      xhr.onload = () => {
+        setUploading(false);
+        setUploadProgress(null);
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (xhr.status >= 200 && xhr.status < 300) {
+          toast.success('Archivo subido exitosamente');
+          fetchFiles();
+        } else {
+          toast.error('Error al subir archivo');
+        }
+      };
+      xhr.onerror = () => {
+        setUploading(false);
+        setUploadProgress(null);
+        toast.error('Error al subir archivo');
+      };
+      xhr.send(formData);
     } catch {
-      toast.error('Error al subir archivo');
-    } finally {
       setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      setUploadProgress(null);
+      toast.error('Error al subir archivo');
     }
   };
 
@@ -104,16 +121,36 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     <Modal isOpen={isOpen} onClose={onClose}>
       <div className="p-6 min-w-[350px] max-w-[400px]">
         <h2 className="text-lg font-bold mb-4">Archivos de la marca</h2>
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col items-center">
           <input
             ref={fileInputRef}
             type="file"
             accept="application/pdf"
             disabled={uploading}
-            onChange={handleUpload}
+            onChange={handleFileChange}
             className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 disabled:opacity-50"
           />
           <p className="text-xs text-gray-400 mt-1">Solo PDF, máx 2MB.</p>
+          {selectedFile && (
+            <div className="mt-2 w-full flex flex-col items-center">
+              <span className="text-xs text-gray-700 mb-2">{selectedFile.name}</span>
+              <button
+                onClick={handleUpload}
+                disabled={uploading}
+                className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {uploading ? 'Subiendo...' : 'Subir'}
+              </button>
+              {uploading && uploadProgress !== null && (
+                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                  <div
+                    className="bg-indigo-600 h-2 rounded-full transition-all duration-200"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
         {loading ? (
           <div className="text-center py-6">Cargando archivos...</div>
@@ -130,7 +167,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
                 </div>
                 <div className="flex items-center gap-2">
                   <a
-                    href={`/uploads/${file.filename}`}
+                    href={file.filename}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-indigo-600 hover:text-indigo-900 text-sm underline"
@@ -150,7 +187,6 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
             ))}
           </ul>
         )}
-        {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
         <button
           onClick={onClose}
           className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 w-full"
