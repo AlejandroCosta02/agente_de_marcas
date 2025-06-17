@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Content type is required' }, { status: 400 });
     }
 
-    const blob = await put(filename, '', {
+    const blob = await put(filename, new Blob([], { type: contentType }), {
       access: 'public',
       addRandomSuffix: true,
       contentType,
