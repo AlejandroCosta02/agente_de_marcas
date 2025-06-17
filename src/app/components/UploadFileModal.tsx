@@ -72,21 +72,27 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
       const response = await fetch('/api/blob-upload-url', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filename: selectedFile.name }),
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error('Failed to get upload URL');
       }
 
-      const data = await response.json();
-      if (data.error) {
-        throw new Error(data.error);
+      const { url } = await response.json();
+
+      const uploadResponse = await fetch(url, {
+        method: 'PUT',
+        body: selectedFile,
+      });
+
+      if (!uploadResponse.ok) {
+        throw new Error('Failed to upload file');
       }
 
       // Save file metadata
@@ -96,7 +102,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          url: data.url,
+          url: url.split('?')[0], // Remove query parameters
           filename: selectedFile.name,
           size: selectedFile.size,
         }),
