@@ -77,11 +77,20 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         },
         body: formData,
       });
+      let blobUrl;
       if (!blobRes.ok) {
-        const error = await blobRes.json();
-        throw new Error(error.error || 'Failed to upload to Vercel Blob');
+        let errorMsg = 'Failed to upload to Vercel Blob';
+        try {
+          const errorData = await blobRes.json();
+          errorMsg = errorData.error || JSON.stringify(errorData);
+        } catch (e) {
+          errorMsg = blobRes.statusText || errorMsg;
+        }
+        throw new Error(errorMsg);
+      } else {
+        const blobData = await blobRes.json();
+        blobUrl = blobData.url;
       }
-      const { url: blobUrl } = await blobRes.json();
       // Save metadata to /api/marcas/[marcaId]/files
       const metaRes = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
@@ -93,7 +102,14 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         }),
       });
       if (!metaRes.ok) {
-        throw new Error('Error al guardar metadatos del archivo');
+        let errorMsg = 'Error al guardar metadatos del archivo';
+        try {
+          const errorData = await metaRes.json();
+          errorMsg = errorData.error || JSON.stringify(errorData);
+        } catch (e) {
+          errorMsg = metaRes.statusText || errorMsg;
+        }
+        throw new Error(errorMsg);
       }
       setUploading(false);
       setUploadProgress(null);
@@ -106,7 +122,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     } catch (err) {
       setUploading(false);
       setUploadProgress(null);
-      toast.error(err instanceof Error ? err.message : 'Error al subir archivo');
+      toast.error(err instanceof Error ? err.message : String(err));
     }
   };
 

@@ -85,12 +85,20 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
         body: formData,
       });
 
+      let blobUrl;
       if (!blobRes.ok) {
-        const error = await blobRes.json();
-        throw new Error(error.error || 'Failed to upload to Vercel Blob');
+        let errorMsg = 'Failed to upload to Vercel Blob';
+        try {
+          const errorData = await blobRes.json();
+          errorMsg = errorData.error || JSON.stringify(errorData);
+        } catch (e) {
+          errorMsg = blobRes.statusText || errorMsg;
+        }
+        throw new Error(errorMsg);
+      } else {
+        const blobData = await blobRes.json();
+        blobUrl = blobData.url;
       }
-
-      const { url: blobUrl } = await blobRes.json();
 
       // Save the file metadata
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
@@ -107,7 +115,14 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       });
 
       if (!saveResponse.ok) {
-        throw new Error('Failed to save file metadata');
+        let errorMsg = 'Failed to save file metadata';
+        try {
+          const errorData = await saveResponse.json();
+          errorMsg = errorData.error || JSON.stringify(errorData);
+        } catch (e) {
+          errorMsg = saveResponse.statusText || errorMsg;
+        }
+        throw new Error(errorMsg);
       }
 
       toast.success('File uploaded successfully');
@@ -115,7 +130,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       onClose();
     } catch (err) {
       console.error('Upload error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to upload file');
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setIsUploading(false);
     }
