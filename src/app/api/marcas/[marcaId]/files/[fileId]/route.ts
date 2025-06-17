@@ -5,7 +5,7 @@ import path from 'path';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
 
-export async function DELETE(req: Request, { params }: { params: { marcaId: string, fileId: string } }) {
+export async function DELETE(req: Request, { params }: { params: { marcaId: string; fileId: string; } }): Promise<Response> {
   const pool = createPool();
   // Get file info
   const { rows } = await pool.query(
