@@ -99,10 +99,10 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       toast.success('Archivo subido exitosamente');
       fetchFiles();
       setTimeout(() => setUploadSuccess(false), 1200);
-    } catch (err: any) {
+    } catch {
       setUploading(false);
       setUploadProgress(null);
-      toast.error(err?.message || 'Error al subir archivo');
+      toast.error('Error al subir archivo');
     }
   };
 

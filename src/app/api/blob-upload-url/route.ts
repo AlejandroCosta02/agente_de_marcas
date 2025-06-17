@@ -27,7 +27,7 @@ export async function POST(request: Request) {
           addRandomSuffix: true,
         });
         resolve(NextResponse.json({ url: blob.url }));
-      } catch (error) {
+      } catch {
         resolve(NextResponse.json({ error: 'Failed to upload to blob' }, { status: 500 }));
       }
     });
