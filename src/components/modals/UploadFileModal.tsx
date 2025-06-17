@@ -83,7 +83,10 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       // 2. Upload file directly to the blob URL
       const uploadRes = await fetch(data.uploadUrl, {
         method: 'PUT',
-        headers: { 'Content-Type': selectedFile.type },
+        headers: {
+          'Content-Type': selectedFile.type,
+          'x-content-length': selectedFile.size.toString(),
+        },
         body: selectedFile,
       });
       if (!uploadRes.ok) {

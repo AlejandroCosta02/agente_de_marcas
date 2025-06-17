@@ -97,6 +97,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
         method: 'PUT',
         headers: {
           'Content-Type': selectedFile.type,
+          'x-content-length': selectedFile.size.toString(),
         },
         body: selectedFile,
       });
