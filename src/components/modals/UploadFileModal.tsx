@@ -22,6 +22,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch files for this marca
@@ -48,6 +49,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setSelectedFile(file);
+    setUploadSuccess(false);
   };
 
   // Handle file upload
@@ -63,6 +65,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     }
     setUploading(true);
     setUploadProgress(0);
+    setUploadSuccess(false);
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
@@ -76,11 +79,13 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       xhr.onload = () => {
         setUploading(false);
         setUploadProgress(null);
-        setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
         if (xhr.status >= 200 && xhr.status < 300) {
+          setUploadSuccess(true);
+          setSelectedFile(null);
+          if (fileInputRef.current) fileInputRef.current.value = '';
           toast.success('Archivo subido exitosamente');
-          fetchFiles(); // Only call once, after upload
+          fetchFiles();
+          setTimeout(() => setUploadSuccess(false), 1200);
         } else {
           toast.error('Error al subir archivo');
         }
@@ -151,6 +156,12 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
                   />
                 </div>
               )}
+            </div>
+          )}
+          {uploadSuccess && (
+            <div className="flex items-center gap-2 mt-2 text-green-600 font-semibold animate-fade-in">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+              ¡Subido!
             </div>
           )}
         </div>
