@@ -38,9 +38,11 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
     }
   };
 
+  // Only fetch files when modal opens or marcaId changes
   useEffect(() => {
     if (isOpen) fetchFiles();
-  }, [isOpen, marcaId, fetchFiles]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, marcaId]);
 
   // Handle file select
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +80,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         if (fileInputRef.current) fileInputRef.current.value = '';
         if (xhr.status >= 200 && xhr.status < 300) {
           toast.success('Archivo subido exitosamente');
-          fetchFiles();
+          fetchFiles(); // Only call once, after upload
         } else {
           toast.error('Error al subir archivo');
         }
