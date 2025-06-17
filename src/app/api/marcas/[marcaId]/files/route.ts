@@ -36,33 +36,35 @@ export async function POST(req: Request, { params }: { params: { marcaId: string
     filter: (part: { mimetype?: string | null }) => part.mimetype === 'application/pdf',
   });
 
-  return new Promise((resolve, reject) => {
-    form.parse(req as any, async (err: any, fields: Fields, files: Files) => {
-      if (err) {
-        return resolve(NextResponse.json({ error: 'Error uploading file or file too large.' }, { status: 400 }));
-      }
+  return new Promise((resolve) => {
+    form.parse(req as any, async (err, fields, files) => {
+      if (err) return resolve(NextResponse.json({ error: 'Error uploading file or file too large.' }, { status: 400 }));
       const file = files.file;
       if (!file) {
         return resolve(NextResponse.json({ error: 'No file uploaded.' }, { status: 400 }));
       }
-      // formidable v3: file is an array if multiples, else object
-      const f = Array.isArray(file) ? file[0] : file as File;
-      if (f.mimetype !== 'application/pdf') {
-        fs.unlinkSync(f.filepath);
+      const fileArray = Array.isArray(file) ? file : [file];
+      const uploadedFile = fileArray[0];
+      if (!uploadedFile) {
+        return resolve(NextResponse.json({ error: 'No file uploaded.' }, { status: 400 }));
+      }
+      const fileSize = uploadedFile.size;
+      if (fileSize > 2 * 1024 * 1024) {
+        return resolve(NextResponse.json({ error: 'File size exceeds 2MB limit.' }, { status: 400 }));
+      }
+      const fileType = uploadedFile.mimetype;
+      if (fileType !== 'application/pdf') {
         return resolve(NextResponse.json({ error: 'Only PDF files are allowed.' }, { status: 400 }));
       }
-      if (f.size > 2 * 1024 * 1024) {
-        fs.unlinkSync(f.filepath);
-        return resolve(NextResponse.json({ error: 'File too large (max 2MB).' }, { status: 400 }));
-      }
-      // Save file metadata to DB
+      const filename = `${Date.now()}-${uploadedFile.originalFilename}`;
+      const filepath = path.join(UPLOAD_DIR, filename);
+      fs.renameSync(uploadedFile.filepath, filepath);
       const pool = createPool();
-      const filename = path.basename(f.filepath);
       const { rows } = await pool.query(
         'INSERT INTO marca_files (marca_id, filename, original_name, size) VALUES ($1, $2, $3, $4) RETURNING id, filename, original_name, size, uploaded_at',
-        [params.marcaId, filename, f.originalFilename, f.size]
+        [params.marcaId, filename, uploadedFile.originalFilename, fileSize]
       );
-      return resolve(NextResponse.json({ file: rows[0] }));
+      resolve(NextResponse.json({ file: rows[0] }));
     });
   });
 } 

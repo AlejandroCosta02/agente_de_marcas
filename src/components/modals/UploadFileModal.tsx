@@ -31,7 +31,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
       const res = await fetch(`/api/marcas/${marcaId}/files`);
       const data = await res.json();
       setFiles(data.files || []);
-    } catch (e) {
+    } catch {
       setError('Error al cargar archivos');
     } finally {
       setLoading(false);
@@ -71,7 +71,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         toast.success('Archivo subido exitosamente');
         fetchFiles();
       }
-    } catch (e) {
+    } catch {
       toast.error('Error al subir archivo');
     } finally {
       setUploading(false);
@@ -93,7 +93,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         toast.success('Archivo eliminado');
         fetchFiles();
       }
-    } catch (e) {
+    } catch {
       toast.error('Error al eliminar archivo');
     } finally {
       setLoading(false);

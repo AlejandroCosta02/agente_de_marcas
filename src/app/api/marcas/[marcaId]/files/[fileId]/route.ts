@@ -19,7 +19,7 @@ export async function DELETE(req: Request, { params }: { params: { marcaId: stri
   // Delete file from disk
   try {
     fs.unlinkSync(path.join(UPLOAD_DIR, filename));
-  } catch (e) {
+  } catch {
     // Ignore if file does not exist
   }
   // Delete from DB
