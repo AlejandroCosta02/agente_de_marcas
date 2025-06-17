@@ -72,6 +72,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
     setError(null);
 
     try {
+      // First, get the upload URL
       const response = await fetch('/api/blob-upload-url', {
         method: 'POST',
         headers: {
@@ -86,16 +87,20 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
 
       const { url } = await response.json();
 
+      // Then, upload the file directly to the blob storage
       const uploadResponse = await fetch(url, {
         method: 'PUT',
         body: selectedFile,
+        headers: {
+          'Content-Type': selectedFile.type,
+        },
       });
 
       if (!uploadResponse.ok) {
         throw new Error('Failed to upload file');
       }
 
-      // Save file metadata
+      // Finally, save the file metadata
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
         headers: {
