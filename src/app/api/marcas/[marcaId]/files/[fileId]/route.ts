@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { del } from '@vercel/blob';
+
 import { createPool } from '@vercel/postgres';
 
 export async function DELETE(
