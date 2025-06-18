@@ -121,7 +121,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
       <div className="fixed inset-0 flex items-center justify-center p-4">
-        <Dialog.Panel className="mx-auto max-w-sm rounded bg-white p-6">
+        <Dialog.Panel className="mx-auto max-w-md rounded bg-white p-6">
           <div className="flex items-center justify-between mb-4">
             <Dialog.Title className="text-lg font-medium">Upload File</Dialog.Title>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-500">

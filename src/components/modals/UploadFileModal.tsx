@@ -132,7 +132,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="p-6 min-w-[350px] max-w-[400px]">
+      <div className="p-6 min-w-[350px] max-w-[600px]">
         <h2 className="text-lg font-bold mb-4">Archivos de la marca</h2>
         <div className="mb-4 flex flex-col items-center">
           <input
