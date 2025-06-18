@@ -19,9 +19,12 @@ export async function DELETE(
   const filename = rows[0].filename;
   
   try {
-    // Delete from Vercel Blob
-    await del(filename);
-    
+    // Delete from S3
+    await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/s3/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key: filename }),
+    });
     // Delete from DB
     await pool.query('DELETE FROM marca_files WHERE id = $1 AND marca_id = $2', [params.fileId, params.marcaId]);
     return Response.json({ success: true });

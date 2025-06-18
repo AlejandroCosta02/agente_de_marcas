@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
 import { XMarkIcon, DocumentIcon, TrashIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-import { upload } from '@vercel/blob/client';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -74,14 +73,32 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
       setIsUploading(true);
       setError(null);
 
-      // Upload file using Vercel Blob Client SDK
-      const result = await upload(selectedFile.name, selectedFile, {
-        access: 'public',
-        handleUploadUrl: 'https://api.vercel.com/v2/blob/upload',
+      // 1. Get a pre-signed S3 upload URL from the API
+      const presignRes = await fetch('/api/s3/upload-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: selectedFile.name,
+          fileType: selectedFile.type,
+        }),
       });
-      const blobUrl = result.url;
+      if (!presignRes.ok) {
+        throw new Error('Failed to get S3 upload URL');
+      }
+      const { uploadUrl } = await presignRes.json();
 
-      // Save the file metadata
+      // 2. Upload the file directly to S3
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': selectedFile.type },
+        body: selectedFile,
+      });
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload file to S3');
+      }
+
+      // 3. Save the file metadata (use the S3 key or URL)
+      const s3FileUrl = uploadUrl.split('?')[0];
       const saveResponse = await fetch(`/api/marcas/${marcaId}/files`, {
         method: 'POST',
         headers: {
@@ -89,7 +106,7 @@ export default function UploadFileModal({ isOpen, onClose, marcaId, onUploadComp
         },
         body: JSON.stringify({
           filename: selectedFile.name,
-          url: blobUrl,
+          url: s3FileUrl,
           size: selectedFile.size,
           type: selectedFile.type,
         }),

@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@auth/neon-adapter": "^1.9.1",
+    "@aws-sdk/client-s3": "^3.830.0",
+    "@aws-sdk/s3-request-presigner": "^3.830.0",
     "@headlessui/react": "^2.2.4",
     "@heroicons/react": "^2.2.0",
     "@neondatabase/serverless": "^1.0.1",

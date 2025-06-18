@@ -110,7 +110,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
   };
 
   // Handle file delete
-  const handleDelete = async (fileId: number) => {
+  const handleDelete = async (fileId: number, fileUrl: string) => {
     if (!window.confirm('¿Seguro que deseas eliminar este archivo?')) return;
     setLoading(true);
     try {
@@ -118,13 +118,20 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
         method: 'DELETE',
       });
       if (!res.ok) {
-        toast.error('Error al eliminar archivo');
+        let errorMsg = 'Error al eliminar archivo';
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.error || JSON.stringify(errorData);
+        } catch {
+          errorMsg = res.statusText || errorMsg;
+        }
+        toast.error(errorMsg);
       } else {
         toast.success('Archivo eliminado');
         fetchFiles();
       }
-    } catch {
-      toast.error('Error al eliminar archivo');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : String(err));
     } finally {
       setLoading(false);
     }
@@ -195,7 +202,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({ marcaId, isOpen, onCl
                     Ver
                   </a>
                   <button
-                    onClick={() => handleDelete(file.id)}
+                    onClick={() => handleDelete(file.id, file.filename)}
                     className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50 transition-colors"
                     title="Eliminar archivo"
                   >
