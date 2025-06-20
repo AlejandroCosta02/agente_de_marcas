@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, getSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -21,27 +21,66 @@ export default function LoginForm() {
         email,
         password,
         redirect: false,
+        callbackUrl: '/dashboard'
       });
+      
       console.log('signIn result:', result);
 
       if (result?.error) {
         toast.error(result.error || 'Invalid credentials');
+        setLoading(false);
         return;
       }
+      
       if (result?.ok) {
         toast.success('Inicio de sesión exitoso');
-        router.push('/dashboard');
-        router.refresh();
+        console.log('Login successful, checking session...');
+        
+        // Wait for session to be established
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const checkSession = async () => {
+          try {
+            const session = await getSession();
+            console.log('Session check attempt', attempts + 1, ':', session);
+            
+            if (session) {
+              console.log('Session established, redirecting to dashboard');
+              router.push('/dashboard');
+              return;
+            }
+            
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkSession, 500);
+            } else {
+              console.log('Max attempts reached, forcing redirect');
+              router.push('/dashboard');
+            }
+          } catch (error) {
+            console.error('Error checking session:', error);
+            attempts++;
+            if (attempts < maxAttempts) {
+              setTimeout(checkSession, 500);
+            } else {
+              router.push('/dashboard');
+            }
+          }
+        };
+        
+        checkSession();
       } else {
         toast.error('No se pudo iniciar sesión.');
+        setLoading(false);
       }
     } catch (error) {
+      console.error('Login error:', error);
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
         toast.error('An error occurred during login');
       }
-    } finally {
       setLoading(false);
     }
   };

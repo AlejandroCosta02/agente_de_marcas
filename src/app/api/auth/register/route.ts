@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
 
-if (!process.env.DATABASE_URL) {
-  throw new Error('Please define the DATABASE_URL environment variable');
+if (!process.env.POSTGRES_URL) {
+  throw new Error('Please define the POSTGRES_URL environment variable');
 }
 
 export async function POST(req: Request) {

@@ -5,7 +5,8 @@ import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort } from 'react-icons/fa';
+import UploadFileModal from '@/components/modals/UploadFileModal';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaFile } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -24,6 +25,8 @@ export default function DashboardClient() {
   const [selectedTimeRange, setSelectedTimeRange] = useState(30);
   const [isTimeRangeOpen, setIsTimeRangeOpen] = useState(false);
   const [oposicionModalOpen, setOposicionModalOpen] = useState(false);
+  const [fileModalOpen, setFileModalOpen] = useState(false);
+  const [selectedMarcaForFiles, setSelectedMarcaForFiles] = useState<string | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
@@ -352,6 +355,11 @@ export default function DashboardClient() {
     }
   };
 
+  const handleManageFiles = (marcaId: string) => {
+    setSelectedMarcaForFiles(marcaId);
+    setFileModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -519,6 +527,11 @@ export default function DashboardClient() {
                                 <span>Anotaciones</span>
                               </div>
                             </th>
+                            <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+                              <div className="min-w-[250px] flex items-center justify-between">
+                                <span>Archivos</span>
+                              </div>
+                            </th>
                             <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6">
                               <div className="min-w-[150px]">
                                 <span className="sr-only">Acciones</span>
@@ -681,6 +694,23 @@ export default function DashboardClient() {
                                   )}
                                 </div>
                               </td>
+                              <td className="px-3 py-4 text-sm text-gray-500">
+                                <div className="min-w-[250px]">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <button
+                                      onClick={() => handleManageFiles(marca.id)}
+                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-105 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-50 inline-flex items-center gap-1 text-xs"
+                                      title="Administrar archivos"
+                                    >
+                                      <FaFile className="h-3 w-3" />
+                                      <span>Administrar</span>
+                                    </button>
+                                  </div>
+                                  <div className="text-gray-400 text-xs italic">
+                                    Archivos PDF
+                                  </div>
+                                </div>
+                              </td>
                               <td className="relative py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                 <div className="min-w-[150px] flex justify-center space-x-2">
                                   <button
@@ -755,6 +785,17 @@ export default function DashboardClient() {
             handleToggleOposicion(selectedOposicion.marcaId, selectedOposicion.index);
             setSelectedOposicion(null);
             setOposicionModalOpen(false);
+          }}
+        />
+      )}
+
+      {selectedMarcaForFiles && (
+        <UploadFileModal
+          marcaId={selectedMarcaForFiles}
+          isOpen={fileModalOpen}
+          onClose={() => {
+            setFileModalOpen(false);
+            setSelectedMarcaForFiles(null);
           }}
         />
       )}

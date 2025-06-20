@@ -6,10 +6,19 @@ import DashboardClient from '@/components/dashboard/DashboardClient';
 
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
+  
+  console.log('Dashboard page - Session check:', {
+    hasSession: !!session,
+    sessionData: session,
+    timestamp: new Date().toISOString()
+  });
 
   if (!session) {
+    console.log('No session found, redirecting to landing page');
     redirect('/');
   }
+
+  console.log('Session found, rendering dashboard');
 
   return (
     <div className="min-h-screen bg-gray-50">

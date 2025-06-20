@@ -1,15 +1,12 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { createClient } = require('@vercel/postgres');
 
 function getConnectionConfig() {
-  const url = process.env.DATABASE_URL;
+  const url = process.env.POSTGRES_URL_NON_POOLING;
   if (!url) {
-    throw new Error('DATABASE_URL environment variable is required');
-  }
-  
-  // Add pooling parameters if they don't exist
-  if (!url.includes('connection_limit')) {
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}sslmode=require&connection_limit=5&pool_timeout=0`;
+    throw new Error('POSTGRES_URL_NON_POOLING environment variable is required');
   }
   
   return url;
@@ -17,7 +14,9 @@ function getConnectionConfig() {
 
 async function runUsersMigration() {
   try {
-    const client = createClient();
+    const client = createClient({
+      connectionString: getConnectionConfig()
+    });
     await client.connect();
     
     await client.query(`
@@ -42,7 +41,9 @@ async function runUsersMigration() {
 
 async function runMarcasMigration() {
   try {
-    const client = createClient();
+    const client = createClient({
+      connectionString: getConnectionConfig()
+    });
     await client.connect();
     
     // First check if the table exists
@@ -147,6 +148,62 @@ async function runMarcasMigration() {
   }
 }
 
+async function runMarcaFilesMigration() {
+  try {
+    const client = createClient({
+      connectionString: getConnectionConfig()
+    });
+    await client.connect();
+    
+    // Create marca_files table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS marca_files (
+        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+        marca_id UUID NOT NULL REFERENCES marcas(id) ON DELETE CASCADE,
+        filename VARCHAR(255) NOT NULL,
+        original_filename VARCHAR(255) NOT NULL,
+        file_size INTEGER NOT NULL,
+        file_type VARCHAR(100) NOT NULL,
+        s3_url TEXT NOT NULL,
+        s3_key VARCHAR(500) NOT NULL,
+        uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Create index for faster queries
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_marca_files_marca_id ON marca_files(marca_id);
+    `);
+
+    // Add trigger to update updated_at timestamp
+    await client.query(`
+      CREATE OR REPLACE FUNCTION update_updated_at_column()
+      RETURNS TRIGGER AS $$
+      BEGIN
+          NEW.updated_at = CURRENT_TIMESTAMP;
+          RETURN NEW;
+      END;
+      $$ language 'plpgsql';
+    `);
+
+    await client.query(`
+      DROP TRIGGER IF EXISTS update_marca_files_updated_at ON marca_files;
+      CREATE TRIGGER update_marca_files_updated_at 
+          BEFORE UPDATE ON marca_files 
+          FOR EACH ROW 
+          EXECUTE FUNCTION update_updated_at_column();
+    `);
+    
+    await client.end();
+    console.log('✅ Marca files table created or verified');
+    return true;
+  } catch (error) {
+    console.error('❌ Error creating marca_files table:', error);
+    return false;
+  }
+}
+
 async function main() {
   try {
     console.log('🚀 Starting migrations...');
@@ -157,7 +214,10 @@ async function main() {
     const marcasResult = await runMarcasMigration();
     console.log('Marcas migration completed:', marcasResult);
 
-    if (!usersResult || !marcasResult) {
+    const marcaFilesResult = await runMarcaFilesMigration();
+    console.log('Marca files migration completed:', marcaFilesResult);
+
+    if (!usersResult || !marcasResult || !marcaFilesResult) {
       console.error('❌ Some migrations failed');
       process.exit(1);
     }

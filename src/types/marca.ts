@@ -29,6 +29,16 @@ export interface Anotacion {
   date: string;
 }
 
+export interface MarcaFile {
+  id: string;
+  filename: string;
+  original_name: string;
+  size: number;
+  s3_url?: string;
+  s3_key?: string;
+  uploaded_at: string;
+}
+
 export interface Marca {
   id: string;
   marca: string;

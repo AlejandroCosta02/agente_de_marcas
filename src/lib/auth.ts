@@ -34,32 +34,52 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
+        console.log('Auth authorize called with:', { email: credentials?.email });
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log('Missing credentials');
           throw new Error('Credenciales requeridas');
         }
 
-        const pool = createPool();
-        const { rows } = await pool.query(
-          'SELECT * FROM users WHERE email = $1',
-          [credentials.email]
-        );
+        try {
+          const pool = createPool();
+          console.log('Database pool created, querying users...');
+          
+          const { rows } = await pool.query(
+            'SELECT * FROM users WHERE email = $1',
+            [credentials.email]
+          );
 
-        if (rows.length === 0) {
-          throw new Error('Usuario no encontrado');
+          console.log('Query result:', { found: rows.length > 0, email: credentials.email });
+
+          if (rows.length === 0) {
+            console.log('User not found');
+            throw new Error('Usuario no encontrado');
+          }
+
+          const user = rows[0];
+          console.log('User found, checking password...');
+          
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+
+          console.log('Password check result:', { isValid });
+
+          if (!isValid) {
+            console.log('Invalid password');
+            throw new Error('Contraseña incorrecta');
+          }
+
+          console.log('Authentication successful, returning user:', { id: user.id, email: user.email });
+          
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
+          throw error;
         }
-
-        const user = rows[0];
-        const isValid = await bcrypt.compare(credentials.password, user.password);
-
-        if (!isValid) {
-          throw new Error('Contraseña incorrecta');
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
       },
     }),
   ],
@@ -74,6 +94,7 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
+      console.log('JWT callback:', { hasUser: !!user, tokenId: token.id });
       if (user) {
         token.id = user.id;
         token.email = user.email;
@@ -82,6 +103,7 @@ export const authOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log('Session callback:', { hasToken: !!token, sessionUserId: session.user?.id });
       if (token) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
@@ -91,17 +113,6 @@ export const authOptions: NextAuthOptions = {
     },
   },
   secret: process.env.NEXTAUTH_SECRET,
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-      },
-    },
-  },
 };
 
 // export default withAuth(
