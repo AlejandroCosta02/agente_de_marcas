@@ -6,8 +6,8 @@ import DashboardNavbar from "@/components/Navbar";
 export default function NavSwitcher() {
   const pathname = usePathname();
 
-  // Define routes that should not have a default navbar
-  const noNavRoutes = ["/privacy", "/terms"];
+  // Define routes that should not have a default navbar from the layout
+  const noNavRoutes = ["/privacy", "/terms", "/about", "/contact", "/sitemap"];
 
   if (noNavRoutes.includes(pathname)) {
     return null; // Don't render any navbar on these pages
