@@ -51,11 +51,6 @@ const Footer = () => {
             </h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/" className="text-gray-600 hover:text-gray-900">
-                  Inicio
-                </Link>
-              </li>
-              <li>
                 <Link href="/about" className="text-gray-600 hover:text-gray-900">
                   Sobre Nosotros
                 </Link>
