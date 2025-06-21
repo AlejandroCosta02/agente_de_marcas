@@ -1,15 +1,12 @@
--- Create marca_files table
 CREATE TABLE IF NOT EXISTS marca_files (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   marca_id UUID NOT NULL REFERENCES marcas(id) ON DELETE CASCADE,
   filename VARCHAR(255) NOT NULL,
-  original_filename VARCHAR(255) NOT NULL,
-  file_size INTEGER NOT NULL,
-  file_type VARCHAR(100) NOT NULL,
-  s3_url TEXT NOT NULL,
-  s3_key VARCHAR(500) NOT NULL,
-  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  original_name VARCHAR(255) NOT NULL,
+  size INTEGER NOT NULL,
+  s3_url TEXT,
+  s3_key VARCHAR(500),
+  uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create index for faster queries
@@ -27,4 +24,4 @@ $$ language 'plpgsql';
 CREATE TRIGGER update_marca_files_updated_at 
     BEFORE UPDATE ON marca_files 
     FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column(); 
+    EXECUTE FUNCTION update_updated_at_column();
