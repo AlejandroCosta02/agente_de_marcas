@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaArrowLeft, FaGavel, FaFileContract, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaGavel, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
 
@@ -37,8 +37,8 @@ export default function TermsOfService() {
                 <section>
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">1. Aceptación de los Términos</h3>
                   <p className="text-gray-700 mb-4">
-                    Al acceder y utilizar el servicio de Agente de Marcas ("el Servicio"), usted acepta estar 
-                    sujeto a estos Términos de Servicio ("Términos"). Si no está de acuerdo con alguna parte 
+                    Al acceder y utilizar el servicio de Agente de Marcas (&quot;el Servicio&quot;), usted acepta estar 
+                    sujeto a estos Términos de Servicio (&quot;Términos&quot;). Si no está de acuerdo con alguna parte 
                     de estos términos, no debe utilizar nuestro servicio.
                   </p>
                   <p className="text-gray-700">

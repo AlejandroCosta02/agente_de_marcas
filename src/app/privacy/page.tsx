@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaArrowLeft, FaShieldAlt, FaDatabase, FaCloud, FaUserShield } from 'react-icons/fa';
+import { FaArrowLeft, FaShieldAlt, FaDatabase, FaUserShield } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
 
@@ -37,7 +37,7 @@ export default function PrivacyPolicy() {
                 <section>
                   <h3 className="text-xl font-semibold text-gray-900 mb-4">1. Introducción</h3>
                   <p className="text-gray-700 mb-4">
-                    Agente de Marcas ("nosotros", "nuestro", "la empresa") se compromete a proteger la privacidad 
+                    Agente de Marcas (&quot;nosotros&quot;, &quot;nuestro&quot;, &quot;la empresa&quot;) se compromete a proteger la privacidad 
                     de nuestros usuarios. Esta Política de Privacidad describe cómo recopilamos, utilizamos, 
                     almacenamos y protegemos su información personal cuando utiliza nuestro servicio de gestión 
                     de marcas comerciales.
