@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaInfoCircle, FaBullseye, FaShieldAlt, FaUsers } from 'react-icons/fa';
+import { FaArrowLeft, FaInfoCircle, FaBullseye, FaShieldAlt, FaUsers } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
 
@@ -11,6 +11,14 @@ export default function AboutPage() {
       <LegalNavbar />
 
       <main className="flex-grow">
+        <div className="bg-white py-4 border-b">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <Link href="/" className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+                <FaArrowLeft className="mr-2 h-4 w-4" />
+                Volver
+              </Link>
+            </div>
+        </div>
         {/* Header Section */}
         <div className="bg-white">
           <div className="max-w-7xl mx-auto py-16 px-4 sm:py-24 sm:px-6 lg:px-8 text-center">

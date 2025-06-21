@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FaSitemap, FaHome, FaFileAlt, FaBalanceScale, FaEnvelope, FaInfoCircle } from 'react-icons/fa';
+import { FaArrowLeft, FaSitemap, FaHome, FaFileAlt, FaBalanceScale, FaEnvelope, FaInfoCircle } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
 
@@ -46,21 +46,31 @@ export default function SitemapPage() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <LegalNavbar />
 
-      <main className="flex-grow py-12 sm:py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <FaSitemap className="mx-auto h-12 w-12 text-gray-400" />
-            <h1 className="mt-4 text-4xl font-extrabold text-gray-900 sm:text-5xl">
-              Mapa del Sitio
-            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
-              Encuentre rápidamente las páginas que necesita. Aquí tiene una descripción
-              general de la estructura de nuestro sitio.
-            </p>
+      <main className="flex-grow">
+        <div className="bg-white py-4 border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Link href="/" className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
+              <FaArrowLeft className="mr-2 h-4 w-4" />
+              Volver
+            </Link>
           </div>
+        </div>
+        <div className="py-12 sm:py-16">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <FaSitemap className="mx-auto h-12 w-12 text-gray-400" />
+              <h1 className="mt-4 text-4xl font-extrabold text-gray-900 sm:text-5xl">
+                Mapa del Sitio
+              </h1>
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
+                Encuentre rápidamente las páginas que necesita. Aquí tiene una descripción
+                general de la estructura de nuestro sitio.
+              </p>
+            </div>
 
-          <div className="bg-white shadow-xl rounded-lg p-8 sm:p-12">
-            {renderLinks(sitemapLinks)}
+            <div className="bg-white shadow-xl rounded-lg p-8 sm:p-12">
+              {renderLinks(sitemapLinks)}
+            </div>
           </div>
         </div>
       </main>
