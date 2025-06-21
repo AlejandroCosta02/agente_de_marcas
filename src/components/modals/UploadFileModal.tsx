@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { MarcaFile } from '@/types/marca';
 import { FaUpload, FaTrash, FaEdit, FaDownload, FaTimes } from 'react-icons/fa';
@@ -29,13 +29,7 @@ export default function UploadFileModal({ marcaId, isOpen, onClose }: UploadFile
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchFiles();
-    }
-  }, [isOpen, marcaId]);
-
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/marcas/${marcaId}/files`);
@@ -51,7 +45,13 @@ export default function UploadFileModal({ marcaId, isOpen, onClose }: UploadFile
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [marcaId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchFiles();
+    }
+  }, [isOpen, fetchFiles]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
