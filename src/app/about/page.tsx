@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { FaArrowLeft, FaInfoCircle, FaBullseye, FaShieldAlt, FaUsers } from 'react-icons/fa';
+import { FaInfoCircle, FaBullseye, FaShieldAlt, FaUsers } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
+import SmartBackButton from '@/components/SmartBackButton';
 
 export default function AboutPage() {
   return (
@@ -13,10 +14,7 @@ export default function AboutPage() {
       <main className="flex-grow">
         <div className="bg-white py-4 border-b">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <Link href="/" className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800">
-                <FaArrowLeft className="mr-2 h-4 w-4" />
-                Volver
-              </Link>
+              <SmartBackButton />
             </div>
         </div>
         {/* Header Section */}
