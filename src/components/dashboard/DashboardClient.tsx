@@ -3,14 +3,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
-import { Marca, MarcaSubmissionData, Oposicion } from '@/types/marca';
+import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/modals/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
 import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaFile } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-
+import AnotacionModal from '../AnotacionModal';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -27,6 +27,8 @@ export default function DashboardClient() {
   const [oposicionModalOpen, setOposicionModalOpen] = useState(false);
   const [fileModalOpen, setFileModalOpen] = useState(false);
   const [selectedMarcaForFiles, setSelectedMarcaForFiles] = useState<string | null>(null);
+  const [anotacionModalOpen, setAnotacionModalOpen] = useState(false);
+  const [selectedMarcaForAnotacion, setSelectedMarcaForAnotacion] = useState<Marca | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
@@ -233,26 +235,30 @@ export default function DashboardClient() {
   };
 
   const handleAddAnotacion = async (marca: Marca) => {
-    try {
-      const text = prompt('Nueva anotación:');
-      if (!text?.trim()) return;
+    setSelectedMarcaForAnotacion(marca);
+    setAnotacionModalOpen(true);
+  };
 
+  const handleSubmitAnotacion = async (anotacionData: Omit<Anotacion, 'id'>) => {
+    if (!selectedMarcaForAnotacion) return;
+
+    try {
       const newAnotacion = {
         id: Math.random().toString(36).substr(2, 9),
-        text: text.trim(),
-        date: new Date().toISOString()
+        text: anotacionData.text,
+        date: anotacionData.date
       };
 
-      const updatedAnotaciones = [...marca.anotacion, newAnotacion];
+      const updatedAnotaciones = [...selectedMarcaForAnotacion.anotacion, newAnotacion];
 
-      const response = await fetch(`/api/marcas?id=${marca.id}`, {
+      const response = await fetch(`/api/marcas?id=${selectedMarcaForAnotacion.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...marca,
-          anotaciones: updatedAnotaciones.map(note => note.text),
+          ...selectedMarcaForAnotacion,
+          anotacion: updatedAnotaciones,
         }),
       });
 
@@ -260,6 +266,8 @@ export default function DashboardClient() {
 
       toast.success('Anotación agregada exitosamente');
       fetchMarcas();
+      setAnotacionModalOpen(false);
+      setSelectedMarcaForAnotacion(null);
     } catch (error) {
       console.error('Error adding anotacion:', error);
       toast.error('Error al agregar anotación');
@@ -797,6 +805,17 @@ export default function DashboardClient() {
             setFileModalOpen(false);
             setSelectedMarcaForFiles(null);
           }}
+        />
+      )}
+
+      {selectedMarcaForAnotacion && (
+        <AnotacionModal
+          isOpen={anotacionModalOpen}
+          onClose={() => {
+            setAnotacionModalOpen(false);
+            setSelectedMarcaForAnotacion(null);
+          }}
+          onSubmit={handleSubmitAnotacion}
         />
       )}
     </div>

@@ -48,12 +48,12 @@ export default function AnotacionModal({ isOpen, onClose, onSubmit, initialData 
               </h3>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Texto</label>
                   <textarea
                     value={text}
                     onChange={(e) => setText(e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
                     rows={4}
+                    placeholder="Escriba su anotación aquí..."
                     required
                   />
                 </div>
