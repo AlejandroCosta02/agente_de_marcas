@@ -6,11 +6,15 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaFile } from 'react-icons/fa';
+import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaFile, FaTimes } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import AnotacionModal from '../AnotacionModal';
+import { useSession } from "next-auth/react";
+import SubscriptionStatus from "@/components/SubscriptionStatus";
+import UpgradeModal from "@/components/UpgradeModal";
+import { getPlanById, getFreePlan } from "@/lib/subscription-plans";
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -38,6 +42,10 @@ export default function DashboardClient() {
   const router = useRouter();
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -430,6 +438,53 @@ export default function DashboardClient() {
     setFileModalOpen(true);
   };
 
+  // Fetch subscription status
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (!session?.user?.email) return;
+      
+      try {
+        const response = await fetch('/api/subscription/status');
+        if (response.ok) {
+          const data = await response.json();
+          setSubscription(data);
+        }
+      } catch (error) {
+        console.error('Error fetching subscription:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubscription();
+  }, [session?.user?.email]);
+
+  // Check if user can add more marcas
+  const canAddMarca = () => {
+    if (!subscription) return true; // Default to free plan
+    
+    const currentPlan = subscription.subscription ? getPlanById(subscription.subscription.tier) : getFreePlan();
+    if (!currentPlan) return true;
+    
+    // Unlimited plan
+    if (currentPlan.marcaLimit === -1) return true;
+    
+    // Check if under limit
+    return marcas.length < currentPlan.marcaLimit;
+  };
+
+  const handleAddMarca = () => {
+    if (!canAddMarca()) {
+      setUpgradeModalOpen(true);
+      return;
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleUpgradeClick = () => {
+    setUpgradeModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="py-10">
@@ -462,26 +517,29 @@ export default function DashboardClient() {
                         <h3 className="text-sm font-medium text-blue-800">
                           Sesión de Seguridad
                         </h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                          <p>
-                            Por su seguridad, su sesión expirará automáticamente después de 1 hora de inactividad. 
-                            Si esto ocurre, deberá volver a iniciar sesión.
-                          </p>
-                        </div>
+                        <p className="mt-1 text-sm text-blue-700">
+                          Por su seguridad, su sesión expirará automáticamente después de 1 hora de inactividad. Si esto ocurre, deberá volver a iniciar sesión.
+                        </p>
                       </div>
                     </div>
                     <button
                       onClick={() => setShowSessionNotice(false)}
-                      className="ml-4 p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-all duration-200"
-                      title="Cerrar"
+                      className="text-blue-400 hover:text-blue-600 transition-colors"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
+                      <FaTimes size={16} />
                     </button>
                   </div>
                 </div>
               )}
+
+              {/* Subscription Status */}
+              <div className="mb-6">
+                <SubscriptionStatus 
+                  marcaCount={marcas.length}
+                  pdfCount={0} // TODO: Calculate actual PDF count when file system is implemented
+                  onUpgradeClick={handleUpgradeClick}
+                />
+              </div>
 
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
@@ -587,7 +645,7 @@ export default function DashboardClient() {
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleAddMarca}
                     className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
                   >
                     <FaPlus className="h-4 w-4 mr-2" />
@@ -935,6 +993,14 @@ export default function DashboardClient() {
             setSelectedMarcaForAnotacion(null);
           }}
           onSubmit={handleSubmitAnotacion}
+        />
+      )}
+
+      {upgradeModalOpen && (
+        <UpgradeModal
+          isOpen={upgradeModalOpen}
+          onClose={() => setUpgradeModalOpen(false)}
+          currentMarcaCount={marcas.length}
         />
       )}
     </div>

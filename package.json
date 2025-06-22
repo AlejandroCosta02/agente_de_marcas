@@ -24,6 +24,7 @@
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "framer-motion": "^12.16.0",
+    "mercadopago": "^2.8.0",
     "next": "15.3.3",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
