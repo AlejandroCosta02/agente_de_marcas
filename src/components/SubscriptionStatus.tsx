@@ -8,11 +8,10 @@ import { FaCrown, FaInfoCircle, FaFilePdf } from 'react-icons/fa';
 
 interface SubscriptionStatusProps {
   marcaCount: number;
-  pdfCount?: number;
   onUpgradeClick: () => void;
 }
 
-export default function SubscriptionStatus({ marcaCount, pdfCount = 0, onUpgradeClick }: SubscriptionStatusProps) {
+export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: SubscriptionStatusProps) {
   const { data: session } = useSession();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -100,6 +99,7 @@ export default function SubscriptionStatus({ marcaCount, pdfCount = 0, onUpgrade
             {/* MercadoPago Logo */}
             <div className="flex items-center space-x-1 text-xs text-gray-400">
               <span>Powered by</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
                 src="/mercadopago-logo-official.svg" 
                 alt="Mercado Pago" 

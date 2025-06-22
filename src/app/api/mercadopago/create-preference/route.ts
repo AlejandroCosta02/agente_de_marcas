@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { planId, billingCycle, marcaCount } = await request.json();
+    const { planId, billingCycle } = await request.json();
 
     const plan = getPlanById(planId);
     if (!plan) {

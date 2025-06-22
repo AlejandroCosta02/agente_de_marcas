@@ -9,7 +9,6 @@ import { getPaymentLinkUrl, isPaymentLinkConfigured } from '@/lib/payment-links'
 interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentMarcaCount: number;
 }
 
 const formatPrice = (price: number) => {
@@ -20,14 +19,12 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-export default function UpgradeModal({ isOpen, onClose, currentMarcaCount }: UpgradeModalProps) {
+export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState(false);
-  const [showTestInfo, setShowTestInfo] = useState(false);
 
   const paidPlans = getPaidPlans();
-  const isDevelopment = process.env.NODE_ENV === 'development';
 
   const handlePlanSelect = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
@@ -249,6 +246,7 @@ export default function UpgradeModal({ isOpen, onClose, currentMarcaCount }: Upg
                   <div className="flex items-center space-x-4">
                     {/* MercadoPago Logo */}
                     <div className="flex items-center space-x-2 text-gray-500 text-sm">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/mercadopago-logo-official.svg"
                         alt="MercadoPago"
@@ -286,6 +284,7 @@ export default function UpgradeModal({ isOpen, onClose, currentMarcaCount }: Upg
                     
                     <div className="flex items-center space-x-1">
                       <span>Procesado por</span>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src="/mercadopago-logo-official.svg"
                         alt="MercadoPago"

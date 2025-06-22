@@ -3,13 +3,14 @@ export type SubscriptionTier = 'free' | 'essential' | 'pro' | 'master';
 export interface SubscriptionPlan {
   id: string;
   name: string;
-  color: string;
-  popular?: boolean;
-  marcaLimit: number;
-  pdfLimit: number;
+  description: string;
   monthlyPrice: number;
   yearlyPrice: number;
+  marcaLimit: number;
+  pdfLimit: number;
   features: string[];
+  popular?: boolean;
+  color?: 'green' | 'blue' | 'purple';
 }
 
 export interface SubscriptionStatus {
@@ -23,14 +24,10 @@ export interface SubscriptionStatus {
 }
 
 export interface UserSubscription {
-  id: string;
-  userId: string;
-  tier: SubscriptionTier;
-  status: 'active' | 'cancelled' | 'expired';
-  startDate: Date;
-  endDate: Date;
-  mercadopagoSubscriptionId?: string;
-  autoRenew: boolean;
+  tier: string;
+  startDate: string;
+  endDate: string;
+  status: 'active' | 'inactive' | 'cancelled';
 }
 
 export interface MercadoPagoPreference {

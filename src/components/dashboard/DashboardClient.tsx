@@ -15,6 +15,7 @@ import { useSession } from "next-auth/react";
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import UpgradeModal from "@/components/UpgradeModal";
 import { getPlanById, getFreePlan } from "@/lib/subscription-plans";
+import { UserSubscription } from '@/types/subscription';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -43,8 +44,7 @@ export default function DashboardClient() {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [sortedMarcas, setSortedMarcas] = useState(marcas);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
-  const [subscription, setSubscription] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
   const { data: session } = useSession();
 
   const totalMarcas = marcas.length;
@@ -447,12 +447,10 @@ export default function DashboardClient() {
         const response = await fetch('/api/subscription/status');
         if (response.ok) {
           const data = await response.json();
-          setSubscription(data);
+          setSubscription(data.subscription);
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -535,8 +533,7 @@ export default function DashboardClient() {
               {/* Subscription Status */}
               <div className="mb-6">
                 <SubscriptionStatus 
-                  marcaCount={marcas.length}
-                  pdfCount={0} // TODO: Calculate actual PDF count when file system is implemented
+                  marcaCount={totalMarcas}
                   onUpgradeClick={handleUpgradeClick}
                 />
               </div>
@@ -1000,7 +997,6 @@ export default function DashboardClient() {
         <UpgradeModal
           isOpen={upgradeModalOpen}
           onClose={() => setUpgradeModalOpen(false)}
-          currentMarcaCount={marcas.length}
         />
       )}
     </div>
