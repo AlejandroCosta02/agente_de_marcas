@@ -30,6 +30,7 @@ export default function DashboardClient() {
   const [anotacionModalOpen, setAnotacionModalOpen] = useState(false);
   const [selectedMarcaForAnotacion, setSelectedMarcaForAnotacion] = useState<Marca | null>(null);
   const [selectedMarcaForOposicion, setSelectedMarcaForOposicion] = useState<Marca | null>(null);
+  const [showSessionNotice, setShowSessionNotice] = useState(true);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
@@ -448,26 +449,39 @@ export default function DashboardClient() {
           ) : (
             <>
               {/* Session Timeout Notice */}
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">
-                      Sesión de Seguridad
-                    </h3>
-                    <div className="mt-2 text-sm text-blue-700">
-                      <p>
-                        Por su seguridad, su sesión expirará automáticamente después de 1 hora de inactividad. 
-                        Si esto ocurre, deberá volver a iniciar sesión.
-                      </p>
+              {showSessionNotice && (
+                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-shrink-0">
+                        <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-blue-800">
+                          Sesión de Seguridad
+                        </h3>
+                        <div className="mt-2 text-sm text-blue-700">
+                          <p>
+                            Por su seguridad, su sesión expirará automáticamente después de 1 hora de inactividad. 
+                            Si esto ocurre, deberá volver a iniciar sesión.
+                          </p>
+                        </div>
+                      </div>
                     </div>
+                    <button
+                      onClick={() => setShowSessionNotice(false)}
+                      className="ml-4 p-1.5 text-blue-400 hover:text-blue-600 hover:bg-blue-100 rounded-full transition-all duration-200"
+                      title="Cerrar"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">

@@ -2,6 +2,7 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { NextAuthProvider } from "@/components/providers/NextAuthProvider";
 import ClientLayout from "@/components/ClientLayout";
+import CookieConsent from "@/components/CookieConsent";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={inter.className}>
         <NextAuthProvider>
           <ClientLayout>{children}</ClientLayout>
+          <CookieConsent />
         </NextAuthProvider>
       </body>
     </html>
