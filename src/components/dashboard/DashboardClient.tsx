@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
-import OposicionModal from '@/components/modals/OposicionModal';
+import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
 import { FaWhatsapp, FaEnvelope, FaEdit, FaTrash, FaPlus, FaCalendarPlus, FaSort, FaFile } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
@@ -29,6 +29,7 @@ export default function DashboardClient() {
   const [selectedMarcaForFiles, setSelectedMarcaForFiles] = useState<string | null>(null);
   const [anotacionModalOpen, setAnotacionModalOpen] = useState(false);
   const [selectedMarcaForAnotacion, setSelectedMarcaForAnotacion] = useState<Marca | null>(null);
+  const [selectedMarcaForOposicion, setSelectedMarcaForOposicion] = useState<Marca | null>(null);
   const timeRangeRef = useRef<HTMLDivElement>(null);
   const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
@@ -274,6 +275,66 @@ export default function DashboardClient() {
     }
   };
 
+  const handleSubmitOposicion = async (oposicionData: Omit<Oposicion, 'id'>) => {
+    if (!selectedMarcaForOposicion) return;
+
+    try {
+      const newOposicion = {
+        id: Math.random().toString(36).substr(2, 9),
+        text: oposicionData.text,
+        completed: false
+      };
+
+      const updatedOposiciones = [...selectedMarcaForOposicion.oposicion, newOposicion];
+
+      const response = await fetch(`/api/marcas?id=${selectedMarcaForOposicion.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...selectedMarcaForOposicion,
+          oposicion: updatedOposiciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al agregar oposición');
+
+      toast.success('Oposición agregada exitosamente');
+      fetchMarcas();
+      setOposicionModalOpen(false);
+      setSelectedMarcaForOposicion(null);
+    } catch (error) {
+      console.error('Error adding oposicion:', error);
+      toast.error('Error al agregar oposición');
+    }
+  };
+
+  const handleDeleteOposicion = async (marca: Marca, index: number) => {
+    try {
+      const updatedOposiciones = marca.oposicion.filter((_, i) => i !== index);
+
+      const response = await fetch(`/api/marcas?id=${marca.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...marca,
+          oposicion: updatedOposiciones,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Error al eliminar oposición');
+
+      toast.success('Oposición eliminada exitosamente');
+      fetchMarcas();
+    } catch (error) {
+      console.error('Error deleting oposicion:', error);
+      toast.error('Error al eliminar oposición');
+    }
+  };
+
   const handleDelete = async (marca: Marca) => {
     if (!window.confirm('¿Estás seguro de que deseas eliminar esta marca?')) return;
 
@@ -297,7 +358,7 @@ export default function DashboardClient() {
   };
 
   const handleAddOposicion = (marca: Marca) => {
-    setSelectedMarca(marca);
+    setSelectedMarcaForOposicion(marca);
     setOposicionModalOpen(true);
   };
 
@@ -612,21 +673,31 @@ export default function DashboardClient() {
                               </td>
                               <td className="px-3 py-4 text-sm text-gray-500">
                                 <div className="min-w-[250px]">
+                                  <div className="flex items-center justify-between mb-2">
+                                    <button
+                                      onClick={() => handleAddOposicion(marca)}
+                                      className="text-indigo-600 hover:text-indigo-900 transform hover:scale-105 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-50 inline-flex items-center gap-1 text-xs"
+                                      title="Agregar oposición"
+                                    >
+                                      <FaPlus className="h-3 w-3" />
+                                      <span>Agregar</span>
+                                    </button>
+                                  </div>
                                   {Array.isArray(marca.oposicion) && marca.oposicion.length > 0 ? (
                                     <div className="space-y-1">
                                       {marca.oposicion.map((op, index) => (
-                                        <div key={index} className="flex items-center space-x-2">
+                                        <div key={index} className="flex items-center justify-between group bg-gray-50 hover:bg-gray-100 rounded-md p-1.5 transition-all duration-200">
                                           <button
                                             onClick={() => setViewTextModal({
                                               isOpen: true,
                                               title: 'Oposición',
                                               content: op.text
                                             })}
-                                            className={`text-left ${op.completed ? 'text-green-600' : 'text-gray-600'} hover:text-gray-900 flex-grow`}
+                                            className={`text-left ${op.completed ? 'text-green-600' : 'text-gray-600'} hover:text-gray-900 flex-grow text-xs truncate mr-2`}
                                           >
                                             {truncateText(op.text)}
                                           </button>
-                                          <div className="flex space-x-1">
+                                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                                             <button
                                               onClick={() => handleToggleOposicion(marca.id, index)}
                                               className={`${
@@ -636,23 +707,24 @@ export default function DashboardClient() {
                                               } transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-gray-100`}
                                               title={op.completed ? 'Marcar como pendiente' : 'Marcar como completado'}
                                             >
-                                              <svg className="h-4 w-4" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
+                                              <svg className="h-3 w-3" fill={op.completed ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                               </svg>
+                                            </button>
+                                            <button
+                                              onClick={() => handleDeleteOposicion(marca, index)}
+                                              className="text-red-500 hover:text-red-700 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-red-50"
+                                              title="Eliminar oposición"
+                                            >
+                                              <FaTrash className="h-3 w-3" />
                                             </button>
                                           </div>
                                         </div>
                                       ))}
                                     </div>
                                   ) : (
-                                    <div className="flex justify-center">
-                                      <button
-                                        onClick={() => handleAddOposicion(marca)}
-                                        className="text-indigo-600 hover:text-indigo-900 transform hover:scale-110 transition-all duration-200 cursor-pointer p-1 rounded-full hover:bg-indigo-100 inline-flex items-center"
-                                        title="Agregar oposición"
-                                      >
-                                        <FaPlus className="h-4 w-4" />
-                                      </button>
+                                    <div className="text-gray-400 text-xs italic">
+                                      No hay oposiciones
                                     </div>
                                   )}
                                 </div>
@@ -794,6 +866,17 @@ export default function DashboardClient() {
             setSelectedOposicion(null);
             setOposicionModalOpen(false);
           }}
+        />
+      )}
+
+      {selectedMarcaForOposicion && (
+        <OposicionModal
+          isOpen={oposicionModalOpen}
+          onClose={() => {
+            setOposicionModalOpen(false);
+            setSelectedMarcaForOposicion(null);
+          }}
+          onSubmit={handleSubmitOposicion}
         />
       )}
 
