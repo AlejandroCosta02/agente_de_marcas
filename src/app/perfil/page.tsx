@@ -68,8 +68,17 @@ export default function PerfilPage() {
       if (!res.ok) {
         throw new Error("Error al guardar el perfil");
       }
-      toast.success("Perfil actualizado");
+      
+      // Force session update to refresh navbar
       await update();
+      
+      toast.success("Perfil actualizado");
+      
+      // Small delay to ensure session is updated before redirecting
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
+      
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Error al guardar el perfil");

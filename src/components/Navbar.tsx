@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
 
 export default function Navbar() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -25,8 +25,14 @@ export default function Navbar() {
     router.push("/auth/register");
   };
 
+  const handleProfileClick = async () => {
+    // Force session update before navigating to profile
+    await update();
+    router.push('/perfil');
+  };
+
   return (
-    <nav key={status} className="bg-white shadow-sm">
+    <nav key={`${status}-${session?.user?.name}`} className="bg-white shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -52,7 +58,7 @@ export default function Navbar() {
             {status === "authenticated" ? (
               <>
                 <button
-                  onClick={() => router.push('/perfil')}
+                  onClick={handleProfileClick}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer group"
                   title="Ver perfil"
                 >
