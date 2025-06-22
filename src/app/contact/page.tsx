@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { FaPaperPlane, FaEnvelope, FaMapMarkerAlt } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';

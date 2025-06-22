@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { FaGavel, FaExclamationTriangle, FaCheckCircle } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';

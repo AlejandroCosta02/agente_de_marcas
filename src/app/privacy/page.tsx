@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { FaShieldAlt, FaDatabase, FaUserShield } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';

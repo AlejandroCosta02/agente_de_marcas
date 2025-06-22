@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { FaArrowLeft } from 'react-icons/fa';
 
 export default function SmartBackButton() {
-  const { data: session, status } = useSession();
+  const { status } = useSession();
   
   // Determine the back URL based on authentication status
   const backUrl = status === 'authenticated' ? '/dashboard' : '/';
