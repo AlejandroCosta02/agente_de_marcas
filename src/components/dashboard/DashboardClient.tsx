@@ -447,6 +447,28 @@ export default function DashboardClient() {
             </div>
           ) : (
             <>
+              {/* Session Timeout Notice */}
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">
+                      Sesión de Seguridad
+                    </h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>
+                        Por su seguridad, su sesión expirará automáticamente después de 1 hora de inactividad. 
+                        Si esto ocurre, deberá volver a iniciar sesión.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Statistics Cards */}
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 mb-8">
                 {/* Total Marcas */}
