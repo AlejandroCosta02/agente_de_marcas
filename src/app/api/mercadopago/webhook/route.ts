@@ -107,31 +107,26 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // For now, we'll store subscription data in a simple format
-        // In a production app, you'd want to create a proper UserSubscription model
-        console.log('Successfully processed subscription upgrade:', {
-          userEmail,
-          plan: selectedPlan.name,
+        // Create or update the user's subscription
+        const subscriptionData = {
+          userId: user.id,
           tier: selectedPlan.id,
+          status: 'active',
           startDate,
           endDate,
-          paymentId,
-          billingCycle,
+        };
+
+        await db.userSubscription.upsert({
+          where: { userId: user.id },
+          update: subscriptionData,
+          create: subscriptionData,
         });
 
-        // TODO: Create a proper UserSubscription model in Prisma schema
-        // For now, we'll just log the successful payment
-        // The subscription status API can be updated to check MercadoPago directly
+        console.log('Subscription created/updated successfully for user:', userEmail);
 
         return NextResponse.json({ 
           success: true, 
-          message: 'Payment processed successfully',
-          userEmail,
-          plan: selectedPlan.name,
-          tier: selectedPlan.id,
-          startDate,
-          endDate,
-          paymentId,
+          message: 'Subscription updated successfully',
         });
 
       } catch (dbError) {
