@@ -36,15 +36,6 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
     fetchSubscription();
   }, [session?.user?.email]);
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-sm border p-4 animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
-        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-      </div>
-    );
-  }
-
   const currentPlan = subscription ? getPlanById(subscription.tier) : getFreePlan();
   const isUnlimitedMarcas = currentPlan?.marcaLimit === -1;
   const marcaUsagePercentage = isUnlimitedMarcas ? 0 : (marcaCount / currentPlan!.marcaLimit) * 100;
@@ -78,11 +69,31 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
     }
   };
 
+  const getPlanBorderColor = (plan: SubscriptionPlan) => {
+    if (!plan) return 'border-t-gray-300';
+    switch (plan.color) {
+      case 'green': return 'border-t-green-500';
+      case 'blue': return 'border-t-blue-500';
+      case 'purple': return 'border-t-purple-500';
+      default: return 'border-t-gray-300';
+    }
+  };
+
+  if (!currentPlan) {
+    // This can happen briefly while the subscription is loading
+    return (
+      <div className="bg-white rounded-lg shadow-sm border p-4 animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-1/3 mb-2"></div>
+        <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-white rounded-lg shadow-sm border p-4">
+    <div className={`bg-white rounded-lg shadow-sm border p-4 border-t-4 ${getPlanBorderColor(currentPlan)}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          {currentPlan?.id !== 'free' && currentPlan && (
+          {currentPlan?.id !== 'free' && (
             <FaCrown className={getPlanIconClasses(currentPlan)} />
           )}
           <h3 className="font-semibold text-gray-900">

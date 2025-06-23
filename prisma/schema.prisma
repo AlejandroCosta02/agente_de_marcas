@@ -31,8 +31,19 @@ model Marca {
 }
 
 model User {
-  id       String @id @default(cuid())
-  email    String @unique
-  name     String
-  password String
+  id            String            @id @default(cuid())
+  email         String            @unique
+  name          String
+  password      String
+  subscription  UserSubscription?
+}
+
+model UserSubscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  tier      String
+  startDate DateTime
+  endDate   DateTime
+  status    String // e.g., "active", "cancelled", "expired"
 } 

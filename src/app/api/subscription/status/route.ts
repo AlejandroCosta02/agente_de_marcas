@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { UserSubscription } from '@/types/subscription';
+import { db } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -10,18 +10,26 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // In a real implementation, you would:
-    // 1. Query your database for the user's subscription
-    // 2. Check if it's active and not expired
-    // 3. Return the subscription details
+    const user = await db.user.findUnique({
+      where: {
+        email: session.user.email,
+      },
+    });
 
-    // Mock subscription data for now
-    const mockSubscription: UserSubscription | null = null; // Default to free plan
+    if (!user) {
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
+    const subscription = await db.userSubscription.findUnique({
+      where: {
+        userId: user.id,
+      },
+    });
 
     return NextResponse.json({
-      subscription: mockSubscription,
-      isFree: true, // Default to free plan for now
+      subscription: subscription,
     });
+    
   } catch (error) {
     console.error('Error fetching subscription status:', error);
     return NextResponse.json(
