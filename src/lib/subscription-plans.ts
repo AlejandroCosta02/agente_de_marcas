@@ -1,19 +1,10 @@
-export interface SubscriptionPlan {
-  id: string;
-  name: string;
-  color: string;
-  popular?: boolean;
-  marcaLimit: number;
-  pdfLimit: number;
-  monthlyPrice: number;
-  yearlyPrice: number;
-  features: string[];
-}
+import { SubscriptionPlan } from '../types/subscription';
 
 export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'free',
     name: 'Gratis',
+    description: 'Para individuos que están empezando a gestionar sus marcas.',
     color: 'gray',
     marcaLimit: 4,
     pdfLimit: 5,
@@ -29,6 +20,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'essential',
     name: 'Essential',
+    description: 'Ideal para pequeños negocios y emprendedores.',
     color: 'green',
     marcaLimit: 10,
     pdfLimit: 10,
@@ -44,8 +36,9 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'pro',
     name: 'Trademark Pro',
-    color: 'blue',
+    description: 'Perfecto para agencias y profesionales con múltiples clientes.',
     popular: true,
+    color: 'blue',
     marcaLimit: 25,
     pdfLimit: 15,
     monthlyPrice: 60000,
@@ -60,6 +53,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
   {
     id: 'master',
     name: 'Master Brand',
+    description: 'La solución definitiva para grandes empresas y corporaciones.',
     color: 'purple',
     marcaLimit: -1, // Unlimited
     pdfLimit: 20,

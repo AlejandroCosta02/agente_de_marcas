@@ -10,7 +10,7 @@ export interface SubscriptionPlan {
   pdfLimit: number;
   features: string[];
   popular?: boolean;
-  color?: 'green' | 'blue' | 'purple';
+  color?: 'green' | 'blue' | 'purple' | 'gray';
 }
 
 export interface SubscriptionStatus {
