@@ -7,15 +7,18 @@ export async function POST(request: NextRequest) {
     const body = await request.text();
     const data = JSON.parse(body);
 
-    console.log('MercadoPago webhook received:', {
+    console.log('🔔 MercadoPago webhook received:', {
       type: data.type,
       data_id: data.data?.id,
       external_reference: data.data?.external_reference,
+      timestamp: new Date().toISOString(),
     });
 
     // Handle payment notifications
     if (data.type === 'payment') {
       const paymentId = data.data.id;
+      
+      console.log('💰 Processing payment ID:', paymentId);
       
       // Get payment details from MercadoPago
       const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
@@ -25,37 +28,45 @@ export async function POST(request: NextRequest) {
       });
 
       if (!paymentResponse.ok) {
-        console.error('Failed to fetch payment details:', paymentResponse.status);
+        console.error('❌ Failed to fetch payment details:', paymentResponse.status);
         return NextResponse.json({ error: 'Failed to fetch payment details' }, { status: 400 });
       }
 
       const payment = await paymentResponse.json();
       
-      console.log('Payment details:', {
+      console.log('💳 Payment details:', {
         id: payment.id,
         status: payment.status,
         external_reference: payment.external_reference,
         amount: payment.transaction_amount,
         currency: payment.currency_id,
+        payer_email: payment.payer?.email,
       });
 
       // Only process approved payments
       if (payment.status !== 'approved') {
-        console.log('Payment not approved, status:', payment.status);
+        console.log('⏳ Payment not approved, status:', payment.status);
         return NextResponse.json({ message: 'Payment not approved' });
       }
 
       // Parse external reference to get user and plan info
       const externalRef = payment.external_reference;
       if (!externalRef || !externalRef.startsWith('subscription_')) {
-        console.error('Invalid external reference:', externalRef);
+        console.error('❌ Invalid external reference:', externalRef);
         return NextResponse.json({ error: 'Invalid external reference' }, { status: 400 });
       }
 
       const [, userEmail, planId, billingCycle] = externalRef.split('_');
       
+      console.log('📧 Parsed external reference:', {
+        userEmail,
+        planId,
+        billingCycle,
+        fullReference: externalRef,
+      });
+      
       if (!userEmail || !planId || !billingCycle) {
-        console.error('Invalid external reference format:', externalRef);
+        console.error('❌ Invalid external reference format:', externalRef);
         return NextResponse.json({ error: 'Invalid external reference format' }, { status: 400 });
       }
 
@@ -63,7 +74,7 @@ export async function POST(request: NextRequest) {
       const amount = payment.transaction_amount;
       const currency = payment.currency_id;
       
-      console.log('Processing subscription upgrade:', {
+      console.log('🔍 Processing subscription upgrade:', {
         userEmail,
         planId,
         billingCycle,
@@ -75,14 +86,21 @@ export async function POST(request: NextRequest) {
       let selectedPlan = null;
       for (const plan of SUBSCRIPTION_PLANS) {
         const planPrice = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+        console.log(`🔍 Checking plan ${plan.id}: expected ${planPrice}, got ${amount}`);
         if (planPrice === amount) {
           selectedPlan = plan;
+          console.log('✅ Found matching plan:', plan.name);
           break;
         }
       }
 
       if (!selectedPlan) {
-        console.error('No plan found for amount:', amount);
+        console.error('❌ No plan found for amount:', amount);
+        console.log('📋 Available plans:', SUBSCRIPTION_PLANS.map(p => ({
+          id: p.id,
+          monthly: p.monthlyPrice,
+          yearly: p.yearlyPrice
+        })));
         return NextResponse.json({ error: 'No plan found for payment amount' }, { status: 400 });
       }
 
@@ -96,16 +114,28 @@ export async function POST(request: NextRequest) {
         endDate.setFullYear(endDate.getFullYear() + 1);
       }
 
+      console.log('📅 Subscription dates:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+      });
+
       try {
         // Check if user exists
+        console.log('🔍 Looking for user with email:', userEmail);
         const user = await db.user.findUnique({
           where: { email: userEmail }
         });
 
         if (!user) {
-          console.error('User not found:', userEmail);
+          console.error('❌ User not found:', userEmail);
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
+
+        console.log('✅ User found:', {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        });
 
         // Create or update the user's subscription
         const subscriptionData = {
@@ -116,13 +146,15 @@ export async function POST(request: NextRequest) {
           endDate,
         };
 
+        console.log('💾 Saving subscription data:', subscriptionData);
+
         await db.userSubscription.upsert({
           where: { userId: user.id },
           update: subscriptionData,
           create: subscriptionData,
         });
 
-        console.log('Subscription created/updated successfully for user:', userEmail);
+        console.log('✅ Subscription created/updated successfully for user:', userEmail);
 
         return NextResponse.json({ 
           success: true, 
@@ -130,17 +162,17 @@ export async function POST(request: NextRequest) {
         });
 
       } catch (dbError) {
-        console.error('Database error:', dbError);
+        console.error('❌ Database error:', dbError);
         return NextResponse.json({ error: 'Database error' }, { status: 500 });
       }
     }
 
     // Handle other webhook types if needed
-    console.log('Unhandled webhook type:', data.type);
+    console.log('📝 Unhandled webhook type:', data.type);
     return NextResponse.json({ message: 'Webhook received' });
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('❌ Webhook error:', error);
     return NextResponse.json({ error: 'Webhook processing error' }, { status: 500 });
   }
 } 
