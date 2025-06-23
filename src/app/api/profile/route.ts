@@ -13,7 +13,7 @@ export async function GET() {
 
     const pool = createPool();
     const { rows } = await pool.query(
-      `SELECT id, name, email FROM users WHERE email = $1`,
+      `SELECT id, name, email FROM "user" WHERE email = $1`,
       [session.user.email]
     );
 

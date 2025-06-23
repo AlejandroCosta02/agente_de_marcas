@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     // Check if user already exists
     const existingUsers = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
+      'SELECT * FROM "user" WHERE email = $1',
       [email]
     );
 

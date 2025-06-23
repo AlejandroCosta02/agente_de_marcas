@@ -46,7 +46,7 @@ export const authOptions: NextAuthOptions = {
           console.log('Database pool created, querying users...');
           
           const { rows } = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+            'SELECT * FROM "user" WHERE email = $1',
             [credentials.email]
           );
 
