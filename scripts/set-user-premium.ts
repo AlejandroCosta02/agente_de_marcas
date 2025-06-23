@@ -11,7 +11,7 @@ async function main() {
     process.exit(1);
   }
 
-  const user = await db.users.findUnique({
+  const user = await db.user.findUnique({
     where: { email: userEmail },
   });
 

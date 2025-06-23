@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       try {
         // Check if user exists
-        const user = await db.users.findUnique({
+        const user = await db.user.findUnique({
           where: { email: userEmail }
         });
 
