@@ -14,7 +14,6 @@ interface SubscriptionStatusProps {
 export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: SubscriptionStatusProps) {
   const { data: session } = useSession();
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchSubscription = async () => {
@@ -28,8 +27,6 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
         }
       } catch (error) {
         console.error('Error fetching subscription:', error);
-      } finally {
-        setLoading(false);
       }
     };
 
