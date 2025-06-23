@@ -459,16 +459,24 @@ export default function DashboardClient() {
 
   // Check if user can add more marcas
   const canAddMarca = () => {
-    if (!subscription) return true; // Default to free plan
-    
-    const currentPlan = subscription.subscription ? getPlanById(subscription.subscription.tier) : getFreePlan();
-    if (!currentPlan) return true;
+    // If subscription status hasn't been fetched yet, allow adding. 
+    // The backend will ultimately decide. This is for UI responsiveness.
+    if (!session) return true;
+
+    const currentPlan = subscription ? getPlanById(subscription.tier) : getFreePlan();
+
+    if (!currentPlan) {
+      // Fallback in case plan is not found, should not happen.
+      return false;
+    }
     
     // Unlimited plan
-    if (currentPlan.marcaLimit === -1) return true;
+    if (currentPlan.marcaLimit === -1) {
+      return true;
+    }
     
     // Check if under limit
-    return marcas.length < currentPlan.marcaLimit;
+    return totalMarcas < currentPlan.marcaLimit;
   };
 
   const handleAddMarca = () => {
