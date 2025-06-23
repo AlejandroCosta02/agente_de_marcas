@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCreditCard, FaCrown, FaCheck } from 'react-icons/fa';
-import { getPaidPlans, SubscriptionPlan } from '@/lib/subscription-plans';
+import { getPaidPlans } from '@/lib/subscription-plans';
+import { SubscriptionPlan } from '@/types/subscription';
 import { getPaymentLinkUrl, isPaymentLinkConfigured } from '@/lib/payment-links';
 
 interface UpgradeModalProps {
