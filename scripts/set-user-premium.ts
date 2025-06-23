@@ -1,10 +1,11 @@
 import { db } from '../src/lib/db';
-import { getPlanById } from '../src/lib/subscription-plans.ts';
+import { getPlanById } from '../src/lib/subscription-plans';
 
 async function main() {
-  const userEmail = process.argv[2];
-  const planId = process.argv[3] || 'master'; 
-  const billingCycle = process.argv[4] || 'yearly'; 
+  // Hardcode the user email and plan for manual upgrade
+  const userEmail = 'lucianadinoto@gmail.com';
+  const planId = 'master';
+  const billingCycle = 'yearly';
 
   if (!userEmail) {
     console.error('Por favor, proporciona el email del usuario.');

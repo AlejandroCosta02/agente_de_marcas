@@ -58,7 +58,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     marcaLimit: -1, // Unlimited
     pdfLimit: 20,
     monthlyPrice: 90000,
-    yearlyPrice: 1, // Modified to match MercadoPago link price
+    yearlyPrice: 900000,
     features: [
       'Marcas ilimitadas',
       'Hasta 20 PDFs por marca',

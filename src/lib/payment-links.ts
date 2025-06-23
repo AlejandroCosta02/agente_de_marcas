@@ -17,7 +17,7 @@ export const PAYMENT_LINKS: Record<string, PaymentLinkConfig> = {
   },
   master: {
     monthly: '574639139-34f52e86-9535-4189-b75f-29440eec7da4', // $90,000 ARS
-    yearly: '574639139-e1ca578c-adb1-4249-80b5-4fd0e00d9c18', // $1 ARS (testing price)
+    yearly: '574639139-e1ca578c-adb1-4249-80b5-4fd0e00d9c18', // $900,000 ARS
   },
 };
 
@@ -62,9 +62,9 @@ export const getMissingPaymentLinks = (): Array<{planId: string, billingCycle: '
   const missing: Array<{planId: string, billingCycle: 'monthly' | 'yearly', expectedAmount: number}> = [];
   
   const expectedAmounts = {
-    essential: { monthly: 40000, yearly: 400000 }, // Reverted to original price
+    essential: { monthly: 40000, yearly: 400000 },
     pro: { monthly: 60000, yearly: 600000 },
-    master: { monthly: 90000, yearly: 1 }, // Updated yearly to 1 ARS for testing
+    master: { monthly: 90000, yearly: 900000 },
   };
   
   Object.entries(PAYMENT_LINKS).forEach(([planId, config]) => {
