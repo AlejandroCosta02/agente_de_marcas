@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { getPlanById } from '../src/lib/subscription-plans';
+import { getPlanById } from '../src/lib/subscription-plans.ts';
 
 const prisma = new PrismaClient();
 

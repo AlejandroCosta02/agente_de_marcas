@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -12,38 +9,122 @@ datasource db {
 }
 
 model Marca {
-  id              String   @id @default(uuid())
-  marca           String
-  renovar         DateTime
-  vencimiento     DateTime
-  oposicion       Json[]   @default([])
-  anotaciones     String[] @default([])
-  clases          Int[]    @default([])
-  user_email      String
-  tipo_marca      String
-  titular_nombre  String
-  titular_email   String
-  titular_telefono String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  id          String   @id @default(dbgenerated("gen_random_uuid()"))
+  nombre      String
+  acta        String
+  clase       String
+  estado      String
+  renovar     DateTime @db.Timestamp(6)
+  vencimiento DateTime @db.Timestamp(6)
+  anotaciones String[] @default([])
+  oposicion   Json[]   @default([])
+  user_email  String
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamp(6)
+  titularId   String
+  Titular     Titular  @relation(fields: [titularId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([user_email])
+  @@index([user_email], map: "marca_user_email_idx")
 }
 
-model User {
-  id            String            @id @default(cuid())
-  email         String            @unique
-  name          String
-  password      String
-  subscription  UserSubscription?
+model Titular {
+  id         String   @id @default(dbgenerated("gen_random_uuid()"))
+  nombre     String
+  direccion  String
+  email      String?
+  phone      String?
+  created_at DateTime @default(now()) @db.Timestamp(6)
+  updated_at DateTime @default(now()) @db.Timestamp(6)
+  Marca      Marca[]
+}
+
+model accounts {
+  id                  Int     @id @default(autoincrement())
+  user_id             Int
+  type                String  @db.VarChar(255)
+  provider            String  @db.VarChar(255)
+  provider_account_id String  @db.VarChar(255)
+  refresh_token       String?
+  access_token        String?
+  expires_at          BigInt?
+  id_token            String?
+  scope               String?
+  session_state       String?
+  token_type          String? @db.VarChar(255)
+  users               users   @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([provider, provider_account_id])
+}
+
+model marca_files {
+  id            Int       @id @default(autoincrement())
+  marca_id      String    @db.Uuid
+  filename      String    @db.VarChar(255)
+  original_name String    @db.VarChar(255)
+  size          Int
+  uploaded_at   DateTime? @default(now()) @db.Timestamptz(6)
+  s3_url        String?
+  s3_key        String?
+  marcas        marcas    @relation(fields: [marca_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([marca_id], map: "idx_marca_files_marca_id")
+}
+
+model marcas {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  marca            String        @db.VarChar(20)
+  renovar          DateTime      @db.Date
+  vencimiento      DateTime      @db.Date
+  titular_nombre   String        @db.VarChar(100)
+  titular_email    String        @db.VarChar(100)
+  titular_telefono String        @db.VarChar(20)
+  anotaciones      String[]      @default([])
+  user_email       String        @db.VarChar(100)
+  created_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?     @default(now()) @db.Timestamptz(6)
+  oposicion        Json?         @default("[]")
+  tipo_marca       String?       @default("denominativa") @db.VarChar(255)
+  clases           Int[]         @default([])
+  marca_files      marca_files[]
+}
+
+model sessions {
+  id            Int       @id @default(autoincrement())
+  user_id       Int
+  expires       DateTime  @db.Timestamptz(6)
+  session_token String    @unique @db.VarChar(255)
+  access_token  String    @unique @db.VarChar(255)
+  created_at    DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime? @default(now()) @db.Timestamptz(6)
+  users         users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model users {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(255)
+  email      String     @unique @db.VarChar(255)
+  password   String     @db.VarChar(255)
+  created_at DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?  @default(now()) @db.Timestamptz(6)
+  accounts   accounts[]
+  sessions   sessions[]
+  subscription UserSubscription?
+}
+
+model verification_tokens {
+  identifier String
+  token      String   @unique
+  expires    DateTime @db.Timestamptz(6)
+
+  @@unique([identifier, token])
 }
 
 model UserSubscription {
   id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
+  userId    Int      @unique
+  user      users    @relation(fields: [userId], references: [id], onDelete: Cascade)
   tier      String
   startDate DateTime
   endDate   DateTime
-  status    String // e.g., "active", "cancelled", "expired"
-} 
+  status    String 
+}
