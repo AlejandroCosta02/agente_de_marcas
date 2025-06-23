@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { db } from '../src/lib/db';
 import { getPlanById } from '../src/lib/subscription-plans.ts';
-
-const prisma = new PrismaClient();
 
 async function main() {
   const userEmail = process.argv[2];
@@ -13,7 +11,7 @@ async function main() {
     process.exit(1);
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUnique({
     where: { email: userEmail },
   });
 
@@ -48,7 +46,7 @@ async function main() {
     status: 'active',
   };
 
-  await prisma.userSubscription.upsert({
+  await db.userSubscription.upsert({
     where: { userId: user.id },
     update: subscriptionData,
     create: subscriptionData,
@@ -64,5 +62,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await db.$disconnect();
   }); 
