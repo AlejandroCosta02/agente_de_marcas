@@ -106,11 +106,20 @@ export default function DashboardClient() {
     console.log('Editing marca:', marca);
     setSelectedMarca({
       ...marca,
-      titular: {
-        fullName: marca.titular?.fullName || '',
-        email: marca.titular?.email || '',
-        phone: marca.titular?.phone || ''
-      }
+      // Ensure titulares is properly structured for editing
+      titulares: marca.titulares && Array.isArray(marca.titulares) && marca.titulares.length > 0
+        ? marca.titulares.map(t => ({
+            id: t.id || Math.random().toString(36).substr(2, 9),
+            fullName: t.fullName || '',
+            email: t.email || '',
+            phone: t.phone || ''
+          }))
+        : [{
+            id: Math.random().toString(36).substr(2, 9),
+            fullName: marca.titular?.fullName || '',
+            email: marca.titular?.email || '',
+            phone: marca.titular?.phone || ''
+          }]
     });
     setIsModalOpen(true);
   };
@@ -341,7 +350,8 @@ export default function DashboardClient() {
   const addToGoogleCalendar = (marca: Marca, type: 'renovar' | 'vencimiento') => {
     const date = type === 'renovar' ? marca.renovar : marca.vencimiento;
     const title = `${type === 'renovar' ? 'Renovar' : 'Vencimiento'} marca: ${marca.marca}`;
-    const description = `Marca: ${marca.marca}\nTitular: ${marca.titular.fullName}\nEmail: ${marca.titular.email}\nTeléfono: ${marca.titular.phone}`;
+    const titular = marca.titular ?? marca.titulares?.[0] ?? { fullName: '', email: '', phone: '' };
+    const description = `Marca: ${marca.marca}\nTitular: ${titular.fullName}\nEmail: ${titular.email}\nTeléfono: ${titular.phone}`;
     
     const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(title)}&dates=${date.split('T')[0].replace(/-/g, '')}/${date.split('T')[0].replace(/-/g, '')}&details=${encodeURIComponent(description)}`;
     
@@ -536,24 +546,27 @@ export default function DashboardClient() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                          {marcas.map((marca) => (
-                            <tr 
-                              key={marca.id}
-                              className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
-                              onClick={() => handleRowClick(marca)}
-                            >
-                              <td className="py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
-                                <div className="min-w-[200px]">
-                                  {truncateText(marca.marca, 30)}
-                                </div>
-                              </td>
-                              <td className="px-3 py-4 text-sm text-gray-500">
-                                <div className="min-w-[200px]">
-                                  {marca.titular.fullName}
-                                </div>
-                              </td>
-                            </tr>
-                          ))}
+                          {marcas.map((marca) => {
+                            const titular = marca.titular ?? marca.titulares?.[0] ?? { fullName: '', email: '', phone: '' };
+                            return (
+                              <tr 
+                                key={marca.id}
+                                className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                                onClick={() => handleRowClick(marca)}
+                              >
+                                <td className="py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
+                                  <div className="min-w-[200px]">
+                                    {truncateText(marca.marca, 30)}
+                                  </div>
+                                </td>
+                                <td className="px-3 py-4 text-sm text-gray-500">
+                                  <div className="min-w-[200px]">
+                                    {titular.fullName}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

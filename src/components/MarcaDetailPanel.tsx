@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile } from 'react-icons/fa';
+import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile, FaUser } from 'react-icons/fa';
 import type { Marca } from '../types/marca';
 
 interface MarcaDetailPanelProps {
@@ -55,6 +55,8 @@ export default function MarcaDetailPanel({
     return text.substring(0, maxLength) + '...';
   };
 
+  const titular = marca.titular ?? marca.titulares?.[0] ?? { fullName: '', email: '', phone: '' };
+
   return (
     <div className="fixed inset-0 z-50 flex pointer-events-none">
       {/* Panel only, no backdrop */}
@@ -98,40 +100,98 @@ export default function MarcaDetailPanel({
               </div>
             </div>
 
-            {/* Titular Information */}
+            {/* Titulares Information */}
             <div className="bg-gray-50 rounded-lg p-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Titular</h3>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                  <p className="mt-1 text-sm text-gray-900">{marca.titular.fullName}</p>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="mt-1 text-sm text-gray-900">{marca.titular.email}</p>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Titulares</h3>
+              <div className="space-y-4">
+                {(marca.titulares && Array.isArray(marca.titulares) && marca.titulares.length > 0) ? (
+                  marca.titulares.map((titular, index) => (
+                    <div key={titular.id || index} className="bg-white rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center mb-3">
+                        <FaUser className="w-5 h-5 text-indigo-600 mr-2" />
+                        <h4 className="font-medium text-gray-900">Titular {index + 1}</h4>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                          <p className="mt-1 text-sm text-gray-900">{titular.fullName}</p>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Email</label>
+                            <p className="mt-1 text-sm text-gray-900">{titular.email}</p>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                            <p className="mt-1 text-sm text-gray-900">{titular.phone || 'No especificado'}</p>
+                          </div>
+                        </div>
+                        <div className="flex space-x-2">
+                          {titular.phone && (
+                            <button
+                              onClick={() => window.open(`https://wa.me/${titular.phone}`, '_blank')}
+                              className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                              <FaWhatsapp className="w-4 h-4 mr-2" />
+                              WhatsApp
+                            </button>
+                          )}
+                          <button
+                            onClick={() => window.location.href = `mailto:${titular.email}`}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <FaEnvelope className="w-4 h-4 mr-2" />
+                            Email
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  // Fallback to old titular structure for backward compatibility
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center mb-3">
+                      <FaUser className="w-5 h-5 text-indigo-600 mr-2" />
+                      <h4 className="font-medium text-gray-900">Titular</h4>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <p className="mt-1 text-sm text-gray-900">{titular.fullName}</p>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Email</label>
+                          <p className="mt-1 text-sm text-gray-900">{titular.email}</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">Teléfono</label>
+                          <p className="mt-1 text-sm text-gray-900">{titular.phone || 'No especificado'}</p>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        {titular.phone && (
+                          <button
+                            onClick={() => window.open(`https://wa.me/${titular.phone}`, '_blank')}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                          >
+                            <FaWhatsapp className="w-4 h-4 mr-2" />
+                            WhatsApp
+                          </button>
+                        )}
+                        {titular.email && (
+                          <button
+                            onClick={() => window.location.href = `mailto:${titular.email}`}
+                            className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          >
+                            <FaEnvelope className="w-4 h-4 mr-2" />
+                            Email
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Teléfono</label>
-                    <p className="mt-1 text-sm text-gray-900">{marca.titular.phone}</p>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => window.open(`https://wa.me/${marca.titular.phone}`, '_blank')}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    <FaWhatsapp className="w-4 h-4 mr-2" />
-                    WhatsApp
-                  </button>
-                  <button
-                    onClick={() => window.location.href = `mailto:${marca.titular.email}`}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <FaEnvelope className="w-4 h-4 mr-2" />
-                    Email
-                  </button>
-                </div>
+                )}
               </div>
             </div>
 

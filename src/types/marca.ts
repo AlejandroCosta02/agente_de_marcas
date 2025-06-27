@@ -11,6 +11,7 @@ export type TipoMarca =
   | "certificacion";
 
 export interface Titular {
+  id: string;
   fullName: string;
   email: string;
   phone: string;
@@ -44,7 +45,8 @@ export interface Marca {
   marca: string;
   renovar: string;
   vencimiento: string;
-  titular: Titular;
+  titulares: Titular[];
+  titular?: Titular;
   oposicion: Oposicion[];
   anotacion: Anotacion[];
   clases: number[];

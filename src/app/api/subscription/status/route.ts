@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { createPool } from '@vercel/postgres';
 
 export async function GET() {
   try {
@@ -10,21 +10,27 @@ export async function GET() {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const user = await db.user.findUnique({
-      where: {
-        email: session.user.email,
-      },
-    });
+    const pool = createPool();
+    
+    // Get user
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [session.user.email]
+    );
 
-    if (!user) {
+    if (userResult.rows.length === 0) {
       return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     }
 
-    const subscription = await db.userSubscription.findUnique({
-      where: {
-        userId: user.id,
-      },
-    });
+    const user = userResult.rows[0];
+
+    // Get subscription
+    const subscriptionResult = await pool.query(
+      'SELECT * FROM "UserSubscription" WHERE "userId" = $1',
+      [user.id]
+    );
+
+    const subscription = subscriptionResult.rows[0] || null;
 
     return NextResponse.json({
       subscription: subscription,

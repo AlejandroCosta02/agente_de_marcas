@@ -73,6 +73,7 @@ export async function GET() {
         m.titular_nombre,
         m.titular_email,
         m.titular_telefono,
+        m.titulares,
         m.anotaciones,
         m.oposicion,
         COALESCE(m.tipo_marca, 'denominativa') as "tipoMarca",
@@ -89,13 +90,25 @@ export async function GET() {
     const formattedMarcas = result.rows.map(marca => {
       try {
         console.log('Processing marca:', marca.id);
-        return {
-          ...marca,
-          titular: {
+        
+        // Handle titulares - try to get from new field, fallback to old structure
+        let titulares = [];
+        if (marca.titulares && Array.isArray(marca.titulares)) {
+          titulares = marca.titulares;
+        } else if (marca.titular_nombre || marca.titular_email) {
+          // Fallback to old structure for backward compatibility
+          titulares = [{
+            id: Math.random().toString(36).substr(2, 9),
             fullName: marca.titular_nombre || '',
             email: marca.titular_email || '',
             phone: marca.titular_telefono || ''
-          },
+          }];
+        }
+
+        return {
+          ...marca,
+          titulares,
+          titular: titulares[0] || { fullName: '', email: '', phone: '' }, // Keep for backward compatibility
           anotacion: Array.isArray(marca.anotaciones) 
             ? marca.anotaciones.map((text: string) => ({ 
                 id: Math.random().toString(36).substr(2, 9), 
@@ -181,11 +194,17 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { marca, renovar, vencimiento, titular, anotacion, oposicion, tipoMarca, clases } = body;
+    const { marca, renovar, vencimiento, titulares, anotacion, oposicion, tipoMarca, clases } = body;
 
     // Validate required fields
-    if (!marca || !renovar || !vencimiento || !titular || !titular.fullName || !titular.email || !titular.phone) {
+    if (!marca || !renovar || !vencimiento || !titulares || !Array.isArray(titulares) || titulares.length === 0) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
+    }
+
+    // Validate first titular (required)
+    const firstTitular = titulares[0];
+    if (!firstTitular.fullName || !firstTitular.email) {
+      return NextResponse.json({ message: 'El primer titular debe tener nombre y email' }, { status: 400 });
     }
 
     // Clean arrays
@@ -209,7 +228,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    // Update the marca
+    // Update the marca - store first titular in existing fields, all titulares as JSON
     await pool.query(`
       UPDATE marcas 
       SET 
@@ -219,20 +238,22 @@ export async function PUT(request: Request) {
         titular_nombre = $4,
         titular_email = $5,
         titular_telefono = $6,
-        anotaciones = $7::text[],
-        oposicion = $8::jsonb,
-        tipo_marca = $9,
-        clases = $10::integer[],
+        titulares = $7::jsonb,
+        anotaciones = $8::text[],
+        oposicion = $9::jsonb,
+        tipo_marca = $10,
+        clases = $11::integer[],
         updated_at = NOW()
-      WHERE id = $11 AND user_email = $12
+      WHERE id = $12 AND user_email = $13
       RETURNING *
     `, [
       marca,
       renovar,
       vencimiento,
-      titular.fullName,
-      titular.email,
-      titular.phone,
+      firstTitular.fullName,
+      firstTitular.email,
+      firstTitular.phone || '',
+      JSON.stringify(titulares),
       cleanedAnotaciones,
       JSON.stringify(cleanedOposicion),
       tipoMarca,
@@ -260,12 +281,23 @@ export async function POST(request: Request) {
       marca, 
       renovar, 
       vencimiento, 
-      titular,
+      titulares,
       anotacion = [],
       oposicion = [],
       clases = [],
       tipoMarca
     } = await request.json();
+
+    // Validate titulares
+    if (!titulares || !Array.isArray(titulares) || titulares.length === 0) {
+      return NextResponse.json({ message: 'Debe proporcionar al menos un titular' }, { status: 400 });
+    }
+
+    // Validate first titular (required)
+    const firstTitular = titulares[0];
+    if (!firstTitular.fullName || !firstTitular.email) {
+      return NextResponse.json({ message: 'El primer titular debe tener nombre y email' }, { status: 400 });
+    }
 
     // Clean and validate anotaciones
     const cleanedAnotaciones = Array.isArray(anotacion) 
@@ -290,7 +322,7 @@ export async function POST(request: Request) {
 
     const pool = createPool();
 
-    // Insert the new marca
+    // Insert the new marca - store first titular in existing fields, all titulares as JSON
     const result = await pool.query(`
       INSERT INTO marcas (
         marca,
@@ -299,22 +331,24 @@ export async function POST(request: Request) {
         titular_nombre,
         titular_email,
         titular_telefono,
+        titulares,
         anotaciones,
         oposicion,
         tipo_marca,
         clases,
         user_email
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7::text[], $8::jsonb, $9, $10::integer[], $11
+        $1, $2, $3, $4, $5, $6, $7::jsonb, $8::text[], $9::jsonb, $10, $11::integer[], $12
       )
       RETURNING id
     `, [
       marca,
       renovar,
       vencimiento,
-      titular.fullName,
-      titular.email,
-      titular.phone,
+      firstTitular.fullName,
+      firstTitular.email,
+      firstTitular.phone || '',
+      JSON.stringify(titulares),
       cleanedAnotaciones,
       JSON.stringify(cleanedOposicion),
       tipoMarca,

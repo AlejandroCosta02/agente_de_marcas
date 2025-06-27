@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
+import { createPool } from '@vercel/postgres';
 import { SUBSCRIPTION_PLANS } from '@/lib/subscription-plans';
 
 export async function POST(request: NextRequest) {
@@ -120,17 +120,21 @@ export async function POST(request: NextRequest) {
       });
 
       try {
+        const pool = createPool();
+        
         // Check if user exists
         console.log('🔍 Looking for user with email:', userEmail);
-        const user = await db.user.findUnique({
-          where: { email: userEmail }
-        });
+        const userResult = await pool.query(
+          'SELECT * FROM users WHERE email = $1',
+          [userEmail]
+        );
 
-        if (!user) {
+        if (userResult.rows.length === 0) {
           console.error('❌ User not found:', userEmail);
           return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
+        const user = userResult.rows[0];
         console.log('✅ User found:', {
           id: user.id,
           email: user.email,
@@ -148,11 +152,33 @@ export async function POST(request: NextRequest) {
 
         console.log('💾 Saving subscription data:', subscriptionData);
 
-        await db.userSubscription.upsert({
-          where: { userId: user.id },
-          update: subscriptionData,
-          create: subscriptionData,
-        });
+        // Check if subscription exists
+        const existingSubscription = await pool.query(
+          'SELECT * FROM "UserSubscription" WHERE "userId" = $1',
+          [user.id]
+        );
+
+        if (existingSubscription.rows.length > 0) {
+          // Update existing subscription
+          await pool.query(`
+            UPDATE "UserSubscription" 
+            SET tier = $1, status = $2, "startDate" = $3, "endDate" = $4
+            WHERE "userId" = $5
+          `, [selectedPlan.id, 'active', startDate, endDate, user.id]);
+        } else {
+          // Create new subscription
+          await pool.query(`
+            INSERT INTO "UserSubscription" (id, "userId", tier, status, "startDate", "endDate")
+            VALUES ($1, $2, $3, $4, $5, $6)
+          `, [
+            `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            user.id,
+            selectedPlan.id,
+            'active',
+            startDate,
+            endDate
+          ]);
+        }
 
         console.log('✅ Subscription created/updated successfully for user:', userEmail);
 

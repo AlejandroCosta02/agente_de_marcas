@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Marca, MarcaSubmissionData, TipoMarca, Oposicion, Anotacion } from '@/types/marca';
+import { Marca, MarcaSubmissionData, TipoMarca, Oposicion, Anotacion, Titular } from '@/types/marca';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaUser } from 'react-icons/fa';
 import AnotacionModal from './AnotacionModal';
 import OposicionModal from './OposicionModal';
 
@@ -30,13 +30,14 @@ const TIPOS_MARCA: TipoMarca[] = [
 export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }: AddMarcaModalProps) {
   const [formData, setFormData] = useState<MarcaSubmissionData>({
     marca: '',
-    renovar: new Date().toISOString().split('T')[0],
-    vencimiento: new Date().toISOString().split('T')[0],
-    titular: {
+    renovar: '',
+    vencimiento: '',
+    titulares: [{
+      id: Math.random().toString(36).substr(2, 9),
       fullName: '',
       email: '',
       phone: ''
-    },
+    }],
     oposicion: [],
     anotacion: [],
     clases: [],
@@ -51,17 +52,67 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const [selectedAnotacion, setSelectedAnotacion] = useState<Anotacion | undefined>();
   const [selectedOposicion, setSelectedOposicion] = useState<Oposicion | undefined>();
 
+  // Helper function to convert ISO date to DD/MM/YYYY
+  const formatDateToDDMMYYYY = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const date = new Date(isoDate);
+    if (isNaN(date.getTime())) return '';
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
+  // Helper function to convert DD/MM/YYYY to ISO date
+  const formatDateToISO = (ddmmyyyy: string): string => {
+    if (!ddmmyyyy || ddmmyyyy.length !== 10) return '';
+    const parts = ddmmyyyy.split('/');
+    if (parts.length !== 3) return '';
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2]);
+    const date = new Date(year, month, day);
+    if (isNaN(date.getTime())) return '';
+    return date.toISOString().split('T')[0];
+  };
+
+  // Helper function to validate DD/MM/YYYY format
+  const isValidDate = (dateString: string): boolean => {
+    if (!dateString || dateString.length !== 10) return false;
+    const parts = dateString.split('/');
+    if (parts.length !== 3) return false;
+    
+    const day = parseInt(parts[0]);
+    const month = parseInt(parts[1]);
+    const year = parseInt(parts[2]);
+    
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return false;
+    if (month < 1 || month > 12) return false;
+    if (day < 1 || day > 31) return false;
+    
+    const date = new Date(year, month - 1, day);
+    return date.getDate() === day && date.getMonth() === month - 1 && date.getFullYear() === year;
+  };
+
   useEffect(() => {
     if (initialData) {
       setFormData({
         marca: initialData.marca,
-        renovar: initialData.renovar ? new Date(initialData.renovar).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        vencimiento: initialData.vencimiento ? new Date(initialData.vencimiento).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        titular: {
-          fullName: initialData.titular?.fullName || '',
-          email: initialData.titular?.email || '',
-          phone: initialData.titular?.phone || ''
-        },
+        renovar: initialData.renovar ? formatDateToDDMMYYYY(initialData.renovar) : formatDateToDDMMYYYY(new Date().toISOString()),
+        vencimiento: initialData.vencimiento ? formatDateToDDMMYYYY(initialData.vencimiento) : formatDateToDDMMYYYY(new Date().toISOString()),
+        titulares: initialData.titulares && initialData.titulares.length > 0 
+          ? initialData.titulares.map(t => ({
+              id: t.id || Math.random().toString(36).substr(2, 9),
+              fullName: t.fullName || '',
+              email: t.email || '',
+              phone: t.phone || ''
+            }))
+          : [{
+              id: Math.random().toString(36).substr(2, 9),
+              fullName: '',
+              email: '',
+              phone: ''
+            }],
         oposicion: initialData.oposicion || [],
         anotacion: initialData.anotacion || [],
         clases: initialData.clases || [],
@@ -70,15 +121,17 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       setSelectedClases(initialData.clases || []);
     } else {
       // Reset form when opening for a new marca
+      const today = formatDateToDDMMYYYY(new Date().toISOString());
       setFormData({
         marca: '',
-        renovar: new Date().toISOString().split('T')[0],
-        vencimiento: new Date().toISOString().split('T')[0],
-        titular: {
+        renovar: today,
+        vencimiento: today,
+        titulares: [{
+          id: Math.random().toString(36).substr(2, 9),
           fullName: '',
           email: '',
           phone: ''
-        },
+        }],
         oposicion: [],
         anotacion: [],
         clases: [],
@@ -89,44 +142,6 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     setErrors({});
   }, [initialData, isOpen]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.marca) {
-      newErrors.marca = 'El nombre es requerido';
-    }
-
-    if (!formData.renovar) {
-      newErrors.renovar = 'La fecha de renovación es requerida';
-    }
-
-    if (!formData.vencimiento) {
-      newErrors.vencimiento = 'La fecha de vencimiento es requerida';
-    }
-
-    if (!formData.titular.fullName) {
-      newErrors['titular.fullName'] = 'El nombre del titular es requerido';
-    }
-
-    if (!formData.titular.email) {
-      newErrors['titular.email'] = 'El email del titular es requerido';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.titular.email)) {
-      newErrors['titular.email'] = 'Email inválido';
-    }
-
-    if (!formData.titular.phone) {
-      newErrors['titular.phone'] = 'El teléfono del titular es requerido';
-    } else if (!/^\+?[\d\s-]{10,}$/.test(formData.titular.phone)) {
-      newErrors['titular.phone'] = 'Teléfono inválido';
-    }
-
-    if (!formData.tipoMarca) {
-      newErrors.tipoMarca = 'El tipo de marca es requerido';
-    }
-
-    return newErrors;
-  };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors = validateForm();
@@ -136,10 +151,15 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       return;
     }
 
-    onSubmit({
+    // Convert dates to ISO format before submitting
+    const submissionData = {
       ...formData,
+      renovar: formatDateToISO(formData.renovar),
+      vencimiento: formatDateToISO(formData.vencimiento),
       clases: selectedClases
-    });
+    };
+
+    onSubmit(submissionData);
     onClose();
   };
 
@@ -210,6 +230,81 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     }));
   };
 
+  // Functions to handle multiple titulares
+  const addTitular = () => {
+    setFormData(prev => ({
+      ...prev,
+      titulares: [...prev.titulares, {
+        id: Math.random().toString(36).substr(2, 9),
+        fullName: '',
+        email: '',
+        phone: ''
+      }]
+    }));
+  };
+
+  const removeTitular = (id: string) => {
+    if (formData.titulares.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        titulares: prev.titulares.filter(t => t.id !== id)
+      }));
+    }
+  };
+
+  const updateTitular = (id: string, field: keyof Titular, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      titulares: prev.titulares.map(t => 
+        t.id === id ? { ...t, [field]: value } : t
+      )
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.marca) {
+      newErrors.marca = 'El nombre es requerido';
+    }
+
+    if (!formData.renovar) {
+      newErrors.renovar = 'La fecha de renovación es requerida';
+    } else if (!isValidDate(formData.renovar)) {
+      newErrors.renovar = 'Formato de fecha inválido. Use DD/MM/YYYY';
+    }
+
+    if (!formData.vencimiento) {
+      newErrors.vencimiento = 'La fecha de vencimiento es requerida';
+    } else if (!isValidDate(formData.vencimiento)) {
+      newErrors.vencimiento = 'Formato de fecha inválido. Use DD/MM/YYYY';
+    }
+
+    // Validate all titulares
+    formData.titulares.forEach((titular, index) => {
+      if (!titular.fullName) {
+        newErrors[`titulares.${index}.fullName`] = 'El nombre del titular es requerido';
+      }
+
+      if (!titular.email) {
+        newErrors[`titulares.${index}.email`] = 'El email del titular es requerido';
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(titular.email)) {
+        newErrors[`titulares.${index}.email`] = 'Email inválido';
+      }
+
+      // Phone is optional, but if provided, validate format
+      if (titular.phone && !/^\+?[\d\s-]{10,}$/.test(titular.phone)) {
+        newErrors[`titulares.${index}.phone`] = 'Teléfono inválido';
+      }
+    });
+
+    if (!formData.tipoMarca) {
+      newErrors.tipoMarca = 'El tipo de marca es requerido';
+    }
+
+    return newErrors;
+  };
+
   return (
     <>
       <AnimatePresence>
@@ -236,106 +331,220 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                 </h3>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Marca <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.marca}
                       onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
-                      className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                      placeholder="Ingrese el nombre de la marca"
                     />
-                    {errors.marca && <p className="mt-1 text-sm text-red-600">{errors.marca}</p>}
+                    {errors.marca && <p className="mt-2 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.marca}
+                    </p>}
                   </div>
 
                   <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fecha de Renovación <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
-                        value={formData.renovar}
-                        onChange={(e) => setFormData({ ...formData, renovar: e.target.value })}
-                        className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
-                      />
-                      {errors.renovar && <p className="mt-1 text-sm text-red-600">{errors.renovar}</p>}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.renovar}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only numbers and slashes
+                            const cleaned = value.replace(/[^\d/]/g, '');
+                            // Auto-format as DD/MM/YYYY
+                            let formatted = cleaned;
+                            if (cleaned.length >= 2 && !cleaned.includes('/')) {
+                              formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2);
+                            }
+                            if (formatted.length >= 5 && formatted.split('/').length === 2) {
+                              formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
+                            }
+                            // Limit to DD/MM/YYYY format
+                            if (formatted.length <= 10) {
+                              setFormData({ ...formData, renovar: formatted });
+                            }
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                          placeholder="DD/MM/YYYY"
+                          maxLength={10}
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">Formato: DD/MM/YYYY (ej: 25/12/2024)</p>
+                      {errors.renovar && <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.renovar}
+                      </p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fecha de Vencimiento <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="date"
-                        value={formData.vencimiento}
-                        onChange={(e) => setFormData({ ...formData, vencimiento: e.target.value })}
-                        className="mt-1 block w-full text-black border-0 border-b border-gray-300 focus:border-indigo-500 focus:ring-0 bg-transparent"
-                      />
-                      {errors.vencimiento && <p className="mt-1 text-sm text-red-600">{errors.vencimiento}</p>}
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.vencimiento}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only numbers and slashes
+                            const cleaned = value.replace(/[^\d/]/g, '');
+                            // Auto-format as DD/MM/YYYY
+                            let formatted = cleaned;
+                            if (cleaned.length >= 2 && !cleaned.includes('/')) {
+                              formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2);
+                            }
+                            if (formatted.length >= 5 && formatted.split('/').length === 2) {
+                              formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
+                            }
+                            // Limit to DD/MM/YYYY format
+                            if (formatted.length <= 10) {
+                              setFormData({ ...formData, vencimiento: formatted });
+                            }
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                          placeholder="DD/MM/YYYY"
+                          maxLength={10}
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">Formato: DD/MM/YYYY (ej: 25/12/2024)</p>
+                      {errors.vencimiento && <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.vencimiento}
+                      </p>}
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h4 className="font-medium text-gray-900">Datos del Titular</h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-semibold text-gray-900 text-lg border-b border-gray-200 pb-2">Titulares</h4>
+                      <button
+                        type="button"
+                        onClick={addTitular}
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                      >
+                        <FaPlus className="w-4 h-4 mr-1" />
+                        Agregar Titular
+                      </button>
+                    </div>
                     
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                      <input
-                        type="text"
-                        value={formData.titular.fullName}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, fullName: e.target.value }
-                        })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                        required
-                      />
-                      {errors['titular.fullName'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['titular.fullName']}</p>
-                      )}
-                    </div>
+                    {formData.titulares.map((titular, index) => (
+                      <div key={titular.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center">
+                            <FaUser className="w-5 h-5 text-indigo-600 mr-2" />
+                            <h5 className="font-medium text-gray-900">Titular {index + 1}</h5>
+                          </div>
+                          {formData.titulares.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() => removeTitular(titular.id)}
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-all duration-200"
+                              title="Eliminar titular"
+                            >
+                              <FaTrash className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Nombre Completo <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={titular.fullName}
+                              onChange={(e) => updateTitular(titular.id, 'fullName', e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                              placeholder="Ingrese el nombre completo del titular"
+                              required
+                            />
+                            {errors[`titulares.${index}.fullName`] && (
+                              <p className="mt-2 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors[`titulares.${index}.fullName`]}
+                              </p>
+                            )}
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <input
-                        type="email"
-                        value={formData.titular.email}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, email: e.target.value }
-                        })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                        required
-                      />
-                      {errors['titular.email'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['titular.email']}</p>
-                      )}
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Email <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="email"
+                              value={titular.email}
+                              onChange={(e) => updateTitular(titular.id, 'email', e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                              placeholder="ejemplo@correo.com"
+                              required
+                            />
+                            {errors[`titulares.${index}.email`] && (
+                              <p className="mt-2 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors[`titulares.${index}.email`]}
+                              </p>
+                            )}
+                          </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">WhatsApp</label>
-                      <input
-                        type="tel"
-                        value={formData.titular.phone}
-                        onChange={(e) => setFormData({
-                          ...formData,
-                          titular: { ...formData.titular, phone: e.target.value }
-                        })}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                        required
-                        placeholder="+1234567890"
-                      />
-                      {errors['titular.phone'] && (
-                        <p className="mt-1 text-sm text-red-600">{errors['titular.phone']}</p>
-                      )}
-                    </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              WhatsApp (Opcional)
+                            </label>
+                            <input
+                              type="tel"
+                              value={titular.phone}
+                              onChange={(e) => updateTitular(titular.id, 'phone', e.target.value)}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                              placeholder="+1234567890"
+                            />
+                            {errors[`titulares.${index}.phone`] && (
+                              <p className="mt-2 text-sm text-red-600 flex items-center">
+                                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                {errors[`titulares.${index}.phone`]}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
 
                   <div className="relative">
-                    <label className="block text-sm font-medium text-gray-700">Clases</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Clases</label>
                     <div 
-                      className="mt-1 p-2 border rounded-md cursor-pointer flex items-center justify-between"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg cursor-pointer flex items-center justify-between bg-white shadow-sm hover:border-gray-400 transition-all duration-200"
                       onClick={() => setShowClasesDropdown(!showClasesDropdown)}
                     >
                       <span className="text-gray-700">
@@ -343,21 +552,21 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                           ? selectedClases.join(', ') 
                           : 'Seleccionar clases...'}
                       </span>
-                      <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                      <svg className="w-5 h-5 text-gray-400 transition-transform duration-200" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                       </svg>
                     </div>
                     {showClasesDropdown && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                        <div className="grid grid-cols-5 gap-1 p-2">
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                        <div className="grid grid-cols-5 gap-1 p-3">
                           {Array.from({ length: 45 }, (_, i) => i + 1).map((clase) => (
                             <div
                               key={clase}
                               onClick={() => handleClaseSelect(clase)}
-                              className={`p-2 text-center cursor-pointer rounded font-medium ${
-                                formData.clases.includes(clase)
-                                  ? 'bg-indigo-100 text-indigo-600 font-semibold'
-                                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                              className={`p-2 text-center cursor-pointer rounded-md font-medium transition-all duration-150 ${
+                                selectedClases.includes(clase)
+                                  ? 'bg-indigo-100 text-indigo-600 font-semibold border border-indigo-200'
+                                  : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                               }`}
                             >
                               {clase}
@@ -368,43 +577,54 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Tipo de Marca</label>
+                  <div className="relative">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Marca</label>
                     <select
                       value={formData.tipoMarca}
                       onChange={(e) => setFormData({ ...formData, tipoMarca: e.target.value as TipoMarca })}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-black bg-white"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 bg-white shadow-sm hover:border-gray-400 appearance-none cursor-pointer pr-10"
                       required
                     >
                       {TIPOS_MARCA.map((tipo) => (
-                        <option key={tipo} value={tipo} className="text-black">
+                        <option key={tipo} value={tipo} className="text-gray-900 py-2">
                           {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
                         </option>
                       ))}
                     </select>
-                    {errors.tipoMarca && <p className="mt-1 text-sm text-red-600">{errors.tipoMarca}</p>}
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg className="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    {errors.tipoMarca && <p className="mt-2 text-sm text-red-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
+                      {errors.tipoMarca}
+                    </p>}
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Anotaciones</h4>
+                      <h4 className="font-semibold text-gray-900 text-lg border-b border-gray-200 pb-2">Anotaciones</h4>
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedAnotacion(undefined);
                           setShowAnotacionModal(true);
                         }}
-                        className="p-2 text-indigo-600 hover:text-indigo-800 transition-colors"
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                       >
-                        <FaPlus className="w-5 h-5" />
+                        <FaPlus className="w-4 h-4 mr-1" />
+                        Agregar
                       </button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {formData.anotacion.map((anotacion) => (
-                        <div key={anotacion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={anotacion.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-200">
                           <div className="flex-1 mr-4">
-                            <p className="text-sm text-gray-600">{anotacion.text}</p>
-                            <p className="text-xs text-gray-400">{new Date(anotacion.date).toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-700 font-medium">{anotacion.text}</p>
+                            <p className="text-xs text-gray-500 mt-1">{new Date(anotacion.date).toLocaleDateString()}</p>
                           </div>
                           <div className="flex space-x-2">
                             <button
@@ -413,43 +633,49 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                                 setSelectedAnotacion(anotacion);
                                 setShowAnotacionModal(true);
                               }}
-                              className="p-1 text-indigo-600 hover:text-indigo-800 transition-colors"
+                              className="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-md transition-all duration-200"
                             >
                               <FaEdit className="w-4 h-4" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteAnotacion(anotacion.id)}
-                              className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-all duration-200"
                             >
                               <FaTrash className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
                       ))}
+                      {formData.anotacion.length === 0 && (
+                        <div className="text-center py-6 text-gray-500">
+                          <p className="text-sm">No hay anotaciones agregadas</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h4 className="font-medium text-gray-900">Oposiciones</h4>
+                      <h4 className="font-semibold text-gray-900 text-lg border-b border-gray-200 pb-2">Oposiciones</h4>
                       <button
                         type="button"
                         onClick={() => {
                           setSelectedOposicion(undefined);
                           setShowOposicionModal(true);
                         }}
-                        className="p-2 text-indigo-600 hover:text-indigo-800 transition-colors"
+                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                       >
-                        <FaPlus className="w-5 h-5" />
+                        <FaPlus className="w-4 h-4 mr-1" />
+                        Agregar
                       </button>
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {formData.oposicion.map((oposicion) => (
-                        <div key={oposicion.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={oposicion.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-all duration-200">
                           <div className="flex-1 mr-4">
-                            <p className="text-sm text-gray-600">{oposicion.text}</p>
-                            <p className="text-xs text-gray-400">{new Date(oposicion.date).toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-700 font-medium">{oposicion.text}</p>
+                            <p className="text-xs text-gray-500 mt-1">{new Date(oposicion.date).toLocaleDateString()}</p>
                           </div>
                           <div className="flex space-x-2">
                             <button
@@ -458,34 +684,39 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                                 setSelectedOposicion(oposicion);
                                 setShowOposicionModal(true);
                               }}
-                              className="p-1 text-indigo-600 hover:text-indigo-800 transition-colors"
+                              className="p-2 text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 rounded-md transition-all duration-200"
                             >
                               <FaEdit className="w-4 h-4" />
                             </button>
                             <button
                               type="button"
                               onClick={() => handleDeleteOposicion(oposicion.id)}
-                              className="p-1 text-red-600 hover:text-red-800 transition-colors"
+                              className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-all duration-200"
                             >
                               <FaTrash className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
                       ))}
+                      {formData.oposicion.length === 0 && (
+                        <div className="text-center py-6 text-gray-500">
+                          <p className="text-sm">No hay oposiciones agregadas</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="mt-6 flex justify-end space-x-3">
+                  <div className="mt-8 flex justify-end space-x-4 pt-6 border-t border-gray-200">
                     <button
                       type="button"
                       onClick={onClose}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="px-6 py-3 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="px-6 py-3 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
                     >
                       {initialData ? 'Guardar Cambios' : 'Crear Marca'}
                     </button>
