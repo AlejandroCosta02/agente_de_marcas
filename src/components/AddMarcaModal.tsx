@@ -218,7 +218,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+            className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-60"
             onClick={(e) => {
               if (e.target === e.currentTarget) onClose();
             }}

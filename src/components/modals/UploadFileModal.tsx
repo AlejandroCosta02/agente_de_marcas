@@ -227,7 +227,7 @@ export default function UploadFileModal({ marcaId, isOpen, onClose }: UploadFile
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <div className="p-6 bg-white rounded-lg shadow-xl w-[90vw] max-w-4xl relative">
+      <div className="p-6 bg-white rounded-lg shadow-xl w-[90vw] max-w-4xl relative z-60">
         <button 
           onClick={onClose} 
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
