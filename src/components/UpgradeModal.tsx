@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaTimes, FaCreditCard, FaCrown, FaCheck } from 'react-icons/fa';
+import { FaTimes, FaCreditCard, FaCrown, FaCheck, FaCopy } from 'react-icons/fa';
 import { getPaidPlans } from '@/lib/subscription-plans';
 import { SubscriptionPlan } from '@/types/subscription';
 import { getPaymentLinkUrl, isPaymentLinkConfigured } from '@/lib/payment-links';
@@ -20,16 +20,41 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+const BANK_ALIAS = 'alejandrocosta.dev';
+const BANK_CBU = '0000003100096180511915';
+const USDT_BNB = '0x3E52B44d83BDE2388A72Ec976E8b4d79f71C2BD4';
+const USDT_TRON = 'TU9HtKd6L9YQhtRJhYX2Xf8uPK9D7wkF7d';
+const USDC_BNB = '0x3E52B44d83BDE2388A72Ec976E8b4d79f71C2BD4';
+const USDC_STELLAR = 'GBRIT4C6Q4LDBD6J2B3WC6F6TOZ3TVFSUZ4HTNZCB6CZAF6SA332CORI';
+const STELLAR_MEMO = '1776313069';
+const CRYPTO_RATE = 1300;
+
+function formatCrypto(amount: number) {
+  return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transfer' | 'crypto'>('mercadopago');
+  const [copied, setCopied] = useState<string | null>(null);
 
   const paidPlans = getPaidPlans();
 
   const handlePlanSelect = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
+    setPaymentMethod('mercadopago');
   };
+
+  const handleCopy = (value: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(value);
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  const getDiscountedPrice = (price: number) => Math.round(price * 0.85);
+  const getCryptoAmount = (price: number) => getDiscountedPrice(price) / CRYPTO_RATE;
 
   const handlePayment = async () => {
     if (!selectedPlan) return;
@@ -244,17 +269,40 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       {formatPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice)}/{billingCycle === 'monthly' ? 'mes' : 'año'}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-4">
-                    {/* MercadoPago Logo */}
-                    <div className="flex items-center space-x-2 text-gray-500 text-sm">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/mercadopago-logo-official.svg"
-                        alt="MercadoPago"
-                        style={{ width: '100px', height: 'auto' }}
-                      />
+                </div>
+                {/* Payment Method Selection */}
+                {(
+                  <div className="mt-6 flex flex-col md:flex-row gap-4">
+                    <button
+                      onClick={() => setPaymentMethod('mercadopago')}
+                      className={`flex-1 px-6 py-3 rounded-lg border-2 font-medium flex items-center justify-center gap-2 text-gray-900 hover:shadow-lg hover:text-gray-900 ${paymentMethod === 'mercadopago' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}
+                    >
+                      <img src="/mercadopago-logo-official.svg" alt="MercadoPago" className="h-6" />
+                      MercadoPago
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('transfer')}
+                      className={`flex-1 px-6 py-3 rounded-lg border-2 font-medium flex items-center justify-center gap-2 text-gray-900 hover:shadow-lg hover:text-gray-900 ${paymentMethod === 'transfer' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white'}`}
+                    >
+                      <FaCreditCard className="text-green-500" />
+                      Transferencia 15% OFF
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('crypto')}
+                      className={`flex-1 px-6 py-3 rounded-lg border-2 font-medium flex items-center justify-center gap-2 text-gray-900 hover:shadow-lg hover:text-gray-900 ${paymentMethod === 'crypto' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 bg-white'}`}
+                    >
+                      <FaCrown className="text-yellow-500" />
+                      Cripto 15% OFF
+                    </button>
+                  </div>
+                )}
+
+                {/* MercadoPago Payment */}
+                {paymentMethod === 'mercadopago' && (
+                  <div className="mt-8">
+                    <div className="flex items-center space-x-2 text-gray-500 text-sm mb-4">
+                      <img src="/mercadopago-logo-official.svg" alt="MercadoPago" style={{ width: '100px', height: 'auto' }} />
                     </div>
-                    
                     <button
                       onClick={handlePayment}
                       disabled={loading}
@@ -264,36 +312,118 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       <span>{loading ? 'Procesando...' : 'Pagar'}</span>
                     </button>
                   </div>
-                </div>
-                
-                {/* Trust Indicators */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex items-center justify-center space-x-6 text-xs text-gray-500">
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                      </svg>
-                      <span>Pago seguro SSL</span>
+                )}
+
+                {/* Transferencia Payment */}
+                {paymentMethod === 'transfer' && (
+                  <div className="mt-8">
+                    <div className="mb-4">
+                      <span className="block text-lg font-bold text-green-700">Precio final con 15% OFF:</span>
+                      <span className="block text-2xl font-bold text-green-900">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
                     </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <svg className="w-4 h-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>Garantía de devolución</span>
+                    <div className="mb-4">
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => handleCopy(BANK_CBU)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar CBU</button>
+                        {copied === BANK_CBU && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-2">
+                        <button onClick={() => handleCopy(BANK_ALIAS)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar Alias</button>
+                        {copied === BANK_ALIAS && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-1">
-                      <span>Procesado por</span>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/mercadopago-logo-official.svg"
-                        alt="MercadoPago"
-                        style={{ width: '80px', height: 'auto' }}
-                      />
+                    <div className="mt-4 text-sm text-gray-700">
+                      <div><span className="font-semibold">Nombre del titular:</span> Costa Claudio Alejandro</div>
+                      <div><span className="font-semibold">Entidad bancaria:</span> Mercadopago</div>
                     </div>
+                    <div className="mb-4 text-sm text-gray-700">
+                      <ol className="list-decimal ml-5 space-y-1">
+                        <li>Realizá la transferencia al alias o CBU.</li>
+                        <li>Tomá una captura del comprobante.</li>
+                        <li>Enviá el comprobante a <b>contacto@agendatusmarcas.com</b>.</li>
+                        <li>El acceso premium puede demorar hasta <b>5hs</b> en activarse por alta demanda.</li>
+                      </ol>
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
+                    >
+                      Confirmar pago
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('mercadopago')}
+                      className="mt-2 text-gray-500 underline block mx-auto"
+                    >
+                      Volver
+                    </button>
                   </div>
-                </div>
+                )}
+
+                {/* Cripto Payment */}
+                {paymentMethod === 'crypto' && (
+                  <div className="mt-8">
+                    <div className="mb-4">
+                      <span className="block text-lg font-bold text-yellow-700">Precio final con 15% OFF:</span>
+                      <span className="block text-2xl font-bold text-yellow-900">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
+                      <span className="block text-lg mt-2">Equivalente en USDT/USDC:</span>
+                      <span className="block text-xl font-bold text-yellow-900">
+                        {formatCrypto(getCryptoAmount(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} USDT/USDC
+                      </span>
+                      <span className="block text-xs text-gray-500">(Tasa fija: $1.300 ARS = 1 USDT/USDC)</span>
+                    </div>
+                    <div className="mb-4">
+                      <div className="font-semibold mb-1 text-gray-800">USDT (BNB Chain):</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-gray-900 font-semibold">{USDT_BNB}</span>
+                        <button onClick={() => handleCopy(USDT_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
+                        {copied === USDT_BNB && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                      <div className="font-semibold mb-1 text-gray-800">USDT (Tron):</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-gray-900 font-semibold">{USDT_TRON}</span>
+                        <button onClick={() => handleCopy(USDT_TRON)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
+                        {copied === USDT_TRON && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                      <div className="font-semibold mb-1 text-gray-800">USDC (BNB Chain):</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-gray-900 font-semibold">{USDC_BNB}</span>
+                        <button onClick={() => handleCopy(USDC_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
+                        {copied === USDC_BNB && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                      <div className="font-semibold mb-1 text-gray-800">USDC (Stellar):</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-gray-900 font-semibold">{USDC_STELLAR}</span>
+                        <button onClick={() => handleCopy(USDC_STELLAR)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
+                        {copied === USDC_STELLAR && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                      <div className="font-semibold mb-1 text-gray-800">Memo (Stellar):</div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-gray-900 font-semibold">{STELLAR_MEMO}</span>
+                        <button onClick={() => handleCopy(STELLAR_MEMO)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
+                        {copied === STELLAR_MEMO && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      </div>
+                    </div>
+                    <div className="mb-4 text-sm text-gray-700">
+                      <ol className="list-decimal ml-5 space-y-1">
+                        <li>Realizá el pago a la wallet seleccionada.</li>
+                        <li>Tomá una captura del comprobante.</li>
+                        <li>Enviá el comprobante a <b>contacto@agendatusmarcas.com</b>.</li>
+                        <li>El acceso premium puede demorar hasta <b>5hs</b> en activarse por alta demanda.</li>
+                      </ol>
+                    </div>
+                    <button
+                      onClick={onClose}
+                      className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
+                    >
+                      Confirmar pago
+                    </button>
+                    <button
+                      onClick={() => setPaymentMethod('mercadopago')}
+                      className="mt-2 text-gray-500 underline block mx-auto"
+                    >
+                      Volver
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
