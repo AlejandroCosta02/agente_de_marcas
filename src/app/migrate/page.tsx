@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Footer from '@/components/Footer';
 
 export default function MigratePage() {
   const { status } = useSession();
@@ -46,40 +47,46 @@ export default function MigratePage() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Loading...</h1>
-        </div>
+      <div className="min-h-screen flex flex-col">
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Loading...</h1>
+          </div>
+        </main>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Database Migration</h1>
-        <p className="mb-4">Click the button below to run database migrations.</p>
-        
-        {message && (
-          <div className="mb-4 p-4 bg-green-100 text-green-700 rounded">
-            {message}
-          </div>
-        )}
-        
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
-            {error}
-          </div>
-        )}
+    <div className="min-h-screen flex flex-col">
+      <main className="flex-grow flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Database Migration</h1>
+          <p className="mb-4">Click the button below to run database migrations.</p>
+          
+          {message && (
+            <div className="mb-4 p-4 bg-green-100 text-green-700 rounded">
+              {message}
+            </div>
+          )}
+          
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
 
-        <button
-          onClick={runMigrations}
-          disabled={!!message}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Run Migrations
-        </button>
-      </div>
+          <button
+            onClick={runMigrations}
+            disabled={!!message}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Run Migrations
+          </button>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 } 

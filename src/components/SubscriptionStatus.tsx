@@ -117,7 +117,7 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
             
             <button
               onClick={onUpgradeClick}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-transform duration-300 ease-in-out hover:scale-105 cursor-pointer"
             >
               Actualizar
             </button>
@@ -168,7 +168,7 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
             </div>
             <button
               onClick={onUpgradeClick}
-              className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-colors"
+              className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition-transform duration-300 ease-in-out hover:scale-105 cursor-pointer"
             >
               Actualizar Plan
             </button>

@@ -11,7 +11,7 @@ export default function SuccessPage() {
         <p className="text-lg mb-6 text-center max-w-xl">
           Tu pago fue procesado correctamente.<br />
           En breve tu cuenta será actualizada y tendrás acceso a todos los beneficios del plan Master Brand.<br />
-          ¡Bienvenido a Agente de Marcas!
+          ¡Bienvenido a Gestiona tus Marcas!
         </p>
         <Link href="/dashboard">
           <button className="bg-blue-600 text-white px-6 py-3 rounded-lg mt-6 hover:bg-blue-700 transition-all">

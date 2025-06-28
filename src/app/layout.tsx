@@ -7,7 +7,7 @@ import CookieConsent from "@/components/CookieConsent";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Agente de Marcas",
+  title: "Gestiona tus Marcas",
   description: "Gestión profesional de marcas en Argentina",
 };
 
