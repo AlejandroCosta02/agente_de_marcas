@@ -1,12 +1,14 @@
 import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
 
 interface ResetPasswordPageProps {
-  searchParams?: {
+  searchParams?: Promise<{
     token?: string;
-  };
+  }>;
 }
 
-export default function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+export default async function ResetPasswordPage({ searchParams }: ResetPasswordPageProps) {
+  const params = await searchParams;
+  
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center items-center px-6 py-12 lg:px-8 bg-gradient-to-b from-blue-900 to-black">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
@@ -17,7 +19,7 @@ export default function ResetPasswordPage({ searchParams }: ResetPasswordPagePro
           Ingresa tu nueva contraseña
         </p>
         <div className="mt-10">
-          <ResetPasswordForm token={searchParams?.token} />
+          <ResetPasswordForm token={params?.token} />
         </div>
       </div>
     </div>
