@@ -12,9 +12,15 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Main Info */}
           <div className="col-span-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Agente de Marcas</h3>
+            <div className="flex items-center space-x-2 mb-4">
+              <img src="/logo.svg" alt="Logo" className="h-7 w-7" />
+              <span className="text-lg font-bold" style={{ fontFamily: 'Merriweather Sans, Orbitron, Roboto, sans-serif' }}>
+                <span className="text-gray-900">Gestiona tus </span>
+                <span className="text-indigo-400">Marcas</span>
+              </span>
+            </div>
             <p className="text-gray-600 mb-4">
-              © {currentYear} Agente de Marcas. Todos los derechos reservados.
+              © {currentYear} Gestiona tus Marcas. Todos los derechos reservados.
             </p>
             <div className="flex space-x-4">
               <a

@@ -6,7 +6,13 @@ export default function LandingNavbar() {
   return (
     <nav className="bg-transparent shadow-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-        <span className="ml-3 text-xl font-semibold text-white">Agente de Marcas</span>
+        <div className="flex items-center space-x-2">
+          <img src="/logo-d.svg" alt="Logo" className="h-10 w-10" />
+          <span className="text-xl font-bold" style={{ fontFamily: 'Merriweather Sans, Orbitron, Roboto, sans-serif' }}>
+            <span className="text-white">Gestiona tus </span>
+            <span className="text-indigo-400">Marcas</span>
+          </span>
+        </div>
         <div>
           <button
             onClick={() => router.push("/auth/login")}
