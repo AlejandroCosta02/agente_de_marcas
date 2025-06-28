@@ -9,16 +9,29 @@ import toast from 'react-hot-toast';
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Client-side validation
+    if (!email.trim()) {
+      toast.error('Por favor ingresa tu email');
+      return;
+    }
+    
+    if (!password.trim()) {
+      toast.error('Por favor ingresa tu contraseña');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       const result = await signIn('credentials', {
-        email,
+        email: email.trim(),
         password,
         redirect: false,
         callbackUrl: '/dashboard'
@@ -27,7 +40,25 @@ export default function LoginForm() {
       console.log('signIn result:', result);
 
       if (result?.error) {
-        toast.error(result.error || 'Invalid credentials');
+        // Handle specific error messages from NextAuth
+        let errorMessage = 'Error al iniciar sesión';
+        
+        console.log('Auth error received:', result.error);
+        
+        if (result.error === 'Credenciales requeridas') {
+          errorMessage = 'Por favor completa todos los campos';
+        } else if (result.error === 'Usuario no encontrado') {
+          errorMessage = 'No existe una cuenta con este email';
+        } else if (result.error === 'Contraseña incorrecta') {
+          errorMessage = 'Contraseña incorrecta';
+        } else if (result.error.includes('Invalid credentials')) {
+          errorMessage = 'Email o contraseña incorrectos';
+        } else {
+          errorMessage = result.error;
+        }
+        
+        console.log('Showing error toast:', errorMessage);
+        toast.error(errorMessage);
         setLoading(false);
         return;
       }
@@ -71,16 +102,12 @@ export default function LoginForm() {
         
         checkSession();
       } else {
-        toast.error('No se pudo iniciar sesión.');
+        toast.error('No se pudo iniciar sesión. Intenta nuevamente.');
         setLoading(false);
       }
     } catch (error) {
       console.error('Login error:', error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('An error occurred during login');
-      }
+      toast.error('Error de conexión. Verifica tu conexión a internet e intenta nuevamente.');
       setLoading(false);
     }
   };
@@ -118,18 +145,34 @@ export default function LoginForm() {
               <label htmlFor="password" className="block text-sm font-medium leading-6 text-gray-900">
                 Password
               </label>
+              <div className="text-sm">
+                <Link href="/auth/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-500">
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
-            <div className="mt-2">
+            <div className="mt-2 relative">
               <input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                className="block w-full rounded-md border-0 py-1.5 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+              >
+                {showPassword ? (
+                  <span className="text-lg">👁️‍🗨️</span>
+                ) : (
+                  <span className="text-lg">👁️</span>
+                )}
+              </button>
             </div>
           </div>
 

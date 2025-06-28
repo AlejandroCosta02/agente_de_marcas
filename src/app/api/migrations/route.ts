@@ -163,6 +163,67 @@ async function runMarcasMigration() {
   }
 }
 
+async function runResetTokenMigration() {
+  try {
+    const pool = createPool();
+    
+    // Check for reset_token column
+    const resetTokenExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'users' 
+        AND column_name = 'reset_token'
+      );
+    `);
+
+    if (!resetTokenExists.rows[0].exists) {
+      await pool.query(`
+        ALTER TABLE users 
+        ADD COLUMN reset_token VARCHAR(255),
+        ADD COLUMN reset_token_expiry TIMESTAMP;
+      `);
+      console.log('Added reset_token and reset_token_expiry columns');
+    }
+
+    // Check for reset_token_expiry column
+    const resetTokenExpiryExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'users' 
+        AND column_name = 'reset_token_expiry'
+      );
+    `);
+
+    if (!resetTokenExpiryExists.rows[0].exists) {
+      await pool.query(`
+        ALTER TABLE users 
+        ADD COLUMN reset_token_expiry TIMESTAMP;
+      `);
+      console.log('Added reset_token_expiry column');
+    }
+
+    // Create indexes for faster lookups
+    try {
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token);
+      `);
+      await pool.query(`
+        CREATE INDEX IF NOT EXISTS idx_users_reset_token_expiry ON users(reset_token_expiry);
+      `);
+      console.log('Created reset token indexes');
+    } catch (indexError) {
+      console.log('Indexes already exist or error creating them:', indexError);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error updating users table for reset tokens:', error);
+    return false;
+  }
+}
+
 export async function POST() {
   try {
     const session = await getServerSession(authOptions);
@@ -177,18 +238,23 @@ export async function POST() {
     const marcasResult = await runMarcasMigration();
     console.log('Marcas migration completed:', marcasResult);
 
-    if (!usersResult || !marcasResult) {
+    const resetTokenResult = await runResetTokenMigration();
+    console.log('Reset token migration completed:', resetTokenResult);
+
+    if (!usersResult || !marcasResult || !resetTokenResult) {
       return NextResponse.json({ 
         message: 'Error al ejecutar algunas migraciones',
         users: usersResult,
-        marcas: marcasResult
+        marcas: marcasResult,
+        resetToken: resetTokenResult
       }, { status: 500 });
     }
 
     return NextResponse.json({ 
       message: 'Migraciones completadas exitosamente',
       users: usersResult,
-      marcas: marcasResult
+      marcas: marcasResult,
+      resetToken: resetTokenResult
     });
   } catch (error) {
     console.error('Error running migrations:', error);
