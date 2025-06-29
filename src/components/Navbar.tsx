@@ -4,6 +4,7 @@ import { signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Navbar() {
   const { data: session, status, update } = useSession();
@@ -37,7 +38,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <img src="/logo-d.svg" alt="Logo" className="h-10 w-10" />
+            <Image src="/logo-d.svg" alt="Logo" width={40} height={40} className="h-10 w-10" />
             <span className="text-xl font-bold" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
               <span className="text-white">Gestiona tus </span>
               <span className="text-blue-400">Marcas</span>

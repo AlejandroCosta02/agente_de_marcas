@@ -1,14 +1,12 @@
 "use client";
 
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import Footer from '@/components/Footer';
 import FadeContent from '@/components/FadeContent';
 import GradientText from '@/components/GradientText';
 
 export default function Home() {
-  const { data: session } = useSession();
-
   return (
     <div>
       <main className="bg-gradient-to-br from-indigo-900 via-gray-800 via-blue-900 to-gray-700 text-white">
@@ -29,9 +27,11 @@ export default function Home() {
             <FadeContent blur={true} duration={1000} easing="ease-out" initialOpacity={0}>
               <div className="flex justify-center mb-10">
                 <div className="w-full max-w-4xl">
-                  <img 
+                  <Image 
                     src="/captura-1.png" 
                     alt="Dashboard de Gestiona tus Marcas - Vista principal" 
+                    width={1200}
+                    height={800}
                     className="w-full h-auto rounded-xl shadow-2xl border border-gray-700"
                   />
                 </div>
@@ -107,9 +107,11 @@ export default function Home() {
             <FadeContent blur={true} duration={1000} easing="ease-out" initialOpacity={0}>
               <div className="flex justify-center mb-10">
                 <div className="w-full max-w-4xl">
-                  <img 
+                  <Image 
                     src="/captura-2.png" 
                     alt="Características de Gestiona tus Marcas - Funcionalidades" 
+                    width={1200}
+                    height={800}
                     className="w-full h-auto rounded-xl shadow-2xl border border-gray-700"
                   />
                 </div>
@@ -153,21 +155,21 @@ export default function Home() {
             <div className="grid md:grid-cols-3 gap-8">
               <FadeContent blur={false} duration={800} easing="ease-out" initialOpacity={0} delay={0}>
                 <div className="bg-blue-800/30 p-6 rounded-xl">
-                  <p className="text-gray-300 mb-4">"Gestiona tus Marcas me ha simplificado enormemente el trabajo. Ahora puedo manejar todos mis expedientes desde un solo lugar sin perder tiempo."</p>
+                  <p className="text-gray-300 mb-4">&ldquo;Gestiona tus Marcas me ha simplificado enormemente el trabajo. Ahora puedo manejar todos mis expedientes desde un solo lugar sin perder tiempo.&rdquo;</p>
                   <div className="font-semibold">María González</div>
                   <div className="text-sm text-gray-400">Agente de Marcas</div>
                 </div>
               </FadeContent>
               <FadeContent blur={false} duration={800} easing="ease-out" initialOpacity={0} delay={100}>
                 <div className="bg-blue-800/30 p-6 rounded-xl">
-                  <p className="text-gray-300 mb-4">"La plataforma es intuitiva y profesional. Los recordatorios automáticos me han salvado de perder fechas importantes en varios expedientes."</p>
+                  <p className="text-gray-300 mb-4">&ldquo;La plataforma es intuitiva y profesional. Los recordatorios automáticos me han salvado de perder fechas importantes en varios expedientes.&rdquo;</p>
                   <div className="font-semibold">Carlos Rodríguez</div>
                   <div className="text-sm text-gray-400">Estudio Jurídico</div>
                 </div>
               </FadeContent>
               <FadeContent blur={false} duration={800} easing="ease-out" initialOpacity={0} delay={200}>
                 <div className="bg-blue-800/30 p-6 rounded-xl">
-                  <p className="text-gray-300 mb-4">"Como emprendedor, necesitaba una herramienta que me ayude a proteger mi marca desde el inicio. Esta plataforma es exactamente lo que buscaba."</p>
+                  <p className="text-gray-300 mb-4">&ldquo;Como emprendedor, necesitaba una herramienta que me ayude a proteger mi marca desde el inicio. Esta plataforma es exactamente lo que buscaba.&rdquo;</p>
                   <div className="font-semibold">Ana Martínez</div>
                   <div className="text-sm text-gray-400">Emprendedora</div>
                 </div>

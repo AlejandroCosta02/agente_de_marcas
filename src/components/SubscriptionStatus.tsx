@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { SubscriptionPlan, UserSubscription } from '@/types/subscription';
 import { getPlanById, getFreePlan } from '@/lib/subscription-plans';
 import { FaCrown, FaInfoCircle, FaFilePdf } from 'react-icons/fa';
+import Image from 'next/image';
 
 interface SubscriptionStatusProps {
   marcaCount: number;
@@ -107,10 +108,11 @@ export default function SubscriptionStatus({ marcaCount, onUpgradeClick }: Subsc
             {/* MercadoPago Logo */}
             <div className="flex items-center space-x-1 text-xs text-gray-400">
               <span>Powered by</span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img 
+              <Image 
                 src="/mercadopago-logo-official.svg" 
                 alt="Mercado Pago" 
+                width={16}
+                height={16}
                 className="h-4"
               />
             </div>

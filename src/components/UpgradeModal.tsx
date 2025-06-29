@@ -6,6 +6,7 @@ import { FaTimes, FaCreditCard, FaCrown, FaCheck, FaCopy } from 'react-icons/fa'
 import { getPaidPlans } from '@/lib/subscription-plans';
 import { SubscriptionPlan } from '@/types/subscription';
 import { getPaymentLinkUrl, isPaymentLinkConfigured } from '@/lib/payment-links';
+import Image from 'next/image';
 
 interface UpgradeModalProps {
   isOpen: boolean;
@@ -277,7 +278,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       onClick={() => setPaymentMethod('mercadopago')}
                       className={`flex-1 px-6 py-3 rounded-lg border-2 font-medium flex items-center justify-center gap-2 text-gray-900 hover:shadow-lg hover:text-gray-900 ${paymentMethod === 'mercadopago' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white'}`}
                     >
-                      <img src="/mercadopago-logo-official.svg" alt="MercadoPago" className="h-6" />
+                      <Image src="/mercadopago-logo-official.svg" alt="MercadoPago" width={24} height={24} className="h-6" />
                       MercadoPago
                     </button>
                     <button
@@ -301,7 +302,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 {paymentMethod === 'mercadopago' && (
                   <div className="mt-8">
                     <div className="flex items-center space-x-2 text-gray-500 text-sm mb-4">
-                      <img src="/mercadopago-logo-official.svg" alt="MercadoPago" style={{ width: '100px', height: 'auto' }} />
+                      <Image src="/mercadopago-logo-official.svg" alt="MercadoPago" width={100} height={40} style={{ width: '100px', height: 'auto' }} />
                     </div>
                     <button
                       onClick={handlePayment}
