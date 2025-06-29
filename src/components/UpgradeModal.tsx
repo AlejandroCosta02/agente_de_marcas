@@ -48,9 +48,9 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
     setPaymentMethod('mercadopago');
   };
 
-  const handleCopy = (value: string) => {
+  const handleCopy = (key: string, value: string) => {
     navigator.clipboard.writeText(value);
-    setCopied(value);
+    setCopied(key);
     setTimeout(() => setCopied(null), 1500);
   };
 
@@ -324,12 +324,12 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                     </div>
                     <div className="mb-4">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => handleCopy(BANK_CBU)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar CBU</button>
-                        {copied === BANK_CBU && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
+                        <button onClick={() => handleCopy('bank_cbu', BANK_CBU)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar CBU</button>
+                        {copied === 'bank_cbu' && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-2">
-                        <button onClick={() => handleCopy(BANK_ALIAS)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar Alias</button>
-                        {copied === BANK_ALIAS && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
+                        <button onClick={() => handleCopy('bank_alias', BANK_ALIAS)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold">Copiar Alias</button>
+                        {copied === 'bank_alias' && <span className="text-green-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
                     </div>
                     <div className="mt-4 text-sm text-gray-700">
@@ -362,48 +362,60 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                 {/* Cripto Payment */}
                 {paymentMethod === 'crypto' && (
                   <div className="mt-8">
-                    <div className="mb-4">
-                      <span className="block text-lg font-bold text-yellow-700">Precio final con 15% OFF:</span>
-                      <span className="block text-2xl font-bold text-yellow-900">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
-                      <span className="block text-lg mt-2">Equivalente en USDT/USDC:</span>
-                      <span className="block text-xl font-bold text-yellow-900">
+                    <div className="mb-6">
+                      <span className="block text-xl font-extrabold text-yellow-700 tracking-tight">Precio final con 15% OFF:</span>
+                      <span className="block text-3xl font-extrabold text-yellow-900 mb-2">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
+                      <span className="block text-base font-semibold text-gray-800 mt-4">Equivalente en USDT/USDC:</span>
+                      <span className="block text-2xl font-bold text-yellow-900">
                         {formatCrypto(getCryptoAmount(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} USDT/USDC
                       </span>
-                      <span className="block text-xs text-gray-500">(Tasa fija: $1.300 ARS = 1 USDT/USDC)</span>
+                      <span className="block text-xs text-gray-600 mt-1">(Tasa fija: $1.300 ARS = 1 USDT/USDC)</span>
                     </div>
-                    <div className="mb-4">
-                      <div className="font-semibold mb-1 text-gray-800">USDT (BNB Chain):</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-gray-900 font-semibold">{USDT_BNB}</span>
-                        <button onClick={() => handleCopy(USDT_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
-                        {copied === USDT_BNB && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                    <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* USDT (BNB Chain) */}
+                      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col gap-2 transition-all duration-200 hover:shadow-md hover:border-yellow-400">
+                        <div className="font-semibold text-gray-800 mb-1">USDT (BNB Chain):</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-900 font-mono text-sm break-all select-all">{USDT_BNB}</span>
+                          <button onClick={() => handleCopy('usdt_bnb', USDT_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold transition-colors duration-200"><FaCopy /></button>
+                        </div>
+                        {copied === 'usdt_bnb' && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
-                      <div className="font-semibold mb-1 text-gray-800">USDT (Tron):</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-gray-900 font-semibold">{USDT_TRON}</span>
-                        <button onClick={() => handleCopy(USDT_TRON)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
-                        {copied === USDT_TRON && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      {/* USDT (Tron) */}
+                      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col gap-2 transition-all duration-200 hover:shadow-md hover:border-yellow-400">
+                        <div className="font-semibold text-gray-800 mb-1">USDT (Tron):</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-900 font-mono text-sm break-all select-all">{USDT_TRON}</span>
+                          <button onClick={() => handleCopy('usdt_tron', USDT_TRON)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold transition-colors duration-200"><FaCopy /></button>
+                        </div>
+                        {copied === 'usdt_tron' && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
-                      <div className="font-semibold mb-1 text-gray-800">USDC (BNB Chain):</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-gray-900 font-semibold">{USDC_BNB}</span>
-                        <button onClick={() => handleCopy(USDC_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
-                        {copied === USDC_BNB && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      {/* USDC (BNB Chain) */}
+                      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col gap-2 transition-all duration-200 hover:shadow-md hover:border-yellow-400">
+                        <div className="font-semibold text-gray-800 mb-1">USDC (BNB Chain):</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-900 font-mono text-sm break-all select-all">{USDC_BNB}</span>
+                          <button onClick={() => handleCopy('usdc_bnb', USDC_BNB)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold transition-colors duration-200"><FaCopy /></button>
+                        </div>
+                        {copied === 'usdc_bnb' && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
-                      <div className="font-semibold mb-1 text-gray-800">USDC (Stellar):</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-gray-900 font-semibold">{USDC_STELLAR}</span>
-                        <button onClick={() => handleCopy(USDC_STELLAR)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
-                        {copied === USDC_STELLAR && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
-                      </div>
-                      <div className="font-semibold mb-1 text-gray-800">Memo (Stellar):</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-gray-900 font-semibold">{STELLAR_MEMO}</span>
-                        <button onClick={() => handleCopy(STELLAR_MEMO)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold"><FaCopy /></button>
-                        {copied === STELLAR_MEMO && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                      {/* USDC (Stellar) + Memo */}
+                      <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm flex flex-col gap-2 transition-all duration-200 hover:shadow-md hover:border-yellow-400">
+                        <div className="font-semibold text-gray-800 mb-1">USDC (Stellar):</div>
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-gray-900 font-mono text-sm break-all select-all">{USDC_STELLAR}</span>
+                          <button onClick={() => handleCopy('usdc_stellar', USDC_STELLAR)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold transition-colors duration-200"><FaCopy /></button>
+                        </div>
+                        {copied === 'usdc_stellar' && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
+                        <div className="font-semibold text-gray-800 mb-1 mt-2">Memo (Stellar):</div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-gray-900 font-mono text-sm break-all select-all">{STELLAR_MEMO}</span>
+                          <button onClick={() => handleCopy('stellar_memo', STELLAR_MEMO)} className="ml-2 text-blue-600 hover:text-blue-800 font-bold transition-colors duration-200"><FaCopy /></button>
+                        </div>
+                        {copied === 'stellar_memo' && <span className="text-yellow-600 ml-1 text-xs">¡Copiado!</span>}
                       </div>
                     </div>
-                    <div className="mb-4 text-sm text-gray-700">
+                    <div className="mb-6 text-sm text-gray-700">
                       <ol className="list-decimal ml-5 space-y-1">
                         <li>Realizá el pago a la wallet seleccionada.</li>
                         <li>Tomá una captura del comprobante.</li>
@@ -411,18 +423,20 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                         <li>El acceso premium puede demorar hasta <b>5hs</b> en activarse por alta demanda.</li>
                       </ol>
                     </div>
-                    <button
-                      onClick={onClose}
-                      className="mt-4 bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
-                    >
-                      Confirmar pago
-                    </button>
-                    <button
-                      onClick={() => setPaymentMethod('mercadopago')}
-                      className="mt-2 text-gray-500 underline block mx-auto"
-                    >
-                      Volver
-                    </button>
+                    <div className="flex flex-col items-center gap-2 mt-6">
+                      <button
+                        onClick={onClose}
+                        className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-8 py-3 rounded-lg font-medium transition-all duration-200"
+                      >
+                        Confirmar pago
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod('mercadopago')}
+                        className="text-gray-500 underline block mt-2"
+                      >
+                        Volver
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>

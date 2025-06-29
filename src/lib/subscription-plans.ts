@@ -24,8 +24,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     color: 'green',
     marcaLimit: 10,
     pdfLimit: 10,
-    monthlyPrice: 40000,
-    yearlyPrice: 400000,
+    monthlyPrice: 32000,
+    yearlyPrice: 320000,
     features: [
       'Hasta 10 marcas',
       'Hasta 10 PDFs por marca',
@@ -41,8 +41,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     color: 'blue',
     marcaLimit: 25,
     pdfLimit: 15,
-    monthlyPrice: 60000,
-    yearlyPrice: 600000,
+    monthlyPrice: 48000,
+    yearlyPrice: 480000,
     features: [
       'Hasta 25 marcas',
       'Hasta 15 PDFs por marca',
@@ -57,8 +57,8 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     color: 'purple',
     marcaLimit: -1, // Unlimited
     pdfLimit: 20,
-    monthlyPrice: 90000,
-    yearlyPrice: 900000,
+    monthlyPrice: 72000,
+    yearlyPrice: 720000,
     features: [
       'Marcas ilimitadas',
       'Hasta 20 PDFs por marca',
