@@ -431,8 +431,9 @@ export default function DashboardClient() {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (err: any) {
-      setBoletinError(err.message || 'Error al descargar el boletín');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error al descargar el boletín';
+      setBoletinError(errorMessage);
     } finally {
       setBoletinLoading(false);
     }
