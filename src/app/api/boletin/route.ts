@@ -5,7 +5,8 @@ export async function GET() {
   try {
     const url = await getLatestBoletinUrl();
     return NextResponse.json({ url });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Error al obtener el boletín' }, { status: 500 });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : 'Error al obtener el boletín';
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 } 

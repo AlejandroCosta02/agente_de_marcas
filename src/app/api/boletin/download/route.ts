@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
         'Cache-Control': 'no-store',
       },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || 'Error interno del servidor.' }, { status: 500 });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : 'Error interno del servidor.';
+    return NextResponse.json({ error: errMsg }, { status: 500 });
   }
 } 

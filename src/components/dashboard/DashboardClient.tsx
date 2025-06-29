@@ -421,7 +421,7 @@ export default function DashboardClient() {
       if (!res.ok || !data.url) throw new Error(data.error || 'No se pudo obtener el boletín');
       const url = data.url;
       const fileName = url.split('/').pop() || 'Boletin_Marcas.pdf';
-      // Fetch the PDF via the proxy API route to avoid CORS issues
+      // Fetch the PDF via your proxy API route
       const resFile = await fetch(`/api/boletin/download?url=${encodeURIComponent(url)}`);
       if (!resFile.ok) throw new Error('No se pudo descargar el boletín');
       const blob = await resFile.blob();
