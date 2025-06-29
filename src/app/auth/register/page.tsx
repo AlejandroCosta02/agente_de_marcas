@@ -18,8 +18,8 @@ export default function RegisterPage() {
   // Show loading state while checking authentication
   if (status === "loading") {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-900 to-black flex items-center justify-center p-4">
-        <div className="text-white">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-black flex items-center justify-center p-4">
+        <div className="text-white font-body">Loading...</div>
       </div>
     );
   }
@@ -31,9 +31,9 @@ export default function RegisterPage() {
 
   // Show register form for unauthenticated users
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-black flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-black flex items-center justify-center p-4">
+      <div className="max-w-md w-full bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-8">
+        <h2 className="text-3xl font-heading text-center text-white mb-8">
           Crear Cuenta
         </h2>
         <RegisterForm />

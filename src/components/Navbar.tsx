@@ -33,14 +33,14 @@ export default function Navbar() {
   };
 
   return (
-    <nav key={`${status}-${session?.user?.name}`} className="bg-white shadow-sm">
+    <nav key={`${status}-${session?.user?.name}`} className="bg-black/20 backdrop-blur-md border-b border-white/10 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <img src="/logo.svg" alt="Logo" className="h-10 w-10" />
-            <span className="text-xl font-bold" style={{ fontFamily: 'Merriweather Sans, Orbitron, Roboto, sans-serif' }}>
-              <span className="text-gray-800">Gestiona tus </span>
-              <span className="text-indigo-600">Marcas</span>
+            <img src="/logo-d.svg" alt="Logo" className="h-10 w-10" />
+            <span className="text-xl font-bold" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+              <span className="text-white">Gestiona tus </span>
+              <span className="text-blue-400">Marcas</span>
             </span>
           </Link>
           
@@ -49,15 +49,17 @@ export default function Navbar() {
               <>
                 <button
                   onClick={handleProfileClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 cursor-pointer group"
+                  className="inline-flex items-center px-4 py-2 border border-white/20 text-sm font-medium rounded-lg text-white bg-white/10 backdrop-blur-sm hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 cursor-pointer group"
                   title="Ver perfil"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
-                  <FaUserCircle className="mr-2 h-5 w-5 text-indigo-500 group-hover:scale-110 transition-transform duration-200" />
+                  <FaUserCircle className="mr-2 h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform duration-200" />
                   <span>{session?.user?.name || 'Usuario'}</span>
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-lg"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   <svg 
                     className="mr-2 -ml-1 h-5 w-5" 
@@ -77,13 +79,15 @@ export default function Navbar() {
               <>
                 <button
                   onClick={handleLoginClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-white/20 text-sm font-medium rounded-lg text-white bg-white/10 backdrop-blur-sm hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   Iniciar sesión
                 </button>
                 <button
                   onClick={handleRegisterClick}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 shadow-lg"
+                  style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   Registrarse
                 </button>

@@ -73,7 +73,7 @@ export default function RegisterForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" autoComplete="off">
       {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm">
+        <div className="bg-red-500/20 text-red-300 p-3 rounded-lg text-sm font-body border border-red-500/30">
           {error}
         </div>
       )}
@@ -81,7 +81,7 @@ export default function RegisterForm() {
       <div>
         <label
           htmlFor="name"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-white font-body"
         >
           Nombre
         </label>
@@ -92,14 +92,15 @@ export default function RegisterForm() {
           onChange={(e) => setName(e.target.value)}
           required
           autoComplete="off"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border border-white/20 bg-white px-3 py-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-black placeholder-gray-500 font-body"
+          placeholder="Ingresa tu nombre completo"
         />
       </div>
 
       <div>
         <label
           htmlFor="email"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-white font-body"
         >
           Email
         </label>
@@ -110,14 +111,15 @@ export default function RegisterForm() {
           onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="off"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border border-white/20 bg-white px-3 py-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-black placeholder-gray-500 font-body"
+          placeholder="tu@email.com"
         />
       </div>
 
       <div>
         <label
           htmlFor="password"
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-medium text-white font-body"
         >
           Contraseña
         </label>
@@ -128,7 +130,8 @@ export default function RegisterForm() {
           onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
-          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-md border border-white/20 bg-white px-3 py-2 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400 text-black placeholder-gray-500 font-body"
+          placeholder="Mínimo 6 caracteres"
         />
       </div>
 
@@ -136,15 +139,15 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors font-body"
         >
           {loading ? 'Registrando...' : 'Registrarse'}
         </button>
       </div>
 
-      <div className="text-sm text-center">
-        <span className="text-gray-600">¿Ya tienes una cuenta? </span>
-        <Link href="/auth/login" className="text-blue-600 hover:text-blue-500">
+      <div className="text-sm text-center font-body">
+        <span className="text-gray-300">¿Ya tienes una cuenta? </span>
+        <Link href="/auth/login" className="text-blue-400 hover:text-blue-300 transition-colors">
           Inicia sesión aquí
         </Link>
       </div>
