@@ -14,6 +14,8 @@ import AnotacionModal from '../AnotacionModal';
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import UpgradeModal from "@/components/UpgradeModal";
 import MarcaDetailPanel from '../MarcaDetailPanel';
+import WelcomeModal from '../WelcomeModal';
+import { useSession } from 'next-auth/react';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -41,6 +43,8 @@ export default function DashboardClient() {
   const [showBlur, setShowBlur] = useState(false);
   const [boletinLoading, setBoletinLoading] = useState(false);
   const [boletinError, setBoletinError] = useState<string | null>(null);
+  const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
+  const { data: session } = useSession();
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -84,6 +88,42 @@ export default function DashboardClient() {
   useEffect(() => {
     fetchMarcas();
   }, [fetchMarcas]);
+
+  // Check if user should see welcome message
+  useEffect(() => {
+    const checkWelcomeStatus = async () => {
+      if (!session?.user?.id) return;
+      
+      try {
+        const response = await fetch('/api/user/welcome-seen');
+        if (response.ok) {
+          const data = await response.json();
+          if (!data.welcome_seen) {
+            setWelcomeModalOpen(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking welcome status:', error);
+      }
+    };
+
+    checkWelcomeStatus();
+  }, [session?.user?.id]);
+
+  const handleWelcomeClose = async () => {
+    try {
+      await fetch('/api/user/welcome-seen', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      setWelcomeModalOpen(false);
+    } catch (error) {
+      console.error('Error marking welcome as seen:', error);
+      setWelcomeModalOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (detailPanelOpen) {
@@ -694,6 +734,11 @@ export default function DashboardClient() {
           onClose={() => setUpgradeModalOpen(false)}
         />
       )}
+
+      <WelcomeModal
+        isOpen={welcomeModalOpen}
+        onClose={handleWelcomeClose}
+      />
 
       {/* Slide-out Panel rendered outside the blurred content for proper animation */}
       {(() => {
