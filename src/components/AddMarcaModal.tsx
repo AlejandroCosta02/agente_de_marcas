@@ -266,6 +266,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
     if (!formData.marca) {
       newErrors.marca = 'El nombre es requerido';
+    } else if (formData.marca.length > 60) {
+      newErrors.marca = 'El nombre de la marca no puede exceder 60 caracteres';
     }
 
     if (!formData.renovar) {
@@ -340,7 +342,16 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       onChange={(e) => setFormData({ ...formData, marca: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
                       placeholder="Ingrese el nombre de la marca"
+                      maxLength={60}
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-gray-500">
+                        Máximo 60 caracteres
+                      </p>
+                      <p className={`text-xs ${formData.marca.length > 50 ? 'text-orange-500' : 'text-gray-400'}`}>
+                        {formData.marca.length}/60
+                      </p>
+                    </div>
                     {errors.marca && <p className="mt-2 text-sm text-red-600 flex items-center">
                       <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />

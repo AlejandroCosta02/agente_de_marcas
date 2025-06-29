@@ -72,7 +72,7 @@ model marca_files {
 
 model marcas {
   id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  marca            String        @db.VarChar(20)
+  marca            String        @db.VarChar(60)
   renovar          DateTime      @db.Date
   vencimiento      DateTime      @db.Date
   titular_nombre   String        @db.VarChar(100)
