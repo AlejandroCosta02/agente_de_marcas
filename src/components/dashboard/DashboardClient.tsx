@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaDownload } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -39,6 +39,8 @@ export default function DashboardClient() {
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [selectedMarcaForDetail, setSelectedMarcaForDetail] = useState<Marca | null>(null);
   const [showBlur, setShowBlur] = useState(false);
+  const [boletinLoading, setBoletinLoading] = useState(false);
+  const [boletinError, setBoletinError] = useState<string | null>(null);
 
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -410,19 +412,57 @@ export default function DashboardClient() {
     }, 400);
   };
 
+  const handleDownloadBoletin = async () => {
+    setBoletinLoading(true);
+    setBoletinError(null);
+    try {
+      const res = await fetch('/api/boletin');
+      const data = await res.json();
+      if (!res.ok || !data.url) throw new Error(data.error || 'No se pudo obtener el boletín');
+      const url = data.url;
+      const fileName = url.split('/').pop() || 'Boletin_Marcas.pdf';
+      // Fetch the PDF via the proxy API route to avoid CORS issues
+      const resFile = await fetch(`/api/boletin/download?url=${encodeURIComponent(url)}`);
+      if (!resFile.ok) throw new Error('No se pudo descargar el boletín');
+      const blob = await resFile.blob();
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err: any) {
+      setBoletinError(err.message || 'Error al descargar el boletín');
+    } finally {
+      setBoletinLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className={`space-y-8 transition-all duration-300 ${showBlur ? 'filter blur-sm' : ''} ${detailPanelOpen ? 'pointer-events-none' : ''}`}>
           {/* Header */}
-          <div className="flex justify-between items-center">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="mt-2 text-sm text-gray-600">
                 Gestiona tus marcas comerciales de manera eficiente
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
+              <button
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2 disabled:opacity-60"
+                type="button"
+                onClick={handleDownloadBoletin}
+                disabled={boletinLoading}
+              >
+                <FaDownload />
+                {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
+              </button>
+              {boletinError && (
+                <span className="text-red-600 text-xs ml-2">{boletinError}</span>
+              )}
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
             </div>
           </div>
