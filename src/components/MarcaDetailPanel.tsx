@@ -44,12 +44,6 @@ export default function MarcaDetailPanel({
     });
   };
 
-  const formatClases = (clases: number[]) => {
-    return clases
-      .sort((a, b) => a - b)
-      .join(', ');
-  };
-
   const truncateText = (text: string, maxLength: number = 50) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
