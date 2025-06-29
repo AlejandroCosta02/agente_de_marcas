@@ -76,11 +76,13 @@ export default function ContactPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h1 className="text-4xl font-heading text-white sm:text-5xl">
-                Póngase en Contacto
+                Conectá con Nuestro Equipo
               </h1>
-              <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-300 font-body">
-                Estamos aquí para ayudar. Envíenos un mensaje y nos pondremos en contacto
-                a la brevedad.
+              <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-300 font-body whitespace-pre-line">
+                🚀 <strong>Tu experiencia nos impulsa a mejorar.</strong> <br />
+                En <span className="text-blue-300">gestionatusmarcas.com</span>, nuestro equipo trabaja continuamente para optimizar la plataforma, incorporar nuevas funcionalidades y brindar un servicio cada vez más completo para agentes y estudios de marcas.<br /><br />
+                📬 <strong>Valoramos profundamente tus comentarios y sugerencias.</strong> <br />
+                Si tenés alguna observación o idea para mejorar, no dudes en escribirnos. Cada mensaje nos ayuda a construir una mejor experiencia para vos y toda la comunidad profesional.
               </p>
             </div>
 
@@ -197,7 +199,7 @@ export default function ContactPage() {
                   <dt><span className="sr-only">Email</span></dt>
                   <dd className="flex text-base text-gray-300 font-body">
                     <FaEnvelope className="flex-shrink-0 w-6 h-6 text-blue-400" />
-                    <span className="ml-3">contacto@gestionatusmarcas.com</span>
+                    <span className="ml-3">consultas@gestionatusmarcas.com</span>
                   </dd>
                   <dt><span className="sr-only">Address</span></dt>
                   <dd className="flex text-base text-gray-300 font-body">
