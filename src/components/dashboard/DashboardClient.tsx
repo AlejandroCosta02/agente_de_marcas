@@ -444,25 +444,27 @@ export default function DashboardClient() {
         <div className={`space-y-8 transition-all duration-300 ${showBlur ? 'filter blur-sm' : ''} ${detailPanelOpen ? 'pointer-events-none' : ''}`}>
           {/* Header */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center mb-4">
-            <div>
+            <div className="col-span-1">
               <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
               <p className="mt-2 text-sm text-gray-600">
                 Gestiona tus marcas comerciales de manera eficiente
               </p>
+              <div className="mt-6">
+                <button
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2 disabled:opacity-60"
+                  type="button"
+                  onClick={handleDownloadBoletin}
+                  disabled={boletinLoading}
+                >
+                  <FaDownload />
+                  {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
+                </button>
+                {boletinError && (
+                  <span className="text-red-600 text-xs ml-2">{boletinError}</span>
+                )}
+              </div>
             </div>
             <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
-              <button
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2 disabled:opacity-60"
-                type="button"
-                onClick={handleDownloadBoletin}
-                disabled={boletinLoading}
-              >
-                <FaDownload />
-                {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
-              </button>
-              {boletinError && (
-                <span className="text-red-600 text-xs ml-2">{boletinError}</span>
-              )}
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
             </div>
           </div>
