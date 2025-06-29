@@ -32,6 +32,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     marca: '',
     renovar: '',
     vencimiento: '',
+    djumt: '',
     titulares: [{
       id: Math.random().toString(36).substr(2, 9),
       fullName: '',
@@ -100,6 +101,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         marca: initialData.marca,
         renovar: initialData.renovar ? formatDateToDDMMYYYY(initialData.renovar) : formatDateToDDMMYYYY(new Date().toISOString()),
         vencimiento: initialData.vencimiento ? formatDateToDDMMYYYY(initialData.vencimiento) : formatDateToDDMMYYYY(new Date().toISOString()),
+        djumt: initialData.djumt || '',
         titulares: initialData.titulares && initialData.titulares.length > 0 
           ? initialData.titulares.map(t => ({
               id: t.id || Math.random().toString(36).substr(2, 9),
@@ -126,6 +128,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         marca: '',
         renovar: today,
         vencimiento: today,
+        djumt: '',
         titulares: [{
           id: Math.random().toString(36).substr(2, 9),
           fullName: '',
@@ -156,6 +159,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       ...formData,
       renovar: formatDateToISO(formData.renovar),
       vencimiento: formatDateToISO(formData.vencimiento),
+      djumt: formatDateToISO(formData.djumt),
       clases: selectedClases
     };
 
@@ -280,6 +284,12 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       newErrors.vencimiento = 'La fecha de vencimiento es requerida';
     } else if (!isValidDate(formData.vencimiento)) {
       newErrors.vencimiento = 'Formato de fecha inválido. Use DD/MM/YYYY';
+    }
+
+    if (!formData.djumt) {
+      newErrors.djumt = 'La fecha DJUMT es requerida';
+    } else if (!isValidDate(formData.djumt)) {
+      newErrors.djumt = 'Formato de fecha inválido. Use DD/MM/YYYY';
     }
 
     // Validate all titulares
@@ -446,6 +456,50 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                           <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         {errors.vencimiento}
+                      </p>}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        DJUMT <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.djumt}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            // Allow only numbers and slashes
+                            const cleaned = value.replace(/[^\d/]/g, '');
+                            // Auto-format as DD/MM/YYYY
+                            let formatted = cleaned;
+                            if (cleaned.length >= 2 && !cleaned.includes('/')) {
+                              formatted = cleaned.slice(0, 2) + '/' + cleaned.slice(2);
+                            }
+                            if (formatted.length >= 5 && formatted.split('/').length === 2) {
+                              formatted = formatted.slice(0, 5) + '/' + formatted.slice(5);
+                            }
+                            // Limit to DD/MM/YYYY format
+                            if (formatted.length <= 10) {
+                              setFormData({ ...formData, djumt: formatted });
+                            }
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 placeholder-gray-400 bg-white shadow-sm hover:border-gray-400"
+                          placeholder="DD/MM/YYYY"
+                          maxLength={10}
+                        />
+                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500">Formato: DD/MM/YYYY (ej: 25/12/2024)</p>
+                      {errors.djumt && <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.djumt}
                       </p>}
                     </div>
                   </div>

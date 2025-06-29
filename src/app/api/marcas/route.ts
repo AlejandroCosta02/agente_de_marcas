@@ -70,6 +70,7 @@ export async function GET() {
         m.marca,
         m.renovar,
         m.vencimiento,
+        m.djumt,
         m.titular_nombre,
         m.titular_email,
         m.titular_telefono,
@@ -194,10 +195,10 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { marca, renovar, vencimiento, titulares, anotacion, oposicion, tipoMarca, clases } = body;
+    const { marca, renovar, vencimiento, djumt, titulares, anotacion, oposicion, tipoMarca, clases } = body;
 
     // Validate required fields
-    if (!marca || !renovar || !vencimiento || !titulares || !Array.isArray(titulares) || titulares.length === 0) {
+    if (!marca || !renovar || !vencimiento || !djumt || !titulares || !Array.isArray(titulares) || titulares.length === 0) {
       return NextResponse.json({ message: 'Faltan campos requeridos' }, { status: 400 });
     }
 
@@ -235,21 +236,23 @@ export async function PUT(request: Request) {
         marca = $1,
         renovar = $2,
         vencimiento = $3,
-        titular_nombre = $4,
-        titular_email = $5,
-        titular_telefono = $6,
-        titulares = $7::jsonb,
-        anotaciones = $8::text[],
-        oposicion = $9::jsonb,
-        tipo_marca = $10,
-        clases = $11::integer[],
+        djumt = $4,
+        titular_nombre = $5,
+        titular_email = $6,
+        titular_telefono = $7,
+        titulares = $8::jsonb,
+        anotaciones = $9::text[],
+        oposicion = $10::jsonb,
+        tipo_marca = $11,
+        clases = $12::integer[],
         updated_at = NOW()
-      WHERE id = $12 AND user_email = $13
+      WHERE id = $13 AND user_email = $14
       RETURNING *
     `, [
       marca,
       renovar,
       vencimiento,
+      djumt,
       firstTitular.fullName,
       firstTitular.email,
       firstTitular.phone || '',
@@ -281,6 +284,7 @@ export async function POST(request: Request) {
       marca, 
       renovar, 
       vencimiento, 
+      djumt,
       titulares,
       anotacion = [],
       oposicion = [],
@@ -328,6 +332,7 @@ export async function POST(request: Request) {
         marca,
         renovar,
         vencimiento,
+        djumt,
         titular_nombre,
         titular_email,
         titular_telefono,
@@ -338,13 +343,14 @@ export async function POST(request: Request) {
         clases,
         user_email
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7::jsonb, $8::text[], $9::jsonb, $10, $11::integer[], $12
+        $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::text[], $10::jsonb, $11, $12::integer[], $13
       )
       RETURNING id
     `, [
       marca,
       renovar,
       vencimiento,
+      djumt,
       firstTitular.fullName,
       firstTitular.email,
       firstTitular.phone || '',

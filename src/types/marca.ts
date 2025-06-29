@@ -45,6 +45,7 @@ export interface Marca {
   marca: string;
   renovar: string;
   vencimiento: string;
+  djumt: string;
   titulares: Titular[];
   titular?: Titular;
   oposicion: Oposicion[];

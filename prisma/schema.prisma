@@ -75,6 +75,7 @@ model marcas {
   marca            String        @db.VarChar(60)
   renovar          DateTime      @db.Date
   vencimiento      DateTime      @db.Date
+  djumt            DateTime      @db.Date
   titular_nombre   String        @db.VarChar(100)
   titular_email    String        @db.VarChar(100)
   titular_telefono String        @db.VarChar(20)
