@@ -91,11 +91,44 @@ export default function MarcaDetailPanel({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Tipo de Marca</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{marca.tipoMarca}</p>
+                  <p className="mt-1 text-sm text-gray-900 capitalize">
+                    {(() => {
+                      switch (String(marca.tipoMarca)) {
+                        case 'denominativa': return '🔤 Denominativa';
+                        case 'mixta': return '🧷 Mixta';
+                        case 'figurativa': return '🖼️ Figurativa';
+                        case 'tridimensional': return '📦 Tridimensional';
+                        case 'olfativa': return '🌸 Olfativa';
+                        case 'sonora': return '🔊 Sonora';
+                        case 'movimiento': return '🎞️ Movimiento';
+                        case 'holografica': return '✨ Holográfica';
+                        case 'colectiva': return '👥 Colectiva';
+                        case 'certificacion': return '✅ Certificación';
+                        default: return String(marca.tipoMarca).charAt(0).toUpperCase() + String(marca.tipoMarca).slice(1);
+                      }
+                    })()}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">Clases</label>
-                  <p className="mt-1 text-sm text-gray-900">{formatClases(marca.clases)}</p>
+                  {/* <label className="block text-sm font-medium text-gray-700">Clases</label> */}
+                  {marca.clases && marca.clases.length > 0 ? (
+                    <div className="mt-1">
+                      <div className="grid grid-cols-3 gap-2 font-semibold text-gray-900 mb-1">
+                        <span>Clase</span>
+                        <span>Acta n.º</span>
+                        <span>Resolución</span>
+                      </div>
+                      {marca.clases.sort((a, b) => a - b).map((clase) => (
+                        <div key={clase} className="grid grid-cols-3 gap-2 mb-1 items-center">
+                          <span className="text-gray-800">{clase}</span>
+                          <span className="text-gray-900">{marca.classDetails?.[clase]?.acta || '-'}</span>
+                          <span className="text-gray-900">{marca.classDetails?.[clase]?.resolucion || '-'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-sm text-gray-900">-</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -205,8 +238,9 @@ export default function MarcaDetailPanel({
                     <span className="text-sm text-gray-900">{formatDate(marca.renovar)}</span>
                     <button
                       onClick={() => onAddToCalendar(marca, 'renovar')}
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
                       title="Agregar a Google Calendar"
+                      style={{ cursor: 'pointer' }}
                     >
                       <FaCalendarPlus className="h-4 w-4" />
                     </button>
@@ -218,8 +252,30 @@ export default function MarcaDetailPanel({
                     <span className="text-sm text-gray-900">{formatDate(marca.vencimiento)}</span>
                     <button
                       onClick={() => onAddToCalendar(marca, 'vencimiento')}
-                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                      className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
                       title="Agregar a Google Calendar"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <FaCalendarPlus className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">DJUMT</label>
+                  <div className="mt-1 flex items-center space-x-2">
+                    <span className="text-sm text-gray-900">{formatDate(marca.djumt)}</span>
+                    <button
+                      onClick={() => {
+                        const title = encodeURIComponent(`DJUMT - ${marca.marca}`);
+                        const date = new Date(marca.djumt);
+                        const start = date.toISOString().replace(/[-:]|\.\d{3}/g, '').slice(0, 15) + 'Z';
+                        const end = start;
+                        const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                      title="Agregar a Google Calendar"
+                      style={{ cursor: 'pointer' }}
                     >
                       <FaCalendarPlus className="h-4 w-4" />
                     </button>

@@ -54,6 +54,7 @@ export interface Marca {
   tipoMarca: TipoMarca;
   createdAt: string;
   updatedAt: string;
+  classDetails: Record<number, { acta: string; resolucion: string }>;
 }
 
 export type MarcaSubmissionData = Omit<Marca, 'id' | 'createdAt' | 'updatedAt'>; 

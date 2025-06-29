@@ -28,7 +28,7 @@ const TIPOS_MARCA: TipoMarca[] = [
 ];
 
 export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }: AddMarcaModalProps) {
-  const [formData, setFormData] = useState<MarcaSubmissionData>({
+  const [formData, setFormData] = useState<MarcaSubmissionData & { classDetails: Record<number, { acta: string; resolucion: string }> }>({
     marca: '',
     renovar: '',
     vencimiento: '',
@@ -42,7 +42,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     oposicion: [],
     anotacion: [],
     clases: [],
-    tipoMarca: 'denominativa'
+    tipoMarca: 'denominativa',
+    classDetails: {} as Record<number, { acta: string; resolucion: string }>,
   });
 
   const [selectedClases, setSelectedClases] = useState<number[]>([]);
@@ -97,11 +98,19 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
   useEffect(() => {
     if (initialData) {
+      console.log('🔍 Initializing form with initialData:', {
+        marca: initialData.marca,
+        clases: initialData.clases,
+        classDetails: initialData.classDetails,
+        hasClassDetails: !!initialData.classDetails,
+        classDetailsKeys: initialData.classDetails ? Object.keys(initialData.classDetails) : []
+      });
+      
       setFormData({
         marca: initialData.marca,
         renovar: initialData.renovar ? formatDateToDDMMYYYY(initialData.renovar) : formatDateToDDMMYYYY(new Date().toISOString()),
         vencimiento: initialData.vencimiento ? formatDateToDDMMYYYY(initialData.vencimiento) : formatDateToDDMMYYYY(new Date().toISOString()),
-        djumt: initialData.djumt || '',
+        djumt: initialData.djumt ? formatDateToDDMMYYYY(initialData.djumt) : '',
         titulares: initialData.titulares && initialData.titulares.length > 0 
           ? initialData.titulares.map(t => ({
               id: t.id || Math.random().toString(36).substr(2, 9),
@@ -118,7 +127,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         oposicion: initialData.oposicion || [],
         anotacion: initialData.anotacion || [],
         clases: initialData.clases || [],
-        tipoMarca: initialData.tipoMarca
+        tipoMarca: initialData.tipoMarca,
+        classDetails: initialData.classDetails || {},
       });
       setSelectedClases(initialData.clases || []);
     } else {
@@ -138,7 +148,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
         oposicion: [],
         anotacion: [],
         clases: [],
-        tipoMarca: 'denominativa'
+        tipoMarca: 'denominativa',
+        classDetails: {} as Record<number, { acta: string; resolucion: string }>,
       });
       setSelectedClases([]);
     }
@@ -160,8 +171,16 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       renovar: formatDateToISO(formData.renovar),
       vencimiento: formatDateToISO(formData.vencimiento),
       djumt: formatDateToISO(formData.djumt),
-      clases: selectedClases
+      clases: selectedClases,
+      classDetails: formData.classDetails,
     };
+
+    console.log('🔍 Submitting marca with classDetails:', {
+      classDetails: submissionData.classDetails,
+      selectedClases,
+      hasClassDetails: !!submissionData.classDetails,
+      classDetailsKeys: Object.keys(submissionData.classDetails || {})
+    });
 
     onSubmit(submissionData);
     onClose();
@@ -169,10 +188,21 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
 
   const handleClaseSelect = (clase: number) => {
     setSelectedClases(prev => {
+      let newClases;
       if (prev.includes(clase)) {
-        return prev.filter(c => c !== clase);
+        newClases = prev.filter(c => c !== clase);
+      } else {
+        newClases = [...prev, clase].sort((a, b) => a - b);
       }
-      return [...prev, clase].sort((a, b) => a - b);
+      // Remove classDetails for unselected classes
+      setFormData(f => {
+        const newDetails = { ...f.classDetails } as Record<number, { acta: string; resolucion: string }>;
+        Object.keys(newDetails).forEach(k => {
+          if (!newClases.includes(Number(k))) delete newDetails[Number(k)];
+        });
+        return { ...f, clases: newClases, classDetails: newDetails };
+      });
+      return newClases;
     });
   };
 
@@ -313,6 +343,17 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     if (!formData.tipoMarca) {
       newErrors.tipoMarca = 'El tipo de marca es requerido';
     }
+
+    selectedClases.forEach((clase: number) => {
+      if (!formData.classDetails[clase] || !formData.classDetails[clase].acta) {
+        newErrors[`classDetails.${clase}.acta`] = `Acta n.º es requerida para la clase ${clase}`;
+      } else if (formData.classDetails[clase].acta.length > 10) {
+        newErrors[`classDetails.${clase}.acta`] = 'Máximo 10 caracteres';
+      }
+      if (formData.classDetails[clase]?.resolucion && formData.classDetails[clase].resolucion.length > 10) {
+        newErrors[`classDetails.${clase}.resolucion`] = 'Máximo 10 caracteres';
+      }
+    });
 
     return newErrors;
   };
@@ -471,7 +512,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                           </svg>
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                            Declaración jurada de uso de medio término
+                            Declaración Jurada de Uso de Medio Término
                             <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                           </div>
                         </div>
@@ -647,10 +688,72 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                                   : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
                               }`}
                             >
-                              {clase}
+                              <span className="text-gray-800">{clase}</span>
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
+                    {selectedClases.length > 0 && (
+                      <div className="mb-4">
+                        <div className="grid grid-cols-3 gap-4 mb-2">
+                          <span className="font-semibold text-gray-900">Clase</span>
+                          <span className="font-semibold text-gray-900">Acta n.º <span className="text-red-500">*</span></span>
+                          <span className="font-semibold text-gray-900">Resolución</span>
+                        </div>
+                        {selectedClases.map((clase: number) => (
+                          <div key={clase} className="grid grid-cols-3 gap-4 mb-2 items-center">
+                            <span className="text-gray-800">Clase {clase}</span>
+                            <input
+                              type="text"
+                              value={formData.classDetails[clase]?.acta || ''}
+                              maxLength={10}
+                              required
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              className="px-2 py-1 border rounded w-full text-gray-900 placeholder-gray-400 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                              onChange={e => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setFormData(f => ({
+                                  ...f,
+                                  classDetails: {
+                                    ...f.classDetails,
+                                    [clase]: {
+                                      ...f.classDetails[clase],
+                                      acta: val,
+                                    },
+                                  },
+                                }));
+                              }}
+                              placeholder="Acta n.º"
+                            />
+                            <input
+                              type="text"
+                              value={formData.classDetails[clase]?.resolucion || ''}
+                              maxLength={10}
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              className="px-2 py-1 border rounded w-full text-gray-900 placeholder-gray-400 bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                              onChange={e => {
+                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                setFormData(f => ({
+                                  ...f,
+                                  classDetails: {
+                                    ...f.classDetails,
+                                    [clase]: {
+                                      ...f.classDetails[clase],
+                                      resolucion: val,
+                                    },
+                                  },
+                                }));
+                              }}
+                              placeholder="Resolución"
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -663,9 +766,23 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 text-gray-900 bg-white shadow-sm hover:border-gray-400 appearance-none cursor-pointer pr-10"
                       required
                     >
-                      {TIPOS_MARCA.map((tipo) => (
+                      {TIPOS_MARCA.map((tipo: string) => (
                         <option key={tipo} value={tipo} className="text-gray-900 py-2">
-                          {tipo.charAt(0).toUpperCase() + tipo.slice(1)}
+                          {(() => {
+                            switch (tipo) {
+                              case 'denominativa': return '🔤 Denominativa';
+                              case 'mixta': return '🧷 Mixta';
+                              case 'figurativa': return '🖼️ Figurativa';
+                              case 'tridimensional': return '📦 Tridimensional';
+                              case 'olfativa': return '🌸 Olfativa';
+                              case 'sonora': return '🔊 Sonora';
+                              case 'movimiento': return '🎞️ Movimiento';
+                              case 'holografica': return '✨ Holográfica';
+                              case 'colectiva': return '👥 Colectiva';
+                              case 'certificacion': return '✅ Certificación';
+                              default: return String(tipo).charAt(0).toUpperCase() + String(tipo).slice(1);
+                            }
+                          })()}
                         </option>
                       ))}
                     </select>

@@ -79,6 +79,7 @@ export async function GET() {
         m.oposicion,
         COALESCE(m.tipo_marca, 'denominativa') as "tipoMarca",
         COALESCE(m.clases, ARRAY[]::INTEGER[]) as clases,
+        m.class_details as "classDetails",
         m.created_at as "createdAt",
         m.updated_at as "updatedAt"
       FROM marcas m
@@ -125,7 +126,8 @@ export async function GET() {
           clases: Array.isArray(marca.clases) 
             ? marca.clases.map((n: number) => Number(n)).filter((n: number) => !isNaN(n))
             : [],
-          tipoMarca: marca.tipoMarca || 'denominativa'
+          tipoMarca: marca.tipoMarca || 'denominativa',
+          classDetails: marca.classDetails || {},
         };
       } catch (formatError) {
         console.error('Error formatting marca:', {
@@ -195,7 +197,15 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { marca, renovar, vencimiento, djumt, titulares, anotacion, oposicion, tipoMarca, clases } = body;
+    const { marca, renovar, vencimiento, djumt, titulares, anotacion, oposicion, tipoMarca, clases, classDetails } = body;
+
+    console.log('🔍 API received classDetails:', {
+      classDetails,
+      hasClassDetails: !!classDetails,
+      classDetailsKeys: classDetails ? Object.keys(classDetails) : [],
+      clases,
+      selectedClases: clases
+    });
 
     // Validate required fields
     if (!marca || !renovar || !vencimiento || !djumt || !titulares || !Array.isArray(titulares) || titulares.length === 0) {
@@ -245,8 +255,9 @@ export async function PUT(request: Request) {
         oposicion = $10::jsonb,
         tipo_marca = $11,
         clases = $12::integer[],
+        class_details = $13::jsonb,
         updated_at = NOW()
-      WHERE id = $13 AND user_email = $14
+      WHERE id = $14 AND user_email = $15
       RETURNING *
     `, [
       marca,
@@ -261,6 +272,7 @@ export async function PUT(request: Request) {
       JSON.stringify(cleanedOposicion),
       tipoMarca,
       clases,
+      JSON.stringify(classDetails || {}),
       id,
       session.user.email
     ]);
@@ -289,7 +301,8 @@ export async function POST(request: Request) {
       anotacion = [],
       oposicion = [],
       clases = [],
-      tipoMarca
+      tipoMarca,
+      classDetails = {}
     } = await request.json();
 
     // Validate titulares
@@ -341,9 +354,10 @@ export async function POST(request: Request) {
         oposicion,
         tipo_marca,
         clases,
+        class_details,
         user_email
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::text[], $10::jsonb, $11, $12::integer[], $13
+        $1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9::text[], $10::jsonb, $11, $12::integer[], $13::jsonb, $14
       )
       RETURNING id
     `, [
@@ -359,6 +373,7 @@ export async function POST(request: Request) {
       JSON.stringify(cleanedOposicion),
       tipoMarca,
       clases,
+      JSON.stringify(classDetails || {}),
       session.user.email
     ]);
 
