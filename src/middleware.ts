@@ -1,16 +1,15 @@
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-// Temporarily disable middleware to test login flow
-export default function middleware() {
+// Temporarily disable middleware to test 404 page
+export default function middleware(request: NextRequest) {
+  // Temporarily disable middleware to test 404 page
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    '/dashboard',
-    '/dashboard/:path*',
-    '/api/marcas/:path*',
-    '/api/migrations/:path*',
-    '/migrate'
+    // Match all paths except static files
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

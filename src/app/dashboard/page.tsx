@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   robots: {
     index: false,
     follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
   },
   openGraph: {
     title: "Dashboard - Gestiona tus Marcas",
@@ -27,7 +31,7 @@ export const metadata: Metadata = {
     url: "https://gestionatusmarcas.com/dashboard",
     images: [
       {
-        url: "/logo-d.svg",
+        url: "https://gestionatusmarcas.com/logo-d.svg",
         width: 1200,
         height: 630,
         alt: "Gestiona tus Marcas - Dashboard",
@@ -38,10 +42,10 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Dashboard - Gestiona tus Marcas",
     description: "Panel de control de Gestiona tus Marcas. Gestioná tus expedientes de marcas.",
-    images: ["/logo-d.svg"],
+    images: ["https://gestionatusmarcas.com/logo-d.svg"],
   },
   alternates: {
-    canonical: "/dashboard",
+    canonical: "https://gestionatusmarcas.com/dashboard",
   },
 };
 

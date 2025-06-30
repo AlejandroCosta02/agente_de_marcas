@@ -1,0 +1,29 @@
+User-agent: *
+Allow: /
+
+# Disallow sensitive areas
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /auth/
+Disallow: /perfil/
+Disallow: /migrate/
+Disallow: /success/
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /private/
+Disallow: /_next/
+Disallow: /static/
+
+# Allow important pages
+Allow: /about/
+Allow: /contact/
+Allow: /terms/
+Allow: /privacy/
+Allow: /sitemap/
+
+# Sitemap location
+Sitemap: https://gestionatusmarcas.com/sitemap.xml
+
+# Crawl delay (optional)
+Crawl-delay: 1 
