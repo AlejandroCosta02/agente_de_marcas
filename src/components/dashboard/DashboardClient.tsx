@@ -17,6 +17,7 @@ import MarcaDetailPanel from '../MarcaDetailPanel';
 import WelcomeModal from '../WelcomeModal';
 import { useSession } from 'next-auth/react';
 import DateFilterModal, { DateType, TimeRange } from './DateFilterModal';
+import GrowthBanner from '../GrowthBanner';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -681,7 +682,7 @@ export default function DashboardClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className={`space-y-8 transition-all duration-300 ${showBlur ? 'filter blur-sm' : ''} ${detailPanelOpen ? 'pointer-events-none' : ''}`}>
           {/* Header */}
@@ -985,6 +986,9 @@ export default function DashboardClient() {
         onDateTypeChange={setSelectedDateType}
         onTimeRangeChange={setSelectedTimeRange}
       />
+
+      {/* Growth Banner */}
+      <GrowthBanner />
     </div>
   );
 } 
