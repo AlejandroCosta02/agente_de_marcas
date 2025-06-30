@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
 
 // Temporarily disable middleware to test 404 page
-export default function middleware(_request: NextRequest) {
+export default function middleware() {
   // Temporarily disable middleware to test 404 page
   return NextResponse.next();
 }
