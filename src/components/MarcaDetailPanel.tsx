@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile, FaUser, FaTrademark, FaCalendarAlt, FaStickyNote, FaGavel, FaFolder, FaRegIdCard, FaInfoCircle } from 'react-icons/fa';
+import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile, FaUser, FaCalendarAlt, FaStickyNote, FaGavel, FaFolder, FaRegIdCard, FaInfoCircle } from 'react-icons/fa';
 import type { Marca } from '../types/marca';
 
 interface MarcaDetailPanelProps {
