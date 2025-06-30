@@ -88,6 +88,16 @@ export async function GET() {
     `, [session.user.email]);
     
     console.log('Raw marcas data:', JSON.stringify(result.rows[0], null, 2));
+    console.log('Full marcas response:', {
+      totalRows: result.rows.length,
+      allMarcas: result.rows.map(row => ({
+        id: row.id,
+        marca: row.marca,
+        renovar: row.renovar,
+        vencimiento: row.vencimiento,
+        djumt: row.djumt
+      }))
+    });
 
     const formattedMarcas = result.rows.map(marca => {
       try {

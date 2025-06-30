@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -16,6 +16,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import MarcaDetailPanel from '../MarcaDetailPanel';
 import WelcomeModal from '../WelcomeModal';
 import { useSession } from 'next-auth/react';
+import DateFilterModal, { DateType, TimeRange } from './DateFilterModal';
 
 interface ViewTextModalState {
   isOpen: boolean;
@@ -46,6 +47,13 @@ export default function DashboardClient() {
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const { data: session } = useSession();
 
+  // Date filtering state
+  const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
+  const [selectedDateType, setSelectedDateType] = useState<DateType>('fechaDeRenovacion');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30');
+
+  console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
+  
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
     Array.isArray(marca.oposicion) && marca.oposicion.length > 0
@@ -55,7 +63,11 @@ export default function DashboardClient() {
     if (typeof window === 'undefined') return;
     
     try {
+      console.log('🔄 Fetching marcas...');
       const response = await fetch('/api/marcas');
+      console.log('📡 Response status:', response.status);
+      console.log('📡 Response ok:', response.ok);
+      
       if (response.status === 401) {
         // Unauthorized, redirect to login
         window.location.href = '/?error=Unauthorized';
@@ -63,16 +75,34 @@ export default function DashboardClient() {
       }
       if (!response.ok) {
         const errorData = await response.json().catch(() => null);
+        console.error('❌ Response not ok:', errorData);
         if (errorData?.details?.includes('column "tipo_marca" does not exist')) {
           setNeedsMigration(true);
           return;
         }
         throw new Error(errorData?.message || 'Error fetching data');
       }
+      
       const data = await response.json();
+      console.log('📦 Received marcas data:', {
+        count: data.length,
+        isArray: Array.isArray(data),
+        dataType: typeof data,
+        marcas: data.map((m: any) => ({
+          id: m.id,
+          marca: m.marca,
+          renovar: m.renovar,
+          vencimiento: m.vencimiento,
+          djumt: m.djumt
+        }))
+      });
+      
+      console.log('🔄 About to update marcas state with:', data.length, 'marcas');
       setMarcas(data);
       setNeedsMigration(false);
+      console.log('✅ Marcas state update called');
     } catch (error: unknown) {
+      console.error('❌ Error fetching marcas:', error);
       if (error instanceof Error) {
         if (error.message.includes('column "tipo_marca" does not exist')) {
           setNeedsMigration(true);
@@ -86,8 +116,17 @@ export default function DashboardClient() {
   }, []);
 
   useEffect(() => {
+    console.log('🚀 Dashboard component mounted, fetching marcas...');
     fetchMarcas();
   }, [fetchMarcas]);
+
+  // Debug marcas state changes
+  useEffect(() => {
+    console.log('📊 Marcas state updated:', {
+      count: marcas.length,
+      marcas: marcas.map(m => ({ id: m.id, marca: m.marca }))
+    });
+  }, [marcas]);
 
   // Check if user should see welcome message
   useEffect(() => {
@@ -205,12 +244,174 @@ export default function DashboardClient() {
 
   const calculateProximosVencer = () => {
     const today = new Date();
-    const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
+    today.setHours(0, 0, 0, 0); // Set to start of day for consistent comparison
+    const daysFromNow = parseInt(selectedTimeRange);
+    const futureDate = new Date(today.getTime() + (daysFromNow * 24 * 60 * 60 * 1000));
     
-    return marcas.filter(marca => {
-      const renovarDate = new Date(marca.renovar);
-      return renovarDate <= thirtyDaysFromNow && renovarDate >= today;
+    console.log('🔍 Date filtering debug:', {
+      totalMarcas: marcas.length,
+      selectedDateType,
+      selectedTimeRange,
+      today: today.toISOString(),
+      futureDate: futureDate.toISOString(),
+      marcas: marcas.map(m => ({
+        id: m.id,
+        marca: m.marca,
+        renovar: m.renovar,
+        vencimiento: m.vencimiento,
+        djumt: m.djumt
+      }))
+    });
+    
+    const filteredCount = marcas.filter(marca => {
+      let dateToCheck: string;
+      
+      switch (selectedDateType) {
+        case 'fechaDeRenovacion':
+          dateToCheck = marca.renovar;
+          break;
+        case 'fechaDeVencimiento':
+          dateToCheck = marca.vencimiento;
+          break;
+        case 'DJUMT':
+          dateToCheck = marca.djumt;
+          break;
+        default:
+          dateToCheck = marca.renovar;
+      }
+      
+      // Convert DD/MM/YYYY to Date object
+      const checkDate = parseDateString(dateToCheck);
+      if (!checkDate) {
+        console.log('❌ Invalid date for marca:', marca.id, dateToCheck);
+        return false;
+      }
+      
+      // Set time to start of day for consistent comparison
+      const normalizedCheckDate = new Date(checkDate);
+      normalizedCheckDate.setHours(0, 0, 0, 0);
+      
+      const isInRange = normalizedCheckDate <= futureDate && normalizedCheckDate >= today;
+      console.log(`📅 Marca ${marca.id} (${marca.marca}): ${dateToCheck} -> ${normalizedCheckDate.toISOString()} -> ${isInRange ? '✅ IN RANGE' : '❌ OUT OF RANGE'}`);
+      
+      return isInRange;
     }).length;
+    
+    console.log(`🎯 Filtered count: ${filteredCount}`);
+    return filteredCount;
+  };
+
+  const getCardTitle = () => {
+    switch (selectedDateType) {
+      case 'fechaDeRenovacion':
+        return 'Próximo a Renovar';
+      case 'fechaDeVencimiento':
+        return 'Próximo a Vencer';
+      case 'DJUMT':
+        return 'Próximo a DJUMT';
+      default:
+        return 'Próximo a Renovar';
+    }
+  };
+
+  const getFilteredMarcas = () => {
+    console.log('🔍 Table sorting debug:', {
+      totalMarcas: marcas.length,
+      selectedDateType,
+      marcas: marcas.map(m => ({
+        id: m.id,
+        marca: m.marca,
+        renovar: m.renovar,
+        vencimiento: m.vencimiento,
+        djumt: m.djumt
+      }))
+    });
+    
+    // Return ALL marcas, sorted by the selected date type (closest to farthest)
+    const sortedMarcas = [...marcas].sort((a, b) => {
+      let dateA: string;
+      let dateB: string;
+      
+      switch (selectedDateType) {
+        case 'fechaDeRenovacion':
+          dateA = a.renovar;
+          dateB = b.renovar;
+          break;
+        case 'fechaDeVencimiento':
+          dateA = a.vencimiento;
+          dateB = b.vencimiento;
+          break;
+        case 'DJUMT':
+          dateA = a.djumt;
+          dateB = b.djumt;
+          break;
+        default:
+          dateA = a.renovar;
+          dateB = b.renovar;
+      }
+      
+      console.log(`🔍 Comparing dates for sorting: ${a.marca} (${dateA}) vs ${b.marca} (${dateB})`);
+      
+      const parsedDateA = parseDateString(dateA);
+      const parsedDateB = parseDateString(dateB);
+      
+      console.log(`📅 Parsed dates: ${a.marca} -> ${parsedDateA?.toISOString()}, ${b.marca} -> ${parsedDateB?.toISOString()}`);
+      
+      if (!parsedDateA && !parsedDateB) return 0;
+      if (!parsedDateA) return 1;
+      if (!parsedDateB) return -1;
+      
+      const comparison = parsedDateA.getTime() - parsedDateB.getTime();
+      console.log(`📊 Sort comparison: ${a.marca} vs ${b.marca} = ${comparison}`);
+      return comparison;
+    });
+    
+    console.log(`🎯 Table sorted marcas: ${sortedMarcas.length} (all marcas, sorted by ${selectedDateType})`);
+    console.log('📋 Final sorted order:', sortedMarcas.map(m => ({ marca: m.marca, date: m[selectedDateType as keyof Marca] })));
+    return sortedMarcas;
+  };
+
+  // Helper function to parse DD/MM/YYYY format to Date object
+  const parseDateString = (dateString: string): Date | null => {
+    if (!dateString) return null;
+    
+    console.log('🔍 Parsing date:', dateString);
+    
+    // If it's already in ISO format (full ISO string with time), parse directly
+    if (dateString.includes('T') && dateString.includes('Z')) {
+      const date = new Date(dateString);
+      const isValid = !isNaN(date.getTime());
+      console.log(`📅 Full ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      return isValid ? date : null;
+    }
+    
+    // If it's in ISO date format (YYYY-MM-DD), parse directly
+    if (dateString.includes('-') && dateString.length === 10) {
+      const date = new Date(dateString);
+      const isValid = !isNaN(date.getTime());
+      console.log(`📅 ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      return isValid ? date : null;
+    }
+    
+    // If it's in DD/MM/YYYY format, convert it
+    if (dateString.includes('/') && dateString.length === 10) {
+      const parts = dateString.split('/');
+      if (parts.length !== 3) return null;
+      
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+      const year = parseInt(parts[2]);
+      
+      if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+      
+      const date = new Date(year, month, day);
+      const isValid = !isNaN(date.getTime());
+      console.log(`📅 DD/MM/YYYY date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      return isValid ? date : null;
+    }
+    
+    console.log(`❌ Unknown date format: ${dateString}`);
+    return null;
   };
 
   const handleToggleOposicion = async (marcaId: string, index: number) => {
@@ -566,7 +767,7 @@ export default function DashboardClient() {
                 </div>
 
                 {/* Próximo a Renovar */}
-                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5">
+                <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg shadow-lg p-5 relative">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <div className="bg-yellow-600 bg-opacity-30 rounded-full p-3">
@@ -576,9 +777,22 @@ export default function DashboardClient() {
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-white uppercase">Próximo a Renovar</p>
+                      <p className="text-sm font-medium text-white uppercase">{getCardTitle()}</p>
                       <p className="text-3xl font-bold text-white">{calculateProximosVencer()}</p>
                     </div>
+                  </div>
+                  
+                  {/* Settings Button */}
+                  <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setDateFilterModalOpen(true)}
+                      className="p-2 bg-white/20 backdrop-blur-sm rounded-full text-white hover:bg-white/30 transition-all duration-200 cursor-pointer"
+                      title="Configurar filtros"
+                    >
+                      <FaCog className="w-4 h-4" />
+                    </motion.button>
                   </div>
                 </div>
 
@@ -629,7 +843,7 @@ export default function DashboardClient() {
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
-                          {marcas.map((marca) => {
+                          {getFilteredMarcas().map((marca) => {
                             const titular = marca.titular ?? marca.titulares?.[0] ?? { fullName: '', email: '', phone: '' };
                             return (
                               <tr 
@@ -761,6 +975,16 @@ export default function DashboardClient() {
           />
         ) : null;
       })()}
+
+      {/* Date Filter Modal */}
+      <DateFilterModal
+        isOpen={dateFilterModalOpen}
+        onClose={() => setDateFilterModalOpen(false)}
+        dateType={selectedDateType}
+        timeRange={selectedTimeRange}
+        onDateTypeChange={setSelectedDateType}
+        onTimeRangeChange={setSelectedTimeRange}
+      />
     </div>
   );
 } 
