@@ -88,7 +88,7 @@ export default function DashboardClient() {
         count: data.length,
         isArray: Array.isArray(data),
         dataType: typeof data,
-        marcas: data.map((m: any) => ({
+        marcas: data.map((m: { id: string; marca: string; renovar: string; vencimiento: string; djumt: string }) => ({
           id: m.id,
           marca: m.marca,
           renovar: m.renovar,
