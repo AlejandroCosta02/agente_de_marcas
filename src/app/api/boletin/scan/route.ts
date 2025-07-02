@@ -98,16 +98,16 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 Processing uploaded file...');
     const formData = await request.formData();
-    const file = formData.get('file');
+    const file = formData.get('file') as File | null;
     
-    if (!file || typeof (file as any).arrayBuffer !== 'function') {
+    if (!file || typeof file.arrayBuffer !== 'function') {
       console.log('❌ Invalid file uploaded');
       return NextResponse.json({ error: 'Archivo no válido o no se pudo leer.' }, { status: 400 });
     }
 
-    console.log('📁 File received:', (file as any).name, 'Size:', (file as any).size);
+    console.log('📁 File received:', file.name, 'Size:', file.size);
 
-    const bytes = await (file as any).arrayBuffer();
+    const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     console.log('📄 Buffer created, size:', buffer.length);
 
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
     let pdfImages: unknown[] = [];
     try {
       const form = new FormData();
-      form.append('file', buffer, { filename: (file as any).name || 'boletin.pdf' });
+      form.append('file', buffer, { filename: file.name || 'boletin.pdf' });
       const microserviceUrl = process.env.PDF_EXTRACT_SERVICE_URL || 'http://localhost:5001/extract-text';
       const response = await fetch(microserviceUrl, {
         method: 'POST',
@@ -207,7 +207,7 @@ function extractMarcaEntries(pdfText: string, pdfImages: unknown[] = []): MarcaE
   const lines = pdfText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   
   let currentEntry: Partial<MarcaEntry> = {};
-  let currentPageIndex = 0;
+  const currentPageIndex = 0;
   let currentImageIndex = 0;
   
   for (const line of lines) {

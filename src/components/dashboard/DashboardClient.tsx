@@ -6,10 +6,10 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload, FaCog } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog, FaSearch, FaLock, FaFilePdf } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import AnotacionModal from '../AnotacionModal';
 import SubscriptionStatus from "@/components/SubscriptionStatus";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -19,10 +19,175 @@ import { useSession } from 'next-auth/react';
 import DateFilterModal, { DateType, TimeRange } from './DateFilterModal';
 import GrowthBanner from '../GrowthBanner';
 
+
 interface ViewTextModalState {
   isOpen: boolean;
   title: string;
   content: string;
+}
+
+// New: Modal for boletin scan
+function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, scanResults }: {
+  isOpen: boolean;
+  onClose: () => void;
+  isPremium: boolean;
+  onFileChange: (file: File) => void;
+  loading: boolean;
+  scanResults?: {
+    denominativas: { count: number; matches: number; pdf: string };
+    mixtas: { count: number; pdf: string };
+  } | null;
+}) {
+  if (!isOpen) return null;
+
+  const handleDownloadPdf = (pdfData: string, filename: string) => {
+    const link = document.createElement('a');
+    link.href = pdfData;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Blur background */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300"
+        onClick={onClose}
+      />
+      {/* Modal content */}
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-10 flex flex-col items-center"
+      >
+        <button
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+          onClick={onClose}
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+
+        {!scanResults ? (
+          <>
+            <div className="flex flex-col items-center gap-2 mb-4">
+              <div className="bg-indigo-100 rounded-full p-4 mb-2">
+                <FaFilePdf className="text-indigo-600 text-3xl" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">Escanear boletín</h2>
+              <p className="text-gray-600 text-center max-w-xs">
+                Subí el PDF del boletín oficial del INPI y detectá automáticamente posibles conflictos con tus marcas.
+              </p>
+            </div>
+            <label className="w-full flex flex-col items-center gap-2 cursor-pointer">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                disabled={!isPremium || loading}
+                onChange={e => {
+                  if (e.target.files && e.target.files[0]) onFileChange(e.target.files[0]);
+                }}
+              />
+              <div className={`w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors duration-200 ${isPremium ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100' : 'border-gray-200 bg-gray-50'}`}>
+                <FaFilePdf className="text-indigo-400 text-4xl mb-2" />
+                <span className="text-gray-700 font-medium">{isPremium ? 'Seleccionar PDF' : 'Función premium'}</span>
+                <span className="text-xs text-gray-400">Solo archivos PDF. Máx 10MB.</span>
+              </div>
+            </label>
+            {/* Loading animation placeholder */}
+            {loading && (
+              <div className="flex flex-col items-center mt-6">
+                <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-2" />
+                <span className="text-indigo-600 text-sm">Analizando boletín...</span>
+              </div>
+            )}
+            {/* Orientative text */}
+            <div className="mt-6 text-sm text-gray-500 text-center">
+              Esta herramienta premium compara automáticamente las marcas nuevas del boletín con las marcas que custodiás.<br />
+              Detectá conflictos fonéticos o visuales, y actuá a tiempo.
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Success Results */}
+            <div className="flex flex-col items-center gap-4 mb-6">
+              <div className="bg-green-100 rounded-full p-4">
+                <div className="text-green-600 text-3xl">🧠</div>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 text-center">Análisis completado con éxito</h2>
+              <div className="text-gray-600 text-center max-w-sm">
+                <p className="mb-3">
+                  El boletín fue escaneado y se detectaron posibles coincidencias con tus marcas custodiadas. 
+                  Consultá el informe detallado para conocer las similitudes fonéticas o visuales encontradas.
+                </p>
+                <p className="mb-3">
+                  📄 También generamos un segundo informe con las marcas mixtas (tipo M) que requieren revisión manual. 
+                  Estas marcas incluyen elementos visuales que no pueden ser analizados automáticamente.
+                </p>
+                <p className="font-medium">
+                  👉 Descargá ambos archivos desde los botones a continuación:
+                </p>
+              </div>
+            </div>
+
+            {/* Statistics */}
+            <div className="w-full bg-gray-50 rounded-lg p-4 mb-6">
+              <div className="grid grid-cols-2 gap-4 text-center">
+                <div>
+                  <div className="text-2xl font-bold text-indigo-600">{scanResults.denominativas.count}</div>
+                  <div className="text-sm text-gray-600">Marcas denominativas</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-orange-600">{scanResults.mixtas.count}</div>
+                  <div className="text-sm text-gray-600">Marcas mixtas</div>
+                </div>
+              </div>
+              {scanResults.denominativas.matches > 0 && (
+                <div className="mt-3 text-center">
+                  <div className="text-lg font-semibold text-red-600">
+                    ⚠️ {scanResults.denominativas.matches} posibles coincidencias detectadas
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Download Buttons */}
+            <div className="w-full space-y-3">
+              <button
+                onClick={() => handleDownloadPdf(scanResults.denominativas.pdf, 'informe-denominativas.pdf')}
+                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaDownload />
+                Informe de coincidencias (denominativas)
+              </button>
+              <button
+                onClick={() => alert('Nuestro equipo está trabajando para mejorar la experiencia en la búsqueda y análisis de marcas mixtas, debido a que el INPI no proporciona una base de datos clara y concisa.')}
+                className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
+              >
+                <FaDownload />
+                Listado de marcas mixtas (revisión manual)
+              </button>
+            </div>
+
+            {/* Close button */}
+            <button
+              onClick={onClose}
+              className="mt-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
+            >
+              Cerrar
+            </button>
+          </>
+        )}
+      </motion.div>
+    </div>
+  );
 }
 
 export default function DashboardClient() {
@@ -44,7 +209,6 @@ export default function DashboardClient() {
   const [selectedMarcaForDetail, setSelectedMarcaForDetail] = useState<Marca | null>(null);
   const [showBlur, setShowBlur] = useState(false);
   const [boletinLoading, setBoletinLoading] = useState(false);
-  const [boletinError, setBoletinError] = useState<string | null>(null);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
   const { data: session } = useSession();
 
@@ -53,12 +217,39 @@ export default function DashboardClient() {
   const [selectedDateType, setSelectedDateType] = useState<DateType>('fechaDeRenovacion');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30');
 
+  // New: Modal for boletin scan
+  const [boletinScanModalOpen, setBoletinScanModalOpen] = useState(false);
+  const [boletinScanLoading, setBoletinScanLoading] = useState(false);
+  const [boletinScanResults, setBoletinScanResults] = useState<{
+    denominativas: { count: number; matches: number; pdf: string };
+    mixtas: { count: number; pdf: string };
+  } | null>(null);
+
+  // Subscription state
+  const [isPremium, setIsPremium] = useState(false);
+
   console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
   
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
     Array.isArray(marca.oposicion) && marca.oposicion.length > 0
   ).length;
+
+  useEffect(() => {
+    const fetchSubscription = async () => {
+      if (!session?.user?.email) return;
+      try {
+        const response = await fetch('/api/subscription/status');
+        if (response.ok) {
+          const data = await response.json();
+          setIsPremium(['essential', 'pro', 'master'].includes(data.subscription?.tier));
+        }
+      } catch {
+        setIsPremium(false);
+      }
+    };
+    fetchSubscription();
+  }, [session?.user?.email]);
 
   const fetchMarcas = useCallback(async () => {
     if (typeof window === 'undefined') return;
@@ -656,7 +847,6 @@ export default function DashboardClient() {
 
   const handleDownloadBoletin = async () => {
     setBoletinLoading(true);
-    setBoletinError(null);
     try {
       const res = await fetch('/api/boletin');
       const data = await res.json();
@@ -675,7 +865,7 @@ export default function DashboardClient() {
       link.remove();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al descargar el boletín';
-      setBoletinError(errorMessage);
+      console.error('Error downloading boletin:', errorMessage);
     } finally {
       setBoletinLoading(false);
     }
@@ -692,7 +882,7 @@ export default function DashboardClient() {
               <p className="mt-2 text-sm text-gray-600">
                 Gestiona tus marcas comerciales de manera eficiente
               </p>
-              <div className="mt-6">
+              <div className="mt-6 flex flex-row gap-3">
                 <button
                   className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 flex items-center gap-2 disabled:opacity-60"
                   type="button"
@@ -702,10 +892,24 @@ export default function DashboardClient() {
                   <FaDownload />
                   {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
                 </button>
-                {boletinError && (
-                  <span className="text-red-600 text-xs ml-2">{boletinError}</span>
-                )}
+                <button
+                  className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2
+                    ${isPremium ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  type="button"
+                  onClick={isPremium ? () => setBoletinScanModalOpen(true) : undefined}
+                  disabled={!isPremium}
+                >
+                  {isPremium ? <FaSearch /> : <FaLock />}
+                  Escanear boletín
+                </button>
               </div>
+              {/* Sutil mensaje para usuarios free */}
+              {!isPremium && (
+                <p className="text-xs text-gray-500 italic mt-2">
+                  Esta función está disponible en el plan Premium.{' '}
+                  <span className="text-indigo-600 hover:underline cursor-pointer" onClick={handleUpgradeClick}>Ver planes</span>
+                </p>
+              )}
             </div>
             <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
@@ -989,6 +1193,65 @@ export default function DashboardClient() {
 
       {/* Growth Banner */}
       <GrowthBanner />
+
+      {/* Modal for boletin scan */}
+      <AnimatePresence>
+        {boletinScanModalOpen && (
+          <BoletinScanModal
+            isOpen={boletinScanModalOpen}
+            onClose={() => {
+              setBoletinScanModalOpen(false);
+              setBoletinScanResults(null);
+            }}
+            isPremium={isPremium}
+            onFileChange={async (file) => {
+              setBoletinScanLoading(true);
+              setBoletinScanResults(null);
+              
+              try {
+                console.log('📁 Uploading file:', file.name, 'Size:', file.size);
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const response = await fetch('/api/boletin/scan', {
+                  method: 'POST',
+                  body: formData,
+                });
+                
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                  const errorText = await response.text();
+                  console.error('❌ API Error Response:', errorText);
+                  
+                  let errorMessage = 'Error al procesar el boletín';
+                  try {
+                    const errorData = JSON.parse(errorText);
+                    errorMessage = errorData.error || errorMessage;
+                  } catch (parseError) {
+                    console.error('❌ Could not parse error response:', parseError);
+                  }
+                  
+                  throw new Error(errorMessage);
+                }
+                
+                const data = await response.json();
+                console.log('✅ API Response:', data);
+                setBoletinScanResults(data.data);
+                toast.success('Boletín analizado exitosamente');
+              } catch (error) {
+                console.error('❌ Error scanning boletin:', error);
+                toast.error(error instanceof Error ? error.message : 'Error al escanear el boletín');
+              } finally {
+                setBoletinScanLoading(false);
+              }
+            }}
+            loading={boletinScanLoading}
+            scanResults={boletinScanResults}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 } 
