@@ -114,7 +114,6 @@ export async function POST(request: NextRequest) {
     // Parse PDF (using Python microservice)
     console.log('🔍 Sending PDF to Python microservice...');
     let pdfText: string;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let pdfImages: unknown[] = [];
     try {
       const form = new FormData();
@@ -128,7 +127,6 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         throw new Error('Python microservice error: ' + (await response.text()));
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await response.json() as { pages: string[], images: unknown[] };
       pdfText = (data.pages || []).join('\n');
       pdfImages = data.images || [];
@@ -204,7 +202,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractMarcaEntries(pdfText: string, pdfImages: unknown[] = []): MarcaEntry[] {
   const entries: MarcaEntry[] = [];
   const lines = pdfText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
@@ -245,8 +242,9 @@ function extractMarcaEntries(pdfText: string, pdfImages: unknown[] = []): MarcaE
           currentEntry.tipo = 'M';
           currentEntry.marca = 'MARCA MIXTA';
           // Assign image if available
-          if ((pdfImages as any)[currentPageIndex] && (pdfImages as any)[currentPageIndex][currentImageIndex]) {
-            currentEntry.imagen = (pdfImages as any)[currentPageIndex][currentImageIndex].data;
+          const imagesByPage = pdfImages as Array<Array<{ data: string }>>;
+          if (imagesByPage[currentPageIndex] && imagesByPage[currentPageIndex][currentImageIndex]) {
+            currentEntry.imagen = imagesByPage[currentPageIndex][currentImageIndex].data;
             currentEntry.pageIndex = currentPageIndex;
             currentEntry.imageIndex = currentImageIndex;
             currentImageIndex++;
