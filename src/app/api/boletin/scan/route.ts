@@ -4,8 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
 import similarity from 'string-similarity-js';
 import jsPDF from 'jspdf';
-import pdfParse from 'pdf-parse';
-import { PDFDocument } from 'pdf-lib';
 import fetch from 'node-fetch';
 import FormData from 'form-data';
 
@@ -42,37 +40,6 @@ function simplePhoneticSimilarity(str1: string, str2: string): number {
   const phonetic2 = normalize(str2);
   
   return phonetic1 === phonetic2 ? 0.7 : 0;
-}
-
-// Mock PDF text extraction (for demonstration with real format)
-function extractTextFromPDFMock(buffer: Buffer): string {
-  // This is a mock implementation that returns sample boletin text in the real INPI format
-  return `
-(21) Acta 4510769 - (51) Clase 21
-(40) D (54) THERMACELL
-(22) 20/05/2025 09:49:00.117 - (73) THERMACELL REPELLENTS, INC.
-- US *
-(57) SOLAMENTE REPELENTES DE PLAGAS ULTRASÓNICOS ;TRAMPAS ELÉCTRICAS PARA INSECTOS ;TRAMPAS PARA INSECTOS ;TRAMPAS PARA INSECTOS (NO
-ELÉCTRICAS -) ;TERMINOS INGRESADOS MANUALMENTE: DIFUSORES ELÉCTRICOS PARA REPELENTES DE INSECTOS; DIFUSORES DE ENCHUFE PARA REPELENTES DE
-MOSQUITOS; RECIPIENTES DIFUSORES PARA REPELENTES DE INSECTOS; APARATOS ELÉCTRICOS PARA ATRAER Y REPELER INSECTOS; DISPOSITIVOS ELÉCTRICOS PARA
-ATRAER Y REPELER INSECTOS; DISPOSITIVO CON UN ELEMENTO CALEFACTOR PARA VOLATILIZAR Y DISPENSAR REPELENTE DE INSECTOS, A SABER, DIFUSORES
-ELÉCTRICOS PARA REPELENTES DE INSECTOS
-(74) 2163 - (44)25/06/2025
-
-(21) Acta 4510661 - (51) Clase 40
-(40) M (54)
-(22) 20/05/2025 09:54:00.767 - (73) GALVAN ABRIL MARIA - AR *
-(57) SOLAMENTE GRABADO ;GRABADO LÁSER ;SERVICIOS DE FOTOCOMPOSICIÓN ;SERVICIOS DE FOTOGRABADO ;SERVICIOS DE TRAZADO
-POR LÁSER ;TERMINOS INGRESADOS MANUALMENTE: SERVICIOS DE SUBLIMACIÓN E IMPRESIÓN SOBRE PRODUCTOS
-(74) Part.
-- (44)25/06/2025
-
-(21) Acta 4510662 - (51) Clase 9
-(40) D (54) INTIMATES
-(22) 20/05/2025 10:15:00.123 - (73) EMPRESA EJEMPLO S.A. - AR *
-(57) SOLAMENTE SOFTWARE DE GESTIÓN ;APLICACIONES MÓVILES ;SISTEMAS INFORMÁTICOS
-(74) 1234 - (44)25/06/2025
-  `;
 }
 
 export async function POST(request: NextRequest) {
@@ -147,7 +114,8 @@ export async function POST(request: NextRequest) {
     // Parse PDF (using Python microservice)
     console.log('🔍 Sending PDF to Python microservice...');
     let pdfText: string;
-    let pdfImages: any[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let pdfImages: unknown[] = [];
     try {
       const form = new FormData();
       form.append('file', buffer, { filename: (file as any).name || 'boletin.pdf' });
@@ -160,7 +128,8 @@ export async function POST(request: NextRequest) {
       if (!response.ok) {
         throw new Error('Python microservice error: ' + (await response.text()));
       }
-      const data = await response.json() as { pages: string[], images: any[] };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data = await response.json() as { pages: string[], images: unknown[] };
       pdfText = (data.pages || []).join('\n');
       pdfImages = data.images || [];
       console.log('✅ PDF text received from Python, length:', pdfText.length);
@@ -235,7 +204,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function extractMarcaEntries(pdfText: string, pdfImages: any[] = []): MarcaEntry[] {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractMarcaEntries(pdfText: string, pdfImages: unknown[] = []): MarcaEntry[] {
   const entries: MarcaEntry[] = [];
   const lines = pdfText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
   
@@ -275,8 +245,8 @@ function extractMarcaEntries(pdfText: string, pdfImages: any[] = []): MarcaEntry
           currentEntry.tipo = 'M';
           currentEntry.marca = 'MARCA MIXTA';
           // Assign image if available
-          if (pdfImages[currentPageIndex] && pdfImages[currentPageIndex][currentImageIndex]) {
-            currentEntry.imagen = pdfImages[currentPageIndex][currentImageIndex].data;
+          if ((pdfImages as any)[currentPageIndex] && (pdfImages as any)[currentPageIndex][currentImageIndex]) {
+            currentEntry.imagen = (pdfImages as any)[currentPageIndex][currentImageIndex].data;
             currentEntry.pageIndex = currentPageIndex;
             currentEntry.imageIndex = currentImageIndex;
             currentImageIndex++;
