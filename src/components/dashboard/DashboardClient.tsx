@@ -866,6 +866,7 @@ export default function DashboardClient() {
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Error al descargar el boletín';
       console.error('Error downloading boletin:', errorMessage);
+      toast.error(errorMessage);
     } finally {
       setBoletinLoading(false);
     }
