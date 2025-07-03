@@ -8,6 +8,7 @@ export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [resetUrl, setResetUrl] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +33,9 @@ export default function ForgotPasswordForm() {
 
       if (response.ok) {
         setSent(true);
+        if (data.resetUrl) {
+          setResetUrl(data.resetUrl);
+        }
         toast.success('Se ha enviado un enlace de recuperación a tu email');
       } else {
         toast.error(data.error || 'Error al enviar el email de recuperación');
@@ -61,11 +65,27 @@ export default function ForgotPasswordForm() {
           Hemos enviado un enlace de recuperación a <strong>{email}</strong>. 
           Revisa tu bandeja de entrada y sigue las instrucciones.
         </p>
+        {resetUrl && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <p className="text-sm text-blue-800 mb-2">
+              <strong>Desarrollo:</strong> Enlace de recuperación:
+            </p>
+            <a 
+              href={resetUrl}
+              className="text-sm text-blue-600 hover:text-blue-800 break-all"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {resetUrl}
+            </a>
+          </div>
+        )}
         <div className="space-y-3">
           <button
             onClick={() => {
               setSent(false);
               setEmail('');
+              setResetUrl('');
             }}
             className="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >

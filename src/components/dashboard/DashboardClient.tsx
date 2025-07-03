@@ -382,13 +382,13 @@ export default function DashboardClient() {
       // Ensure titulares is properly structured for editing
       titulares: marca.titulares && Array.isArray(marca.titulares) && marca.titulares.length > 0
         ? marca.titulares.map(t => ({
-            id: t.id || Math.random().toString(36).substr(2, 9),
+            id: t.id || `${t.email || t.fullName || 'titular'}-${marca.id}`,
             fullName: t.fullName || '',
             email: t.email || '',
             phone: t.phone || ''
           }))
         : [{
-            id: Math.random().toString(36).substr(2, 9),
+            id: `${marca.titular?.email || marca.titular?.fullName || 'default'}-${marca.id}`,
             fullName: marca.titular?.fullName || '',
             email: marca.titular?.email || '',
             phone: marca.titular?.phone || ''

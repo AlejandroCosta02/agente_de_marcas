@@ -4,8 +4,15 @@ import { FaShieldAlt, FaDatabase, FaUserShield } from 'react-icons/fa';
 import LegalNavbar from '@/components/LegalNavbar';
 import Footer from '@/components/Footer';
 import SmartBackButton from '@/components/SmartBackButton';
+import React, { useState, useEffect } from 'react';
 
 export default function PrivacyClient() {
+  const [lastUpdate, setLastUpdate] = useState('');
+
+  useEffect(() => {
+    setLastUpdate(new Date().toLocaleDateString('es-ES'));
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <LegalNavbar />
@@ -26,7 +33,7 @@ export default function PrivacyClient() {
               </div>
               
               <p className="text-gray-600 mb-6">
-                <strong>Última actualización:</strong> {new Date().toLocaleDateString('es-ES')}
+                <strong>Última actualización:</strong> {lastUpdate}
               </p>
 
               <div className="space-y-8">

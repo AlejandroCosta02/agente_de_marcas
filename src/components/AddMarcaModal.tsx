@@ -34,7 +34,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     vencimiento: '',
     djumt: '',
     titulares: [{
-      id: Math.random().toString(36).substr(2, 9),
+      id: 'new-titular-1',
       fullName: '',
       email: '',
       phone: ''
@@ -108,18 +108,18 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       
       setFormData({
         marca: initialData.marca,
-        renovar: initialData.renovar ? formatDateToDDMMYYYY(initialData.renovar) : formatDateToDDMMYYYY(new Date().toISOString()),
-        vencimiento: initialData.vencimiento ? formatDateToDDMMYYYY(initialData.vencimiento) : formatDateToDDMMYYYY(new Date().toISOString()),
+        renovar: initialData.renovar ? formatDateToDDMMYYYY(initialData.renovar) : '',
+        vencimiento: initialData.vencimiento ? formatDateToDDMMYYYY(initialData.vencimiento) : '',
         djumt: initialData.djumt ? formatDateToDDMMYYYY(initialData.djumt) : '',
         titulares: initialData.titulares && initialData.titulares.length > 0 
           ? initialData.titulares.map(t => ({
-              id: t.id || Math.random().toString(36).substr(2, 9),
+              id: t.id || `${t.email || t.fullName || 'titular'}-${initialData.id}`,
               fullName: t.fullName || '',
               email: t.email || '',
               phone: t.phone || ''
             }))
           : [{
-              id: Math.random().toString(36).substr(2, 9),
+              id: `default-titular-${initialData.id}`,
               fullName: '',
               email: '',
               phone: ''
@@ -133,14 +133,13 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       setSelectedClases(initialData.clases || []);
     } else {
       // Reset form when opening for a new marca
-      const today = formatDateToDDMMYYYY(new Date().toISOString());
       setFormData({
         marca: '',
-        renovar: today,
-        vencimiento: today,
+        renovar: '',
+        vencimiento: '',
         djumt: '',
         titulares: [{
-          id: Math.random().toString(36).substr(2, 9),
+          id: 'new-titular-1',
           fullName: '',
           email: '',
           phone: ''
@@ -155,6 +154,18 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     }
     setErrors({});
   }, [initialData, isOpen]);
+
+  // Set default dates after initial render to avoid hydration mismatch
+  useEffect(() => {
+    if (!initialData && isOpen) {
+      const today = formatDateToDDMMYYYY(new Date().toISOString());
+      setFormData(prev => ({
+        ...prev,
+        renovar: today,
+        vencimiento: today
+      }));
+    }
+  }, [isOpen, initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -209,7 +220,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const handleAddAnotacion = (anotacion: Omit<Anotacion, 'id'>) => {
     const newAnotacion = {
       ...anotacion,
-      id: Math.random().toString(36).substr(2, 9)
+      id: `anotacion-${formData.anotacion.length + 1}`
     };
     setFormData(prev => ({
       ...prev,
@@ -238,7 +249,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
   const handleAddOposicion = (oposicion: Omit<Oposicion, 'id'>) => {
     const newOposicion = {
       ...oposicion,
-      id: Math.random().toString(36).substr(2, 9)
+      id: `oposicion-${formData.oposicion.length + 1}`
     };
     setFormData(prev => ({
       ...prev,
@@ -269,7 +280,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
     setFormData(prev => ({
       ...prev,
       titulares: [...prev.titulares, {
-        id: Math.random().toString(36).substr(2, 9),
+        id: `titular-${prev.titulares.length + 1}`,
         fullName: '',
         email: '',
         phone: ''

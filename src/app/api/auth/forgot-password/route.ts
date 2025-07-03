@@ -52,38 +52,50 @@ export async function POST(request: NextRequest) {
       console.log('Password reset URL:', resetUrl);
       console.log('Reset token:', resetToken);
       
-      // Email sending with nodemailer
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: Number(process.env.EMAIL_PORT),
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        secure: false, // true for port 465, false for 587
-      });
-      
-      await transporter.sendMail({
-        from: process.env.EMAIL_FROM,
-        to: user.email,
-        subject: 'Recuperación de contraseña - Agente de Marcas',
-        html: `
-          <h1>Recuperación de contraseña</h1>
-          <p>Hola ${user.name || 'usuario'},</p>
-          <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
-          <a href="${resetUrl}">Restablecer contraseña</a>
-          <p>Este enlace expirará en 1 hora.</p>
-          <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
-        `
-      });
+      // Check if email configuration is available
+      if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        // Email sending with nodemailer
+        const transporter = nodemailer.createTransport({
+          host: process.env.EMAIL_HOST,
+          port: Number(process.env.EMAIL_PORT),
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+          secure: false, // true for port 465, false for 587
+        });
+        
+        await transporter.sendMail({
+          from: process.env.EMAIL_FROM,
+          to: user.email,
+          subject: 'Recuperación de contraseña - Agente de Marcas',
+          html: `
+            <h1>Recuperación de contraseña</h1>
+            <p>Hola ${user.name || 'usuario'},</p>
+            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+            <a href="${resetUrl}">Restablecer contraseña</a>
+            <p>Este enlace expirará en 1 hora.</p>
+            <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
+          `
+        });
+        console.log('Password reset email sent successfully');
+      } else {
+        console.log('Email configuration not found. In development, you can use the reset URL above.');
+      }
 
     } catch (emailError) {
       console.error('Email sending error:', emailError);
       // Don't fail the request if email fails, just log it
     }
 
+    // In development, return the reset URL for testing
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     return NextResponse.json(
-      { message: 'Si el email existe, se enviará un enlace de recuperación' },
+      { 
+        message: 'Si el email existe, se enviará un enlace de recuperación',
+        ...(isDevelopment && { resetUrl, resetToken })
+      },
       { status: 200 }
     );
 
