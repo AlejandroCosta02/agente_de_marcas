@@ -54,18 +54,35 @@ export async function POST(request: NextRequest) {
       
       // Check if email configuration is available
       if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        console.log('Email configuration found:', {
+          host: process.env.EMAIL_HOST,
+          port: process.env.EMAIL_PORT,
+          user: process.env.EMAIL_USER,
+          from: process.env.EMAIL_FROM,
+          to: user.email
+        });
+        
         // Email sending with nodemailer
         const transporter = nodemailer.createTransport({
           host: process.env.EMAIL_HOST,
           port: Number(process.env.EMAIL_PORT),
+          secure: false, // true for port 465, false for 587
           auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS,
           },
-          secure: false, // true for port 465, false for 587
+          tls: {
+            rejectUnauthorized: false
+          },
+          debug: true, // Enable debug output
+          logger: true // Log to console
         });
         
-        await transporter.sendMail({
+        // Verify transporter configuration
+        await transporter.verify();
+        console.log('Email transporter verified successfully');
+        
+        const mailResult = await transporter.sendMail({
           from: process.env.EMAIL_FROM,
           to: user.email,
           subject: 'Recuperación de contraseña - Agente de Marcas',
@@ -78,8 +95,17 @@ export async function POST(request: NextRequest) {
             <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
           `
         });
-        console.log('Password reset email sent successfully');
+        console.log('Password reset email sent successfully:', {
+          messageId: mailResult.messageId,
+          response: mailResult.response
+        });
       } else {
+        console.log('Email configuration missing:', {
+          hasHost: !!process.env.EMAIL_HOST,
+          hasUser: !!process.env.EMAIL_USER,
+          hasPass: !!process.env.EMAIL_PASS,
+          hasFrom: !!process.env.EMAIL_FROM
+        });
         console.log('Email configuration not found. In development, you can use the reset URL above.');
       }
 
