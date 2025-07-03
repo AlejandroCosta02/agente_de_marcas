@@ -173,8 +173,6 @@ export async function POST(request: NextRequest) {
     }
 
     // In development, return the reset URL for testing
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
     return NextResponse.json(
       { 
         message: 'Si el email existe, se enviará un enlace de recuperación',
