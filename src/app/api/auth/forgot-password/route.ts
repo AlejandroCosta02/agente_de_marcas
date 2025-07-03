@@ -3,6 +3,40 @@ import { createPool } from '@vercel/postgres';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
+// Function to send email via Brevo API
+async function sendEmailViaBrevoAPI(to: string, subject: string, htmlContent: string) {
+  const apiKey = process.env.EMAIL_PASS; // Use the same env var but as API key
+  
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      'api-key': apiKey || ''
+    },
+    body: JSON.stringify({
+      sender: {
+        name: 'Agente de Marcas',
+        email: process.env.EMAIL_FROM
+      },
+      to: [
+        {
+          email: to
+        }
+      ],
+      subject: subject,
+      htmlContent: htmlContent
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    throw new Error(`Brevo API error: ${response.status} - ${errorData}`);
+  }
+
+  return await response.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email } = await request.json();
@@ -52,61 +86,85 @@ export async function POST(request: NextRequest) {
       console.log('Password reset URL:', resetUrl);
       console.log('Reset token:', resetToken);
       
-      // Check if email configuration is available
-      if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-        console.log('Email configuration found:', {
-          host: process.env.EMAIL_HOST,
-          port: process.env.EMAIL_PORT,
-          user: process.env.EMAIL_USER,
-          from: process.env.EMAIL_FROM,
-          to: user.email
-        });
+      // Try Brevo API first (using EMAIL_PASS as API key)
+      try {
+        console.log('Attempting to send email via Brevo API...');
+        const emailContent = `
+          <h1>Recuperación de contraseña</h1>
+          <p>Hola ${user.name || 'usuario'},</p>
+          <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+          <a href="${resetUrl}">Restablecer contraseña</a>
+          <p>Este enlace expirará en 1 hora.</p>
+          <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
+        `;
         
-        // Email sending with nodemailer
-        const transporter = nodemailer.createTransport({
-          host: process.env.EMAIL_HOST,
-          port: Number(process.env.EMAIL_PORT),
-          secure: false, // true for port 465, false for 587
-          auth: {
+        const apiResult = await sendEmailViaBrevoAPI(
+          user.email,
+          'Recuperación de contraseña - Agente de Marcas',
+          emailContent
+        );
+        
+        console.log('Password reset email sent successfully via Brevo API:', apiResult);
+        
+      } catch (apiError) {
+        console.log('Brevo API failed, trying SMTP...', apiError);
+        
+        // Fallback to SMTP
+        if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+          console.log('Email configuration found:', {
+            host: process.env.EMAIL_HOST,
+            port: process.env.EMAIL_PORT,
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-          tls: {
-            rejectUnauthorized: false
-          },
-          debug: true, // Enable debug output
-          logger: true // Log to console
-        });
-        
-        // Verify transporter configuration
-        await transporter.verify();
-        console.log('Email transporter verified successfully');
-        
-        const mailResult = await transporter.sendMail({
-          from: process.env.EMAIL_FROM,
-          to: user.email,
-          subject: 'Recuperación de contraseña - Agente de Marcas',
-          html: `
-            <h1>Recuperación de contraseña</h1>
-            <p>Hola ${user.name || 'usuario'},</p>
-            <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
-            <a href="${resetUrl}">Restablecer contraseña</a>
-            <p>Este enlace expirará en 1 hora.</p>
-            <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
-          `
-        });
-        console.log('Password reset email sent successfully:', {
-          messageId: mailResult.messageId,
-          response: mailResult.response
-        });
-      } else {
-        console.log('Email configuration missing:', {
-          hasHost: !!process.env.EMAIL_HOST,
-          hasUser: !!process.env.EMAIL_USER,
-          hasPass: !!process.env.EMAIL_PASS,
-          hasFrom: !!process.env.EMAIL_FROM
-        });
-        console.log('Email configuration not found. In development, you can use the reset URL above.');
+            from: process.env.EMAIL_FROM,
+            to: user.email
+          });
+          
+          // Email sending with nodemailer
+          const transporter = nodemailer.createTransport({
+            host: process.env.EMAIL_HOST,
+            port: Number(process.env.EMAIL_PORT),
+            secure: false, // true for port 465, false for 587
+            auth: {
+              user: process.env.EMAIL_USER,
+              pass: process.env.EMAIL_PASS,
+            },
+            tls: {
+              rejectUnauthorized: false
+            },
+            debug: true, // Enable debug output
+            logger: true // Log to console
+          });
+          
+          // Verify transporter configuration
+          await transporter.verify();
+          console.log('Email transporter verified successfully');
+          
+          const mailResult = await transporter.sendMail({
+            from: process.env.EMAIL_FROM,
+            to: user.email,
+            subject: 'Recuperación de contraseña - Agente de Marcas',
+            html: `
+              <h1>Recuperación de contraseña</h1>
+              <p>Hola ${user.name || 'usuario'},</p>
+              <p>Has solicitado restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+              <a href="${resetUrl}">Restablecer contraseña</a>
+              <p>Este enlace expirará en 1 hora.</p>
+              <p>Si no solicitaste este cambio, puedes ignorar este email.</p>
+            `
+          });
+          console.log('Password reset email sent successfully via SMTP:', {
+            messageId: mailResult.messageId,
+            response: mailResult.response
+          });
+        } else {
+          console.log('Email configuration missing:', {
+            hasHost: !!process.env.EMAIL_HOST,
+            hasUser: !!process.env.EMAIL_USER,
+            hasPass: !!process.env.EMAIL_PASS,
+            hasFrom: !!process.env.EMAIL_FROM
+          });
+          console.log('Email configuration not found. In development, you can use the reset URL above.');
+        }
       }
 
     } catch (emailError) {
