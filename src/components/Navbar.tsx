@@ -5,10 +5,27 @@ import { useRouter } from 'next/navigation';
 import { FaUserCircle } from 'react-icons/fa';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect, useState } from 'react';
 
 export default function Navbar() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const [userName, setUserName] = useState<string>('Usuario');
+  const [mounted, setMounted] = useState(false);
+
+  // Only render on client side to prevent hydration mismatches
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Update userName when session changes
+  useEffect(() => {
+    if (session?.user?.name) {
+      setUserName(session.user.name);
+    } else if (status === 'authenticated') {
+      setUserName('Usuario');
+    }
+  }, [session?.user?.name, status]);
 
   const handleLogout = async () => {
     try {
@@ -33,8 +50,30 @@ export default function Navbar() {
     router.push('/perfil');
   };
 
+  // Don't render until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <nav className="bg-black/20 backdrop-blur-md border-b border-white/10 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+              <Image src="/logo-d.svg" alt="Logo" width={40} height={40} className="h-10 w-10" />
+              <span className="text-xl font-bold" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+                <span className="text-white">Gestiona tus </span>
+                <span className="text-blue-400">Marcas</span>
+              </span>
+            </Link>
+            <div className="flex items-center space-x-4">
+              <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
+            </div>
+          </div>
+        </div>
+      </nav>
+    );
+  }
+
   return (
-    <nav key={`${status}-${session?.user?.name}`} className="bg-black/20 backdrop-blur-md border-b border-white/10 shadow-lg">
+    <nav className="bg-black/20 backdrop-blur-md border-b border-white/10 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
@@ -55,7 +94,7 @@ export default function Navbar() {
                   style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                 >
                   <FaUserCircle className="mr-2 h-5 w-5 text-blue-400 group-hover:scale-110 transition-transform duration-200" />
-                  <span>{session?.user?.name || 'Usuario'}</span>
+                  <span>{userName}</span>
                 </button>
                 <button
                   onClick={handleLogout}

@@ -70,8 +70,12 @@ export default function PerfilPage() {
         throw new Error("Error al guardar el perfil");
       }
       
-      // Force session update to refresh navbar
-      await update();
+      // Update the session with new user data
+      await update({
+        user: {
+          name: profile.name
+        }
+      });
       
       toast.success("Perfil actualizado");
       
@@ -117,6 +121,7 @@ export default function PerfilPage() {
                 placeholder="Nombre completo"
                 value={profile.name ?? ""}
                 onChange={handleChange}
+                maxLength={30}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
                 required
               />
@@ -142,18 +147,21 @@ export default function PerfilPage() {
                 placeholder="Dirección"
                 value={profile.address ?? ""}
                 onChange={handleChange}
+                maxLength={100}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
               />
             </div>
             <div className="flex items-center gap-2">
               <FaPhone className="text-gray-400" />
               <input
-                type="text"
+                type="tel"
                 name="contact_number"
                 placeholder="Teléfono de contacto"
                 value={profile.contact_number ?? ""}
                 onChange={handleChange}
+                maxLength={20}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
+                required
               />
             </div>
             <div className="flex items-center gap-2">
@@ -164,7 +172,9 @@ export default function PerfilPage() {
                 placeholder="Número de agente"
                 value={profile.agent_number ?? ""}
                 onChange={handleChange}
+                maxLength={20}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
+                required
               />
             </div>
             <div className="flex items-center gap-2">
@@ -175,7 +185,9 @@ export default function PerfilPage() {
                 placeholder="Provincia"
                 value={profile.province ?? ""}
                 onChange={handleChange}
+                maxLength={50}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
+                required
               />
             </div>
             <div className="flex items-center gap-2">
@@ -186,7 +198,9 @@ export default function PerfilPage() {
                 placeholder="Código postal"
                 value={profile.zip_code ?? ""}
                 onChange={handleChange}
+                maxLength={10}
                 className="flex-1 px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-400 text-black"
+                required
               />
             </div>
             <button

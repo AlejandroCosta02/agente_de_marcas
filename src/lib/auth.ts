@@ -123,8 +123,14 @@ export const authOptions: NextAuthOptions = {
     }
   },
   callbacks: {
-    async jwt({ token, user }) {
-      console.log('JWT callback:', { hasUser: !!user, tokenId: token.id });
+    async jwt({ token, user, trigger, session }) {
+      console.log('JWT callback:', { hasUser: !!user, tokenId: token.id, trigger });
+      
+      // Handle session update
+      if (trigger === "update" && session?.user?.name) {
+        token.name = session.user.name;
+      }
+      
       if (user) {
         token.id = user.id;
         token.email = user.email;

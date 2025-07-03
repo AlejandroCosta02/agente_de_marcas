@@ -906,7 +906,6 @@ export default function DashboardClient() {
                 </button>
                 */}
               </div>
-              {/* Sutil mensaje para usuarios free */}
               {/*
               {!isPremium && (
                 <p className="text-xs text-gray-500 italic mt-2">

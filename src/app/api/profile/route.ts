@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
+import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
 
@@ -13,7 +13,7 @@ export async function GET() {
 
     const pool = createPool();
     const { rows } = await pool.query(
-      `SELECT id, name, email FROM users WHERE email = $1`,
+      `SELECT id, name, email, address, contact_number, agent_number, province, zip_code FROM users WHERE email = $1`,
       [session.user.email]
     );
 
@@ -49,13 +49,51 @@ export async function PUT(req: NextRequest) {
       );
     }
 
+    if (!data.contact_number) {
+      return NextResponse.json(
+        { error: 'El teléfono de contacto es requerido' },
+        { status: 400 }
+      );
+    }
+
+    if (!data.agent_number) {
+      return NextResponse.json(
+        { error: 'El número de agente es requerido' },
+        { status: 400 }
+      );
+    }
+
+    if (!data.province) {
+      return NextResponse.json(
+        { error: 'La provincia es requerida' },
+        { status: 400 }
+      );
+    }
+
+    if (!data.zip_code) {
+      return NextResponse.json(
+        { error: 'El código postal es requerido' },
+        { status: 400 }
+      );
+    }
+
     await pool.query(
       `UPDATE users SET
         name = $1,
+        contact_number = $2,
+        agent_number = $3,
+        province = $4,
+        zip_code = $5,
+        address = $6,
         updated_at = NOW()
-       WHERE email = $2`,
+       WHERE email = $7`,
       [
         data.name,
+        data.contact_number,
+        data.agent_number,
+        data.province,
+        data.zip_code,
+        data.address || null,
         session.user.email,
       ]
     );
