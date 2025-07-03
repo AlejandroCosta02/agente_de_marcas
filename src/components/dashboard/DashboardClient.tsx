@@ -1037,7 +1037,28 @@ export default function DashboardClient() {
                     Agregar Marca
                   </motion.button>
                 </div>
-                <div className="flow-root">
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-4">
+                  {getFilteredMarcas().map((marca) => {
+                    const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
+                      ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
+                      : (marca.titular?.fullName || '');
+                    return (
+                      <div
+                        key={marca.id}
+                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        onClick={() => handleRowClick(marca)}
+                      >
+                        <div className="text-sm font-semibold text-gray-900">Marca</div>
+                        <div className="text-base text-gray-900 break-words">{truncateText(marca.marca, 30)}</div>
+                        <div className="text-sm font-semibold text-gray-500 mt-2">Titular</div>
+                        <div className="text-base text-gray-700 break-words">{titulares}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Desktop Table */}
+                <div className="hidden sm:block flow-root">
                   <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                     <div className="inline-block min-w-full align-middle">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -1053,7 +1074,6 @@ export default function DashboardClient() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                           {getFilteredMarcas().map((marca) => {
-                            // Show all titulares' full names, comma separated
                             const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
                               ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
                               : (marca.titular?.fullName || '');

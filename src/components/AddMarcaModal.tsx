@@ -391,7 +391,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 20 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="relative top-20 mx-auto p-8 border w-[600px] shadow-xl rounded-lg bg-white"
+              className="relative top-20 mx-auto p-4 sm:p-8 border w-full max-w-[95vw] sm:w-[600px] shadow-xl rounded-lg bg-white"
             >
               <div className="mt-2">
                 <h3 className="text-2xl font-semibold text-gray-900 mb-6">
@@ -426,7 +426,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                     </p>}
                   </div>
 
-                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6 gap-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Fecha de Renovación <span className="text-red-500">*</span>
@@ -714,13 +714,13 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
                   <div className="mt-6">
                     {selectedClases.length > 0 && (
                       <div className="mb-4">
-                        <div className="grid grid-cols-3 gap-4 mb-2">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-4 gap-y-2 mb-2">
                           <span className="font-semibold text-gray-900">Clase</span>
                           <span className="font-semibold text-gray-900">Acta n.º <span className="text-red-500">*</span></span>
                           <span className="font-semibold text-gray-900">Resolución</span>
                         </div>
                         {selectedClases.map((clase: number) => (
-                          <div key={clase} className="grid grid-cols-3 gap-4 mb-2 items-center">
+                          <div key={clase} className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:gap-4 gap-y-2 mb-2 items-center">
                             <span className="text-gray-800">Clase {clase}</span>
                             <input
                               type="text"
