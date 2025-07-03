@@ -355,6 +355,10 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
       }
     });
 
+    if (!selectedClases || selectedClases.length === 0) {
+      newErrors.clases = 'Debe seleccionar al menos una clase';
+    }
+
     return newErrors;
   };
 

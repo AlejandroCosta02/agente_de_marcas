@@ -48,6 +48,10 @@ export async function GET() {
         m.titular_telefono,
         m.anotaciones,
         m.oposicion,
+        m.clases,
+        m.class_details,
+        m.tipo_marca,
+        m.titulares,
         m.created_at as "createdAt",
         m.updated_at as "updatedAt"
       FROM marcas m
@@ -71,18 +75,20 @@ export async function GET() {
       try {
         console.log('Processing marca:', marca.id);
         
-        // Handle titulares - use old structure for backward compatibility
-        const titulares = [{
-          id: Math.random().toString(36).substr(2, 9),
-          fullName: marca.titular_nombre || '',
-          email: marca.titular_email || '',
-          phone: marca.titular_telefono || ''
-        }];
+        // Use titulares from JSONB if present, else fallback to legacy fields
+        const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
+          ? marca.titulares
+          : [{
+              id: (marca.titular_email || marca.titular_nombre || 'default-titular-id'),
+              fullName: marca.titular_nombre || '',
+              email: marca.titular_email || '',
+              phone: marca.titular_telefono || ''
+            }];
 
         return {
           ...marca,
           titulares,
-          titular: titulares[0] || { fullName: '', email: '', phone: '' }, // Keep for backward compatibility
+          titular: titulares[0] || { fullName: '', email: '', phone: '' },
           anotacion: Array.isArray(marca.anotaciones) 
             ? marca.anotaciones.map((text: string) => ({ 
                 id: Math.random().toString(36).substr(2, 9), 
@@ -95,9 +101,9 @@ export async function GET() {
             : typeof marca.oposicion === 'object' && marca.oposicion !== null
               ? Object.values(marca.oposicion)
               : [],
-          clases: [],
-          tipoMarca: 'denominativa',
-          classDetails: {},
+          clases: Array.isArray(marca.clases) ? marca.clases : [],
+          tipoMarca: marca.tipo_marca || 'denominativa',
+          classDetails: marca.class_details || {},
         };
       } catch (formatError) {
         console.error('Error formatting marca:', {
@@ -209,7 +215,18 @@ export async function PUT(request: Request) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
-    // Update the marca - store first titular in existing fields
+    // Fetch current clases if not provided
+    let clasesToSave = clases;
+    if (typeof clases === 'undefined') {
+      const current = await pool.query('SELECT clases FROM marcas WHERE id = $1', [id]);
+      if (current.rows.length > 0) {
+        clasesToSave = current.rows[0].clases || [];
+      } else {
+        clasesToSave = [];
+      }
+    }
+
+    // Update the marca - store first titular in legacy fields, all titulares as JSON
     await pool.query(`
       UPDATE marcas 
       SET 
@@ -225,8 +242,9 @@ export async function PUT(request: Request) {
         tipo_marca = $10,
         clases = $11::integer[],
         class_details = $12::jsonb,
+        titulares = $13::jsonb,
         updated_at = NOW()
-      WHERE id = $13 AND user_email = $14
+      WHERE id = $14 AND user_email = $15
       RETURNING *
     `, [
       marca,
@@ -239,8 +257,9 @@ export async function PUT(request: Request) {
       cleanedAnotaciones,
       JSON.stringify(cleanedOposicion),
       tipoMarca,
-      clases,
+      Array.isArray(clasesToSave) ? clasesToSave : [],
       JSON.stringify(classDetails || {}),
+      JSON.stringify(titulares),
       id,
       session.user.email
     ]);
@@ -307,7 +326,7 @@ export async function POST(request: Request) {
 
     const pool = createPool();
 
-    // Insert the new marca - store first titular in existing fields
+    // Insert the new marca - store first titular in legacy fields, all titulares as JSON
     const result = await pool.query(`
       INSERT INTO marcas (
         marca,
@@ -322,9 +341,10 @@ export async function POST(request: Request) {
         tipo_marca,
         clases,
         class_details,
+        titulares,
         user_email
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8::text[], $9::jsonb, $10, $11::integer[], $12::jsonb, $13
+        $1, $2, $3, $4, $5, $6, $7, $8::text[], $9::jsonb, $10, $11::integer[], $12::jsonb, $13::jsonb, $14
       )
       RETURNING id
     `, [
@@ -338,8 +358,9 @@ export async function POST(request: Request) {
       cleanedAnotaciones,
       JSON.stringify(cleanedOposicion),
       tipoMarca,
-      clases,
+      Array.isArray(clases) ? clases : [],
       JSON.stringify(classDetails || {}),
+      JSON.stringify(titulares),
       session.user.email
     ]);
 

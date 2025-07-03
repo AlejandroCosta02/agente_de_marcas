@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Toaster } from "react-hot-toast";
 import NavSwitcher from './NavSwitcher';
 
@@ -9,11 +9,15 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     // Clear any stored session data on mount
     localStorage.removeItem('selectedTimeRange');
     sessionStorage.clear();
+    setMounted(true);
   }, []);
+
+  if (!mounted) return null;
 
   return (
     <>

@@ -87,6 +87,7 @@ model marcas {
   tipo_marca       String?       @default("denominativa") @db.VarChar(255)
   clases           Int[]         @default([])
   class_details    Json?         @db.JsonB
+  titulares        Json?         @db.JsonB
   marca_files      marca_files[]
 }
 

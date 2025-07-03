@@ -1053,7 +1053,10 @@ export default function DashboardClient() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                           {getFilteredMarcas().map((marca) => {
-                            const titular = marca.titular ?? marca.titulares?.[0] ?? { fullName: '', email: '', phone: '' };
+                            // Show all titulares' full names, comma separated
+                            const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
+                              ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
+                              : (marca.titular?.fullName || '');
                             return (
                               <tr 
                                 key={marca.id}
@@ -1067,7 +1070,7 @@ export default function DashboardClient() {
                                 </td>
                                 <td className="px-3 py-4 text-sm text-gray-500">
                                   <div className="min-w-[200px]">
-                                    {titular.fullName}
+                                    {titulares}
                                   </div>
                                 </td>
                               </tr>

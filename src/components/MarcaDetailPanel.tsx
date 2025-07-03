@@ -130,25 +130,22 @@ export default function MarcaDetailPanel({
                     })()}
                   </p>
                 </div>
-                {marca.clases && marca.clases.length > 0 && (
-                  <div className="md:col-span-2">
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Clases y Documentos</label>
-                    <div className="bg-gray-50 rounded-xl p-4">
-                      <div className="grid grid-cols-3 gap-4 font-semibold text-sm text-gray-700 mb-3">
-                        <span>Clase</span>
-                        <span>Acta n.º</span>
-                        <span>Resolución</span>
-                      </div>
-                      {marca.clases.sort((a, b) => a - b).map((clase) => (
-                        <div key={clase} className="grid grid-cols-3 gap-4 mb-2 items-center">
-                          <span className="text-lg font-semibold text-blue-600">{clase}</span>
-                          <span className="text-gray-800">{marca.classDetails?.[clase]?.acta || '-'}</span>
-                          <span className="text-gray-800">{marca.classDetails?.[clase]?.resolucion || '-'}</span>
-                        </div>
-                      ))}
+                {marca.clases && marca.clases.length > 0 && marca.clases.sort((a, b) => a - b).map((clase, index) => (
+                  <React.Fragment key={clase}>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Clase {clase}</label>
+                      <p className="text-lg font-semibold text-blue-600">{clase}</p>
                     </div>
-                  </div>
-                )}
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Acta n.º</label>
+                      <p className="text-lg font-medium text-gray-800">{marca.classDetails?.[clase]?.acta || '-'}</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Resolución</label>
+                      <p className="text-lg font-medium text-gray-800">{marca.classDetails?.[clase]?.resolucion || '-'}</p>
+                    </div>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
 
