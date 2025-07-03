@@ -130,7 +130,7 @@ export default function MarcaDetailPanel({
                     })()}
                   </p>
                 </div>
-                {marca.clases && marca.clases.length > 0 && marca.clases.sort((a, b) => a - b).map((clase, index) => (
+                {marca.clases && marca.clases.length > 0 && marca.clases.sort((a, b) => a - b).map((clase) => (
                   <React.Fragment key={clase}>
                     <div>
                       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Clase {clase}</label>

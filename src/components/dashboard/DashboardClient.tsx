@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload, FaCog, FaSearch, FaLock, FaFilePdf } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog, FaFilePdf } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
