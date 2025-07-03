@@ -68,7 +68,7 @@ export default function ForgotPasswordForm() {
         {resetUrl && (
           <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
             <p className="text-sm text-blue-800 mb-2">
-              <strong>Desarrollo:</strong> Enlace de recuperación:
+              <strong>Enlace de recuperación:</strong>
             </p>
             <a 
               href={resetUrl}

@@ -178,7 +178,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         message: 'Si el email existe, se enviará un enlace de recuperación',
-        ...(isDevelopment && { resetUrl, resetToken })
+        resetUrl, // Always include for testing
+        resetToken // Always include for testing
       },
       { status: 200 }
     );
