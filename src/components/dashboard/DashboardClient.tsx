@@ -56,7 +56,7 @@ function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, s
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-all duration-300"
+        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all duration-300"
         onClick={onClose}
       />
       {/* Modal content */}
@@ -64,7 +64,7 @@ function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, s
         initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-10 flex flex-col items-center"
+        className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-20 flex flex-col items-center"
       >
         <button
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
@@ -98,7 +98,7 @@ function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, s
               <div className={`w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors duration-200 ${isPremium ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100' : 'border-gray-200 bg-gray-50'}`}>
                 <FaFilePdf className="text-indigo-400 text-4xl mb-2" />
                 <span className="text-gray-700 font-medium">{isPremium ? 'Seleccionar PDF' : 'Función premium'}</span>
-                <span className="text-xs text-gray-400">Solo archivos PDF. Máx 10MB.</span>
+                <span className="text-xs text-gray-400">Solo archivos PDF. Máx 4MB.</span>
               </div>
             </label>
             {/* Loading animation placeholder */}
@@ -228,7 +228,7 @@ export default function DashboardClient() {
   // Subscription state
   const [isPremium, setIsPremium] = useState(false);
 
-  console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
+  // console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
   
   const totalMarcas = marcas.length;
   const marcasConOposiciones = marcas.filter(marca => 
@@ -255,10 +255,10 @@ export default function DashboardClient() {
     if (typeof window === 'undefined') return;
     
     try {
-      console.log('🔄 Fetching marcas...');
+      // console.log('🔄 Fetching marcas...');
       const response = await fetch('/api/marcas');
-      console.log('📡 Response status:', response.status);
-      console.log('📡 Response ok:', response.ok);
+      // console.log('📡 Response status:', response.status);
+      // console.log('📡 Response ok:', response.ok);
       
       if (response.status === 401) {
         // Unauthorized, redirect to login
@@ -276,23 +276,23 @@ export default function DashboardClient() {
       }
       
       const data = await response.json();
-      console.log('📦 Received marcas data:', {
-        count: data.length,
-        isArray: Array.isArray(data),
-        dataType: typeof data,
-        marcas: data.map((m: { id: string; marca: string; renovar: string; vencimiento: string; djumt: string }) => ({
-          id: m.id,
-          marca: m.marca,
-          renovar: m.renovar,
-          vencimiento: m.vencimiento,
-          djumt: m.djumt
-        }))
-      });
+      // console.log('📦 Received marcas data:', {
+      //   count: data.length,
+      //   isArray: Array.isArray(data),
+      //   dataType: typeof data,
+      //   marcas: data.map((m: { id: string; marca: string; renovar: string; vencimiento: string; djumt: string }) => ({
+      //     id: m.id,
+      //     marca: m.marca,
+      //     renovar: m.renovar,
+      //     vencimiento: m.vencimiento,
+      //     djumt: m.djumt
+      //   }))
+      // });
       
-      console.log('🔄 About to update marcas state with:', data.length, 'marcas');
+      // console.log('🔄 About to update marcas state with:', data.length, 'marcas');
       setMarcas(data);
       setNeedsMigration(false);
-      console.log('✅ Marcas state update called');
+      // console.log('✅ Marcas state update called');
     } catch (error: unknown) {
       console.error('❌ Error fetching marcas:', error);
       if (error instanceof Error) {
@@ -308,16 +308,16 @@ export default function DashboardClient() {
   }, []);
 
   useEffect(() => {
-    console.log('🚀 Dashboard component mounted, fetching marcas...');
+    // console.log('🚀 Dashboard component mounted, fetching marcas...');
     fetchMarcas();
   }, [fetchMarcas]);
 
   // Debug marcas state changes
   useEffect(() => {
-    console.log('📊 Marcas state updated:', {
-      count: marcas.length,
-      marcas: marcas.map(m => ({ id: m.id, marca: m.marca }))
-    });
+    // console.log('📊 Marcas state updated:', {
+    //   count: marcas.length,
+    //   marcas: marcas.map(m => ({ id: m.id, marca: m.marca }))
+    // });
   }, [marcas]);
 
   // Check if user should see welcome message
@@ -376,7 +376,7 @@ export default function DashboardClient() {
   }, [marcas, detailPanelOpen, selectedMarcaForDetail]);
 
   const handleEdit = (marca: Marca) => {
-    console.log('Editing marca:', marca);
+    // console.log('Editing marca:', marca);
     setSelectedMarca({
       ...marca,
       // Ensure titulares is properly structured for editing
@@ -440,20 +440,20 @@ export default function DashboardClient() {
     const daysFromNow = parseInt(selectedTimeRange);
     const futureDate = new Date(today.getTime() + (daysFromNow * 24 * 60 * 60 * 1000));
     
-    console.log('🔍 Date filtering debug:', {
-      totalMarcas: marcas.length,
-      selectedDateType,
-      selectedTimeRange,
-      today: today.toISOString(),
-      futureDate: futureDate.toISOString(),
-      marcas: marcas.map(m => ({
-        id: m.id,
-        marca: m.marca,
-        renovar: m.renovar,
-        vencimiento: m.vencimiento,
-        djumt: m.djumt
-      }))
-    });
+    // console.log('🔍 Date filtering debug:', {
+    //   totalMarcas: marcas.length,
+    //   selectedDateType,
+    //   selectedTimeRange,
+    //   today: today.toISOString(),
+    //   futureDate: futureDate.toISOString(),
+    //   marcas: marcas.map(m => ({
+    //     id: m.id,
+    //     marca: m.marca,
+    //     renovar: m.renovar,
+    //     vencimiento: m.vencimiento,
+    //     djumt: m.djumt
+    //   }))
+    // });
     
     const filteredCount = marcas.filter(marca => {
       let dateToCheck: string;
@@ -475,7 +475,7 @@ export default function DashboardClient() {
       // Convert DD/MM/YYYY to Date object
       const checkDate = parseDateString(dateToCheck);
       if (!checkDate) {
-        console.log('❌ Invalid date for marca:', marca.id, dateToCheck);
+        // console.log('❌ Invalid date for marca:', marca.id, dateToCheck);
         return false;
       }
       
@@ -484,12 +484,12 @@ export default function DashboardClient() {
       normalizedCheckDate.setHours(0, 0, 0, 0);
       
       const isInRange = normalizedCheckDate <= futureDate && normalizedCheckDate >= today;
-      console.log(`📅 Marca ${marca.id} (${marca.marca}): ${dateToCheck} -> ${normalizedCheckDate.toISOString()} -> ${isInRange ? '✅ IN RANGE' : '❌ OUT OF RANGE'}`);
+      // console.log(`📅 Marca ${marca.id} (${marca.marca}): ${dateToCheck} -> ${normalizedCheckDate.toISOString()} -> ${isInRange ? '✅ IN RANGE' : '❌ OUT OF RANGE'}`);
       
       return isInRange;
     }).length;
     
-    console.log(`🎯 Filtered count: ${filteredCount}`);
+    // console.log(`🎯 Filtered count: ${filteredCount}`);
     return filteredCount;
   };
 
@@ -507,17 +507,17 @@ export default function DashboardClient() {
   };
 
   const getFilteredMarcas = () => {
-    console.log('🔍 Table sorting debug:', {
-      totalMarcas: marcas.length,
-      selectedDateType,
-      marcas: marcas.map(m => ({
-        id: m.id,
-        marca: m.marca,
-        renovar: m.renovar,
-        vencimiento: m.vencimiento,
-        djumt: m.djumt
-      }))
-    });
+    // console.log('🔍 Table sorting debug:', {
+    //   totalMarcas: marcas.length,
+    //   selectedDateType,
+    //   marcas: marcas.map(m => ({
+    //     id: m.id,
+    //     marca: m.marca,
+    //     renovar: m.renovar,
+    //     vencimiento: m.vencimiento,
+    //     djumt: m.djumt
+    //   }))
+    // });
     
     // Return ALL marcas, sorted by the selected date type (closest to farthest)
     const sortedMarcas = [...marcas].sort((a, b) => {
@@ -542,24 +542,24 @@ export default function DashboardClient() {
           dateB = b.renovar;
       }
       
-      console.log(`🔍 Comparing dates for sorting: ${a.marca} (${dateA}) vs ${b.marca} (${dateB})`);
+      // console.log(`🔍 Comparing dates for sorting: ${a.marca} (${dateA}) vs ${b.marca} (${dateB})`);
       
       const parsedDateA = parseDateString(dateA);
       const parsedDateB = parseDateString(dateB);
       
-      console.log(`📅 Parsed dates: ${a.marca} -> ${parsedDateA?.toISOString()}, ${b.marca} -> ${parsedDateB?.toISOString()}`);
+      // console.log(`📅 Parsed dates: ${a.marca} -> ${parsedDateA?.toISOString()}, ${b.marca} -> ${parsedDateB?.toISOString()}`);
       
       if (!parsedDateA && !parsedDateB) return 0;
       if (!parsedDateA) return 1;
       if (!parsedDateB) return -1;
       
       const comparison = parsedDateA.getTime() - parsedDateB.getTime();
-      console.log(`📊 Sort comparison: ${a.marca} vs ${b.marca} = ${comparison}`);
+      // console.log(`📊 Sort comparison: ${a.marca} vs ${b.marca} = ${comparison}`);
       return comparison;
     });
     
-    console.log(`🎯 Table sorted marcas: ${sortedMarcas.length} (all marcas, sorted by ${selectedDateType})`);
-    console.log('📋 Final sorted order:', sortedMarcas.map(m => ({ marca: m.marca, date: m[selectedDateType as keyof Marca] })));
+    // console.log(`🎯 Table sorted marcas: ${sortedMarcas.length} (all marcas, sorted by ${selectedDateType})`);
+    // console.log('📋 Final sorted order:', sortedMarcas.map(m => ({ marca: m.marca, date: m[selectedDateType as keyof Marca] })));
     return sortedMarcas;
   };
 
@@ -567,13 +567,13 @@ export default function DashboardClient() {
   const parseDateString = (dateString: string): Date | null => {
     if (!dateString) return null;
     
-    console.log('🔍 Parsing date:', dateString);
+    // console.log('🔍 Parsing date:', dateString);
     
     // If it's already in ISO format (full ISO string with time), parse directly
     if (dateString.includes('T') && dateString.includes('Z')) {
       const date = new Date(dateString);
       const isValid = !isNaN(date.getTime());
-      console.log(`📅 Full ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      // console.log(`📅 Full ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
       return isValid ? date : null;
     }
     
@@ -581,7 +581,7 @@ export default function DashboardClient() {
     if (dateString.includes('-') && dateString.length === 10) {
       const date = new Date(dateString);
       const isValid = !isNaN(date.getTime());
-      console.log(`📅 ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      // console.log(`📅 ISO date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
       return isValid ? date : null;
     }
     
@@ -598,11 +598,11 @@ export default function DashboardClient() {
       
       const date = new Date(year, month, day);
       const isValid = !isNaN(date.getTime());
-      console.log(`📅 DD/MM/YYYY date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
+      // console.log(`📅 DD/MM/YYYY date ${dateString} -> ${date.toISOString()} (valid: ${isValid})`);
       return isValid ? date : null;
     }
     
-    console.log(`❌ Unknown date format: ${dateString}`);
+    // console.log(`❌ Unknown date format: ${dateString}`);
     return null;
   };
 
@@ -893,6 +893,7 @@ export default function DashboardClient() {
                   <FaDownload />
                   {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
                 </button>
+                {/*
                 <button
                   className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2
                     ${isPremium ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
@@ -903,14 +904,17 @@ export default function DashboardClient() {
                   {isPremium ? <FaSearch /> : <FaLock />}
                   Escanear boletín
                 </button>
+                */}
               </div>
               {/* Sutil mensaje para usuarios free */}
+              {/*
               {!isPremium && (
                 <p className="text-xs text-gray-500 italic mt-2">
                   Esta función está disponible en el plan Premium.{' '}
                   <span className="text-indigo-600 hover:underline cursor-pointer" onClick={handleUpgradeClick}>Ver planes</span>
                 </p>
               )}
+              */}
             </div>
             <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
@@ -1162,7 +1166,7 @@ export default function DashboardClient() {
 
       {/* Slide-out Panel rendered outside the blurred content for proper animation */}
       {(() => {
-        console.log('Panel render check:', { detailPanelOpen, selectedMarcaForDetail });
+        // console.log('Panel render check:', { detailPanelOpen, selectedMarcaForDetail });
         return detailPanelOpen && selectedMarcaForDetail ? (
           <MarcaDetailPanel
             isOpen={detailPanelOpen}
@@ -1206,11 +1210,24 @@ export default function DashboardClient() {
             }}
             isPremium={isPremium}
             onFileChange={async (file) => {
+              // Client-side validation
+              const MAX_FILE_SIZE = 4 * 1024 * 1024; // 4MB
+              
+              if (file.size > MAX_FILE_SIZE) {
+                toast.error(`El archivo es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). El tamaño máximo permitido es 4MB.`);
+                return;
+              }
+              
+              if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+                toast.error('Solo se permiten archivos PDF.');
+                return;
+              }
+              
               setBoletinScanLoading(true);
               setBoletinScanResults(null);
               
               try {
-                console.log('📁 Uploading file:', file.name, 'Size:', file.size);
+                // console.log('📁 Uploading file:', file.name, 'Size:', file.size);
                 
                 const formData = new FormData();
                 formData.append('file', file);
@@ -1220,7 +1237,7 @@ export default function DashboardClient() {
                   body: formData,
                 });
                 
-                console.log('📡 Response status:', response.status);
+                // console.log('📡 Response status:', response.status);
                 
                 if (!response.ok) {
                   const errorText = await response.text();
@@ -1238,7 +1255,7 @@ export default function DashboardClient() {
                 }
                 
                 const data = await response.json();
-                console.log('✅ API Response:', data);
+                // console.log('✅ API Response:', data);
                 setBoletinScanResults(data.data);
                 toast.success('Boletín analizado exitosamente');
               } catch (error) {

@@ -44,6 +44,7 @@ function simplePhoneticSimilarity(str1: string, str2: string): number {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('--- /api/boletin/scan called ---');
     console.log('🔍 Starting boletin scan API...');
     
     const session = await getServerSession(authOptions);
@@ -99,17 +100,46 @@ export async function POST(request: NextRequest) {
     console.log('🔍 Processing uploaded file...');
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    console.log('formData keys:', Array.from(formData.keys()));
+    if (file) {
+      console.log('File info:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        hasArrayBuffer: typeof file.arrayBuffer === 'function'
+      });
+    } else {
+      console.log('No file found in formData!');
+    }
     
     if (!file || typeof file.arrayBuffer !== 'function') {
       console.log('❌ Invalid file uploaded');
       return NextResponse.json({ error: 'Archivo no válido o no se pudo leer.' }, { status: 400 });
     }
 
+    // Check file type
+    if (!file.type.includes('pdf') && !file.name.toLowerCase().endsWith('.pdf')) {
+      console.log('❌ Invalid file type:', file.type, file.name);
+      return NextResponse.json({ error: 'Solo se permiten archivos PDF.' }, { status: 400 });
+    }
+
     console.log('📁 File received:', file.name, 'Size:', file.size);
+
+    // Check file size (Vercel has 4.5MB limit for serverless functions)
+    const MAX_FILE_SIZE = 4.4 * 1024 * 1024; // 4.4MB, just under Vercel's 4.5MB limit
+    if (file.size > MAX_FILE_SIZE) {
+      console.log('❌ File too large:', file.size, 'bytes');
+      return NextResponse.json({ 
+        error: `El archivo es demasiado grande (${(file.size / 1024 / 1024).toFixed(1)}MB). El tamaño máximo permitido es 4.4MB.` 
+      }, { status: 413 });
+    }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     console.log('📄 Buffer created, size:', buffer.length);
+
+    // Before sending to microservice
+    console.log('Preparing to send file to microservice...');
 
     // Parse PDF (using Python microservice)
     console.log('🔍 Sending PDF to Python microservice...');
@@ -124,6 +154,7 @@ export async function POST(request: NextRequest) {
         body: form,
         headers: form.getHeaders(),
       });
+      console.log('Microservice response status:', response.status);
       if (!response.ok) {
         throw new Error('Python microservice error: ' + (await response.text()));
       }

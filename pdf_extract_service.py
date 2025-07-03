@@ -9,6 +9,7 @@ app = Flask(__name__)
 
 @app.route('/extract-text', methods=['POST'])
 def extract_text():
+    print('--- /extract-text endpoint called ---')
     file = request.files['file']
     pdf_bytes = file.read()
     text_by_page = []
