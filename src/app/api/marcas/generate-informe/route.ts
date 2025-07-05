@@ -56,15 +56,22 @@ export async function POST(request: NextRequest) {
 
     // Generar PDF con jsPDF - Versión profesional
     try {
+      console.log('Starting PDF generation...');
+      
       const doc = new jsPDF();
+      console.log('jsPDF instance created');
+      
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 32;
       const contentWidth = pageWidth - (margin * 2);
       
+      console.log('Page dimensions:', { pageWidth, pageHeight, margin, contentWidth });
+      
       let yPosition = 32;
       
       // Header con logo y título
+      console.log('Creating header...');
       doc.setFillColor(37, 99, 235); // #2563eb
       doc.rect(0, 0, pageWidth, 80, 'F');
       
@@ -86,6 +93,7 @@ export async function POST(request: NextRequest) {
       doc.text(`Marca: ${marca.marca || ''}`, margin + 80, 66);
       
       yPosition = 100;
+      console.log('Header completed, yPosition:', yPosition);
       
       // Resumen Ejecutivo
       doc.setTextColor(37, 99, 235);
@@ -108,6 +116,7 @@ export async function POST(request: NextRequest) {
       doc.text(resumenLines, margin, yPosition);
       
       yPosition += (resumenLines.length * 8) + 20;
+      console.log('Resumen completed, yPosition:', yPosition);
       
       // Datos de la Marca
       doc.setTextColor(37, 99, 235);
@@ -133,6 +142,8 @@ export async function POST(request: NextRequest) {
         { label: 'Estado:', value: marca.djumt || 'No especificado' }
       ];
       
+      console.log('Processing marca info:', marcaInfo);
+      
       for (const info of marcaInfo) {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(35, 64, 153);
@@ -147,6 +158,7 @@ export async function POST(request: NextRequest) {
       }
       
       yPosition += 10;
+      console.log('Marca info completed, yPosition:', yPosition);
       
       // Titulares
       doc.setTextColor(37, 99, 235);
@@ -160,10 +172,13 @@ export async function POST(request: NextRequest) {
       
       yPosition += 20;
       
+      console.log('Processing titulares:', titulares);
+      
       for (const titular of titulares) {
         if (!titular || (!titular.fullName && !titular.email && !titular.phone)) continue;
         
         if (yPosition > 220) {
+          console.log('Adding new page for titular');
           doc.addPage();
           yPosition = 32;
         }
@@ -207,8 +222,11 @@ export async function POST(request: NextRequest) {
         yPosition += 10;
       }
       
+      console.log('Titulares completed, yPosition:', yPosition);
+      
       // Datos del Agente
       if (yPosition > 180) {
+        console.log('Adding new page for agent data');
         doc.addPage();
         yPosition = 32;
       }
@@ -235,6 +253,8 @@ export async function POST(request: NextRequest) {
         { label: 'CP:', value: user.zip_code || '' }
       ];
       
+      console.log('Processing agent info:', agenteInfo);
+      
       for (const info of agenteInfo) {
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(35, 64, 153);
@@ -248,7 +268,10 @@ export async function POST(request: NextRequest) {
         yPosition += 12;
       }
       
+      console.log('Agent info completed, yPosition:', yPosition);
+      
       // Footer profesional
+      console.log('Creating footer...');
       doc.setFillColor(35, 64, 153); // #234099
       doc.rect(0, pageHeight - 40, pageWidth, 40, 'F');
       
@@ -262,7 +285,9 @@ export async function POST(request: NextRequest) {
       doc.text(`Fecha de generación: ${fechaGeneracion} | Este documento es confidencial y sólo para uso informativo.`, margin, pageHeight - 15);
       doc.text('Gestión inteligente de tu cartera marcaria. Protección con visión profesional.', margin, pageHeight - 8);
       
+      console.log('Generating PDF buffer...');
       const pdfBuffer = doc.output('arraybuffer');
+      console.log('PDF buffer generated, size:', pdfBuffer.byteLength);
       
       return new NextResponse(pdfBuffer, {
         headers: {
@@ -270,8 +295,13 @@ export async function POST(request: NextRequest) {
           'Content-Disposition': `attachment; filename="informe-marca-${marca.marca}.pdf"`,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error generating PDF:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
       return NextResponse.json({ error: 'Error al generar el PDF' }, { status: 500 });
     }
 
