@@ -92,11 +92,27 @@ export async function POST(request: NextRequest) {
 }
 
 // Fallback function using jsPDF
-async function generateSimplePDF(marca: any, user: any) {
+async function generateSimplePDF(marca: unknown, user: unknown) {
   const jsPDF = (await import('jspdf')).default;
-  
+
+  // Type assertions for expected structure
+  const m = marca as {
+    marca?: string;
+    clases?: string[];
+    renovar?: unknown;
+    vencimiento?: unknown;
+    djumt?: unknown;
+    titulares?: Array<{ fullName?: string; email?: string; phone?: string }>;
+    titular_nombre?: string;
+    titular_email?: string;
+    titular_telefono?: string;
+  };
+  const u = user as {
+    name?: string;
+  };
+
   const doc = new jsPDF();
-  
+    
   // Helper function to safely convert dates to strings
   const safeDateToString = (dateValue: unknown): string => {
     if (!dateValue) return 'No especificado';
@@ -106,26 +122,26 @@ async function generateSimplePDF(marca: any, user: any) {
   };
 
   const fechaGeneracion = new Date().toLocaleDateString('es-AR');
-  const marcaClases = Array.isArray(marca.clases) ? marca.clases.join(', ') : 'No especificadas';
-  const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
-    ? marca.titulares
-    : [{ fullName: marca.titular_nombre, email: marca.titular_email, phone: marca.titular_telefono }];
+  const marcaClases = Array.isArray(m.clases) ? m.clases.join(', ') : 'No especificadas';
+  const titulares = Array.isArray(m.titulares) && m.titulares.length > 0
+    ? m.titulares
+    : [{ fullName: m.titular_nombre, email: m.titular_email, phone: m.titular_telefono }];
 
   // Simple PDF content
   doc.setFontSize(16);
   doc.text('Informe de Marca', 20, 20);
   
   doc.setFontSize(12);
-  doc.text(`Agente: ${user.name || ''}`, 20, 40);
-  doc.text(`Marca: ${marca.marca || ''}`, 20, 50);
+  doc.text(`Agente: ${u.name || ''}`, 20, 40);
+  doc.text(`Marca: ${m.marca || ''}`, 20, 50);
   doc.text(`Fecha: ${fechaGeneracion}`, 20, 60);
   
   doc.text('Datos de la Marca:', 20, 80);
-  doc.text(`Nombre: ${marca.marca || ''}`, 20, 90);
+  doc.text(`Nombre: ${m.marca || ''}`, 20, 90);
   doc.text(`Clases: ${marcaClases}`, 20, 100);
-  doc.text(`Renovación: ${safeDateToString(marca.renovar)}`, 20, 110);
-  doc.text(`Vencimiento: ${safeDateToString(marca.vencimiento)}`, 20, 120);
-  doc.text(`Estado: ${safeDateToString(marca.djumt)}`, 20, 130);
+  doc.text(`Renovación: ${safeDateToString(m.renovar)}`, 20, 110);
+  doc.text(`Vencimiento: ${safeDateToString(m.vencimiento)}`, 20, 120);
+  doc.text(`Estado: ${safeDateToString(m.djumt)}`, 20, 130);
   
   // Add titulares
   doc.text('Titulares:', 20, 140);
@@ -151,7 +167,7 @@ async function generateSimplePDF(marca: any, user: any) {
   return new NextResponse(pdfBuffer, {
     headers: {
       'Content-Type': 'application/pdf',
-      'Content-Disposition': `attachment; filename="informe-marca-${marca.marca}.pdf"`,
+      'Content-Disposition': `attachment; filename="informe-marca-${m.marca}.pdf"`,
     },
   });
 } 
