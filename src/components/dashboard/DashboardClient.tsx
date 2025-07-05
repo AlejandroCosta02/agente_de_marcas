@@ -26,169 +26,7 @@ interface ViewTextModalState {
   content: string;
 }
 
-// New: Modal for boletin scan
-function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, scanResults }: {
-  isOpen: boolean;
-  onClose: () => void;
-  isPremium: boolean;
-  onFileChange: (file: File) => void;
-  loading: boolean;
-  scanResults?: {
-    denominativas: { count: number; matches: number; pdf: string };
-    mixtas: { count: number; pdf: string };
-  } | null;
-}) {
-  if (!isOpen) return null;
-
-  const handleDownloadPdf = (pdfData: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = pdfData;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Blur background */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all duration-300"
-        onClick={onClose}
-      />
-      {/* Modal content */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-20 flex flex-col items-center"
-      >
-        <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
-          onClick={onClose}
-          aria-label="Cerrar"
-        >
-          ×
-        </button>
-
-        {!scanResults ? (
-          <>
-            <div className="flex flex-col items-center gap-2 mb-4">
-              <div className="bg-indigo-100 rounded-full p-4 mb-2">
-                <FaFilePdf className="text-indigo-600 text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Escanear boletín</h2>
-              <p className="text-gray-600 text-center max-w-xs">
-                Subí el PDF del boletín oficial del INPI y detectá automáticamente posibles conflictos con tus marcas.
-              </p>
-            </div>
-            <label className="w-full flex flex-col items-center gap-2 cursor-pointer">
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                disabled={!isPremium || loading}
-                onChange={e => {
-                  if (e.target.files && e.target.files[0]) onFileChange(e.target.files[0]);
-                }}
-              />
-              <div className={`w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors duration-200 ${isPremium ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100' : 'border-gray-200 bg-gray-50'}`}>
-                <FaFilePdf className="text-indigo-400 text-4xl mb-2" />
-                <span className="text-gray-700 font-medium">{isPremium ? 'Seleccionar PDF' : 'Función premium'}</span>
-                <span className="text-xs text-gray-400">Solo archivos PDF. Máx 4MB.</span>
-              </div>
-            </label>
-            {/* Loading animation placeholder */}
-            {loading && (
-              <div className="flex flex-col items-center mt-6">
-                <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                <span className="text-indigo-600 text-sm">Analizando boletín...</span>
-              </div>
-            )}
-            {/* Orientative text */}
-            <div className="mt-6 text-sm text-gray-500 text-center">
-              Esta herramienta premium compara automáticamente las marcas nuevas del boletín con las marcas que custodiás.<br />
-              Detectá conflictos fonéticos o visuales, y actuá a tiempo.
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Success Results */}
-            <div className="flex flex-col items-center gap-4 mb-6">
-              <div className="bg-green-100 rounded-full p-4">
-                <div className="text-green-600 text-3xl">🧠</div>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 text-center">Análisis completado con éxito</h2>
-              <div className="text-gray-600 text-center max-w-sm">
-                <p className="mb-3">
-                  El boletín fue escaneado y se detectaron posibles coincidencias con tus marcas custodiadas. 
-                  Consultá el informe detallado para conocer las similitudes fonéticas o visuales encontradas.
-                </p>
-                <p className="mb-3">
-                  📄 También generamos un segundo informe con las marcas mixtas (tipo M) que requieren revisión manual. 
-                  Estas marcas incluyen elementos visuales que no pueden ser analizados automáticamente.
-                </p>
-                <p className="font-medium">
-                  👉 Descargá ambos archivos desde los botones a continuación:
-                </p>
-              </div>
-            </div>
-
-            {/* Statistics */}
-            <div className="w-full bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-indigo-600">{scanResults.denominativas.count}</div>
-                  <div className="text-sm text-gray-600">Marcas denominativas</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-orange-600">{scanResults.mixtas.count}</div>
-                  <div className="text-sm text-gray-600">Marcas mixtas</div>
-                </div>
-              </div>
-              {scanResults.denominativas.matches > 0 && (
-                <div className="mt-3 text-center">
-                  <div className="text-lg font-semibold text-red-600">
-                    ⚠️ {scanResults.denominativas.matches} posibles coincidencias detectadas
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Download Buttons */}
-            <div className="w-full space-y-3">
-              <button
-                onClick={() => handleDownloadPdf(scanResults.denominativas.pdf, 'informe-denominativas.pdf')}
-                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <FaDownload />
-                Informe de coincidencias (denominativas)
-              </button>
-              <button
-                onClick={() => alert('Nuestro equipo está trabajando para mejorar la experiencia en la búsqueda y análisis de marcas mixtas, debido a que el INPI no proporciona una base de datos clara y concisa.')}
-                className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <FaDownload />
-                Listado de marcas mixtas (revisión manual)
-              </button>
-            </div>
-
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="mt-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
-            >
-              Cerrar
-            </button>
-          </>
-        )}
-      </motion.div>
-    </div>
-  );
-}
+// BoletinScanModal component removed as it's not being used
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -217,14 +55,6 @@ export default function DashboardClient() {
   const [selectedDateType, setSelectedDateType] = useState<DateType>('fechaDeRenovacion');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30');
 
-  // New: Modal for boletin scan
-  const [boletinScanModalOpen, setBoletinScanModalOpen] = useState(false);
-  const [boletinScanLoading, setBoletinScanLoading] = useState(false);
-  const [boletinScanResults, setBoletinScanResults] = useState<{
-    denominativas: { count: number; matches: number; pdf: string };
-    mixtas: { count: number; pdf: string };
-  } | null>(null);
-
   // Informe modal state
   const [informeModalOpen, setInformeModalOpen] = useState(false);
   const [informeLoading, setInformeLoading] = useState(false);
@@ -232,7 +62,18 @@ export default function DashboardClient() {
   const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
   const [includeOposiciones, setIncludeOposiciones] = useState(false);
   const [profileComplete, setProfileComplete] = useState(false);
-  const [profileData, setProfileData] = useState<any>(null);
+  const [profileData, setProfileData] = useState<{
+    nombre?: string;
+    apellido?: string;
+    email?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    provincia?: string;
+    codigoPostal?: string;
+    cuit?: string;
+    matricula?: string;
+  } | null>(null);
 
   // Subscription state
   const [isPremium, setIsPremium] = useState(false);
