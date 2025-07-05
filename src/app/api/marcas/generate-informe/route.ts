@@ -76,13 +76,28 @@ export async function POST(request: NextRequest) {
 
     // Leer plantilla HTML
     const templatePath = path.resolve(process.cwd(), 'src/templates/informe-template.html');
-    let html = await fs.readFile(templatePath, 'utf8');
+    console.log('Template path:', templatePath);
+    let html;
+    try {
+      html = await fs.readFile(templatePath, 'utf8');
+    } catch (error) {
+      console.error('Error reading template file:', error);
+      return NextResponse.json({ error: 'Error al leer la plantilla del informe' }, { status: 500 });
+    }
 
     // Leer logo real y convertir a base64
     const logoPath = path.resolve(process.cwd(), 'public/logo.png');
-    const logoBuffer = await fs.readFile(logoPath);
-    const logoBase64 = logoBuffer.toString('base64');
-    const logoUrl = `data:image/png;base64,${logoBase64}`;
+    console.log('Logo path:', logoPath);
+    let logoUrl;
+    try {
+      const logoBuffer = await fs.readFile(logoPath);
+      const logoBase64 = logoBuffer.toString('base64');
+      logoUrl = `data:image/png;base64,${logoBase64}`;
+    } catch (error) {
+      console.error('Error reading logo file:', error);
+      // Use a fallback logo or continue without logo
+      logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+    }
 
     // Datos para la plantilla
     const fechaGeneracion = new Date().toLocaleDateString('es-AR');
@@ -122,18 +137,33 @@ export async function POST(request: NextRequest) {
     html = html.replace(/{{#each titulares}}([\s\S]*?){{\/each}}/, titularesHtml);
 
     // Generar PDF con Puppeteer
-    const browser = await puppeteer.launch({ args: ['--no-sandbox', '--font-render-hinting=none'] });
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    const pdfBuffer = await page.pdf({ format: 'A4', printBackground: true, margin: { top: 0, bottom: 0, left: 0, right: 0 } });
-    await browser.close();
-
-    return new NextResponse(pdfBuffer, {
-      headers: {
-        'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename="informe-marca-${marca.marca}.pdf"`,
-      },
-    });
+    let browser;
+    try {
+      browser = await puppeteer.launch({ 
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--font-render-hinting=none'] 
+      });
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: 'networkidle0' });
+      const pdfBuffer = await page.pdf({ 
+        format: 'A4', 
+        printBackground: true, 
+        margin: { top: 0, bottom: 0, left: 0, right: 0 } 
+      });
+      await browser.close();
+      
+      return new NextResponse(pdfBuffer, {
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="informe-marca-${marca.marca}.pdf"`,
+        },
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      if (browser) {
+        await browser.close();
+      }
+      return NextResponse.json({ error: 'Error al generar el PDF' }, { status: 500 });
+    }
 
   } catch (error) {
     console.error('Error generating informe:', error);
