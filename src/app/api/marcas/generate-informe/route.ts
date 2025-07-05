@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
-import path from 'path';
-import fs from 'fs/promises';
 import { jsPDF } from 'jspdf';
 
 const pool = createPool();
@@ -47,32 +45,7 @@ export async function POST(request: NextRequest) {
 
     const marca = marcaResult.rows[0];
 
-    // Procesar detalles de clase
-    let classDetailsTable = '';
-    if (marca.class_details) {
-      let details = marca.class_details;
-      if (typeof details === 'string') {
-        try { details = JSON.parse(details); } catch { details = {}; }
-      }
-      const clases = Object.keys(details).sort((a, b) => Number(a) - Number(b));
-      if (clases.length > 0) {
-        classDetailsTable = `<table style="border-collapse:collapse;margin-bottom:18px;font-size:0.98rem;">
-          <tr style="background:#f4f6fa;color:#234099;font-weight:600;">
-            <td style="border:1px solid #2563eb;padding:4px 10px;">Clase</td>
-            <td style="border:1px solid #2563eb;padding:4px 10px;">N° de acta</td>
-            <td style="border:1px solid #2563eb;padding:4px 10px;">Resolución</td>
-          </tr>`;
-        for (const clase of clases) {
-          const d = details[clase] || {};
-          classDetailsTable += `<tr>
-            <td style="border:1px solid #2563eb;padding:4px 10px;">${clase}</td>
-            <td style="border:1px solid #2563eb;padding:4px 10px;">${d.acta || '-'}</td>
-            <td style="border:1px solid #2563eb;padding:4px 10px;">${d.resolucion || '-'}</td>
-          </tr>`;
-        }
-        classDetailsTable += '</table>';
-      }
-    }
+    // Procesar detalles de clase (removed as not used in jsPDF version)
 
     // Datos para el informe
     const fechaGeneracion = new Date().toLocaleDateString('es-AR');
@@ -92,7 +65,6 @@ export async function POST(request: NextRequest) {
       let yPosition = 20;
       const margin = 20;
       const pageWidth = doc.internal.pageSize.getWidth();
-      const contentWidth = pageWidth - (margin * 2);
       
       // Título
       doc.setFontSize(18);
