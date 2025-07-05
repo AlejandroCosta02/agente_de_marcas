@@ -45,8 +45,6 @@ export async function POST(request: NextRequest) {
 
     const marca = marcaResult.rows[0];
 
-    // Procesar detalles de clase (removed as not used in jsPDF version)
-
     // Datos para el informe
     const fechaGeneracion = new Date().toLocaleDateString('es-AR');
     const marcaClases = Array.isArray(marca.clases) ? marca.clases.join(', ') : 'No especificadas';
@@ -54,9 +52,17 @@ export async function POST(request: NextRequest) {
       ? marca.titulares
       : [{ fullName: marca.titular_nombre, email: marca.titular_email, phone: marca.titular_telefono }];
 
-    // Generar PDF con jsPDF - Versión simple para testing
+    // Helper function to safely convert dates to strings
+    const safeDateToString = (dateValue: any): string => {
+      if (!dateValue) return 'No especificado';
+      if (dateValue instanceof Date) return dateValue.toLocaleDateString('es-AR');
+      if (typeof dateValue === 'string') return dateValue;
+      return String(dateValue);
+    };
+
+    // Generar PDF con jsPDF - Versión simple y segura
     try {
-      console.log('Starting simple PDF generation...');
+      console.log('Starting safe PDF generation...');
       
       const doc = new jsPDF();
       console.log('jsPDF instance created');
@@ -74,9 +80,9 @@ export async function POST(request: NextRequest) {
       doc.text('Datos de la Marca:', 20, 80);
       doc.text(`Nombre: ${marca.marca || ''}`, 20, 90);
       doc.text(`Clases: ${marcaClases}`, 20, 100);
-      doc.text(`Renovación: ${marca.renovar ? new Date(marca.renovar).toLocaleDateString('es-AR') : 'No especificada'}`, 20, 110);
-      doc.text(`Vencimiento: ${marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString('es-AR') : 'No especificada'}`, 20, 120);
-      doc.text(`Estado: ${marca.djumt ? (marca.djumt instanceof Date ? marca.djumt.toLocaleDateString('es-AR') : String(marca.djumt)) : 'No especificado'}`, 20, 130);
+      doc.text(`Renovación: ${safeDateToString(marca.renovar)}`, 20, 110);
+      doc.text(`Vencimiento: ${safeDateToString(marca.vencimiento)}`, 20, 120);
+      doc.text(`Estado: ${safeDateToString(marca.djumt)}`, 20, 130);
       
       // Add titulares
       doc.text('Titulares:', 20, 140);
@@ -97,7 +103,7 @@ export async function POST(request: NextRequest) {
         yPos += 5;
       }
       
-      console.log('Simple PDF content added');
+      console.log('Safe PDF content added');
       
       const pdfBuffer = doc.output('arraybuffer');
       console.log('PDF buffer generated, size:', pdfBuffer.byteLength);
