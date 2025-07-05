@@ -997,18 +997,6 @@ export default function DashboardClient() {
                   {isPremium ? <FaFileAlt /> : <FaLock />}
                   {isPremium ? 'Generar informe' : 'Generar informe'}
                 </button>
-                {/*
-                <button
-                  className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2
-                    ${isPremium ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                  type="button"
-                  onClick={isPremium ? () => setBoletinScanModalOpen(true) : undefined}
-                  disabled={!isPremium}
-                >
-                  {isPremium ? <FaSearch /> : <FaLock />}
-                  Escanear boletín
-                </button>
-                */}
               </div>
               {!isPremium && (
                 <p className="text-xs text-gray-500 italic mt-2">
@@ -1323,7 +1311,8 @@ export default function DashboardClient() {
       {/* Growth Banner */}
       <GrowthBanner />
 
-      {/* Modal for boletin scan */}
+      {/* Modal for boletin scan - DEBE PERMANECER COMENTADO */}
+      {/*
       <AnimatePresence>
         {boletinScanModalOpen && (
           <BoletinScanModal
@@ -1394,6 +1383,7 @@ export default function DashboardClient() {
           />
         )}
       </AnimatePresence>
+      */}
 
       {/* Modal for informe generation */}
       <AnimatePresence>
@@ -1461,13 +1451,19 @@ export default function DashboardClient() {
                     
                                          return (
                        <div className="space-y-2 text-sm text-gray-600">
-                         <div><strong>Marca:</strong> {marca.marca}</div>
-                         <div><strong>Clases:</strong> {marca.clases?.join(', ') || 'No especificadas'}</div>
-                         <div><strong>Fecha de renovación:</strong> {marca.renovar || 'No especificada'}</div>
-                         <div><strong>Fecha de vencimiento:</strong> {marca.vencimiento || 'No especificada'}</div>
-                         <div><strong>Titulares:</strong> {
+                         <div><strong>📝 Marca:</strong> {marca.marca}</div>
+                         <div><strong>🏛️ Clases:</strong> {marca.clases?.join(', ') || 'No especificadas'}</div>
+                         <div><strong>🔄 Fecha de renovación:</strong> {marca.renovar || 'No especificada'}</div>
+                         <div><strong>⏰ Fecha de vencimiento:</strong> {marca.vencimiento || 'No especificada'}</div>
+                         <div><strong>👥 Titulares:</strong> {
                            Array.isArray(marca.titulares) && marca.titulares.length > 0
-                             ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
+                             ? marca.titulares.map(t => {
+                                 const contactInfo = [];
+                                 if (t.fullName) contactInfo.push(t.fullName);
+                                 if (t.email) contactInfo.push(`📧 ${t.email}`);
+                                 if (t.phone) contactInfo.push(`📞 ${t.phone}`);
+                                 return contactInfo.join(' | ');
+                               }).join(', ')
                              : marca.titular?.fullName || 'No especificados'
                          }</div>
                        </div>
