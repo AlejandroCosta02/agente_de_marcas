@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       : [{ fullName: marca.titular_nombre, email: marca.titular_email, phone: marca.titular_telefono }];
 
     // Helper function to safely convert dates to strings
-    const safeDateToString = (dateValue: any): string => {
+    const safeDateToString = (dateValue: unknown): string => {
       if (!dateValue) return 'No especificado';
       if (dateValue instanceof Date) return dateValue.toLocaleDateString('es-AR');
       if (typeof dateValue === 'string') return dateValue;
