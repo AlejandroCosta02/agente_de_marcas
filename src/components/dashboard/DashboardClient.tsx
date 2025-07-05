@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload, FaCog, FaFilePdf } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog, FaFilePdf, FaLock, FaFileAlt } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -224,6 +224,15 @@ export default function DashboardClient() {
     denominativas: { count: number; matches: number; pdf: string };
     mixtas: { count: number; pdf: string };
   } | null>(null);
+
+  // Informe modal state
+  const [informeModalOpen, setInformeModalOpen] = useState(false);
+  const [informeLoading, setInformeLoading] = useState(false);
+  const [selectedMarcaForInforme, setSelectedMarcaForInforme] = useState<string>('');
+  const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
+  const [includeOposiciones, setIncludeOposiciones] = useState(false);
+  const [profileComplete, setProfileComplete] = useState(false);
+  const [profileData, setProfileData] = useState<any>(null);
 
   // Subscription state
   const [isPremium, setIsPremium] = useState(false);
@@ -872,6 +881,88 @@ export default function DashboardClient() {
     }
   };
 
+  // Check if user profile is complete
+  const checkProfileComplete = async () => {
+    try {
+      const res = await fetch('/api/profile');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.profile) {
+          const profile = data.profile;
+          setProfileData(profile);
+          const requiredFields = ['name', 'contact_number', 'agent_number', 'province', 'zip_code'];
+          const isComplete = requiredFields.every(field => profile[field] && profile[field].trim() !== '');
+          setProfileComplete(isComplete);
+          return isComplete;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking profile:', error);
+      return false;
+    }
+  };
+
+  // Handle informe generation
+  const handleGenerateInforme = async () => {
+    if (!isPremium) {
+      handleUpgradeClick();
+      return;
+    }
+
+    const isProfileComplete = await checkProfileComplete();
+    if (!isProfileComplete) {
+      toast.error('Antes de generar un informe, completá tu perfil profesional.');
+      return;
+    }
+
+    setInformeModalOpen(true);
+  };
+
+  const handleSubmitInforme = async () => {
+    if (!selectedMarcaForInforme) {
+      toast.error('Seleccioná una marca para generar el informe.');
+      return;
+    }
+
+    setInformeLoading(true);
+    try {
+      const res = await fetch('/api/marcas/generate-informe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          marcaId: selectedMarcaForInforme,
+          includeAnotaciones,
+          includeOposiciones,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al generar el informe');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `informe-marca-${selectedMarcaForInforme}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Informe generado exitosamente');
+      setInformeModalOpen(false);
+    } catch (error) {
+      console.error('Error generating informe:', error);
+      toast.error('Error al generar el informe');
+    } finally {
+      setInformeLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -893,6 +984,19 @@ export default function DashboardClient() {
                   <FaDownload />
                   {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
                 </button>
+                <button
+                  className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2 ${
+                    isPremium 
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-400' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                  type="button"
+                  onClick={handleGenerateInforme}
+                  disabled={!isPremium}
+                >
+                  {isPremium ? <FaFileAlt /> : <FaLock />}
+                  {isPremium ? 'Generar informe' : 'Generar informe'}
+                </button>
                 {/*
                 <button
                   className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2
@@ -906,14 +1010,12 @@ export default function DashboardClient() {
                 </button>
                 */}
               </div>
-              {/*
               {!isPremium && (
                 <p className="text-xs text-gray-500 italic mt-2">
-                  Esta función está disponible en el plan Premium.{' '}
+                  La generación de informes está disponible en el plan Premium.{' '}
                   <span className="text-indigo-600 hover:underline cursor-pointer" onClick={handleUpgradeClick}>Ver planes</span>
                 </p>
               )}
-              */}
             </div>
             <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
@@ -1290,6 +1392,135 @@ export default function DashboardClient() {
             loading={boletinScanLoading}
             scanResults={boletinScanResults}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Modal for informe generation */}
+      <AnimatePresence>
+        {informeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Blur background */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all duration-300"
+              onClick={() => setInformeModalOpen(false)}
+            />
+            {/* Modal content */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-20"
+            >
+              <button
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+                onClick={() => setInformeModalOpen(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+
+              <div className="flex flex-col items-center gap-2 mb-6">
+                <div className="bg-indigo-100 rounded-full p-4 mb-2">
+                  <FaFileAlt className="text-indigo-600 text-3xl" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Generar informe de marca</h2>
+                <p className="text-gray-600 text-center max-w-xs">
+                  Seleccioná una marca y configurá qué información incluir en el informe.
+                </p>
+              </div>
+
+              {/* Marca selector */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar marca
+                </label>
+                <select
+                  value={selectedMarcaForInforme}
+                  onChange={(e) => setSelectedMarcaForInforme(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                >
+                  <option value="">Seleccioná una marca</option>
+                  {marcas.map((marca) => (
+                    <option key={marca.id} value={marca.id}>
+                      {marca.marca}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selected marca info */}
+              {selectedMarcaForInforme && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">Información de la marca</h3>
+                  {(() => {
+                    const marca = marcas.find(m => m.id === selectedMarcaForInforme);
+                    if (!marca) return null;
+                    
+                                         return (
+                       <div className="space-y-2 text-sm text-gray-600">
+                         <div><strong>Marca:</strong> {marca.marca}</div>
+                         <div><strong>Clases:</strong> {marca.clases?.join(', ') || 'No especificadas'}</div>
+                         <div><strong>Fecha de renovación:</strong> {marca.renovar || 'No especificada'}</div>
+                         <div><strong>Fecha de vencimiento:</strong> {marca.vencimiento || 'No especificada'}</div>
+                         <div><strong>Titulares:</strong> {
+                           Array.isArray(marca.titulares) && marca.titulares.length > 0
+                             ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
+                             : marca.titular?.fullName || 'No especificados'
+                         }</div>
+                       </div>
+                     );
+                  })()}
+                </div>
+              )}
+
+              {/* Optional sections */}
+              <div className="mb-6 space-y-4">
+                <h3 className="font-semibold text-gray-900">Secciones opcionales</h3>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={includeAnotaciones}
+                    onChange={(e) => setIncludeAnotaciones(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Incluir anotaciones del agente</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={includeOposiciones}
+                    onChange={(e) => setIncludeOposiciones(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Incluir oposiciones registradas</span>
+                </label>
+              </div>
+
+              {/* Generate button */}
+              <button
+                onClick={handleSubmitInforme}
+                disabled={!selectedMarcaForInforme || informeLoading}
+                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {informeLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generando informe...
+                  </>
+                ) : (
+                  <>
+                    <FaFileAlt />
+                    Confirmar y generar informe
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>
