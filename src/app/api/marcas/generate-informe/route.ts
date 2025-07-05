@@ -54,238 +54,51 @@ export async function POST(request: NextRequest) {
       ? marca.titulares
       : [{ fullName: marca.titular_nombre, email: marca.titular_email, phone: marca.titular_telefono }];
 
-    // Generar PDF con jsPDF - Versión profesional
+    // Generar PDF con jsPDF - Versión simple para testing
     try {
-      console.log('Starting PDF generation...');
+      console.log('Starting simple PDF generation...');
       
       const doc = new jsPDF();
       console.log('jsPDF instance created');
       
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      const margin = 32;
-      const contentWidth = pageWidth - (margin * 2);
-      
-      console.log('Page dimensions:', { pageWidth, pageHeight, margin, contentWidth });
-      
-      let yPosition = 32;
-      
-      // Header con logo y título
-      console.log('Creating header...');
-      doc.setFillColor(37, 99, 235); // #2563eb
-      doc.rect(0, 0, pageWidth, 80, 'F');
-      
-      // Logo placeholder (rectángulo azul)
-      doc.setFillColor(255, 255, 255);
-      doc.rect(margin, 16, 56, 56, 'F');
-      
-      // Título del informe
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(24);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Informe de Marca', margin + 80, 40);
-      
-      // Información del header
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Agente: ${user.name || ''}`, margin + 80, 50);
-      doc.text(`Fecha: ${fechaGeneracion}`, margin + 80, 58);
-      doc.text(`Marca: ${marca.marca || ''}`, margin + 80, 66);
-      
-      yPosition = 100;
-      console.log('Header completed, yPosition:', yPosition);
-      
-      // Resumen Ejecutivo
-      doc.setTextColor(37, 99, 235);
+      // Simple test PDF
       doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Resumen Ejecutivo', margin, yPosition);
+      doc.text('Informe de Marca', 20, 20);
       
-      // Línea debajo del título
-      doc.setDrawColor(37, 99, 235);
-      doc.setLineWidth(2);
-      doc.line(margin, yPosition + 2, margin + 80, yPosition + 2);
-      
-      yPosition += 20;
-      doc.setTextColor(34, 34, 34);
       doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
+      doc.text(`Agente: ${user.name || ''}`, 20, 40);
+      doc.text(`Marca: ${marca.marca || ''}`, 20, 50);
+      doc.text(`Fecha: ${fechaGeneracion}`, 20, 60);
       
-      const resumenText = 'Este informe contiene un resumen profesional de la marca seleccionada, sus titulares y los datos clave para la gestión y protección de tu cartera marcaria.';
-      const resumenLines = doc.splitTextToSize(resumenText, contentWidth);
-      doc.text(resumenLines, margin, yPosition);
+      // Add some basic content
+      doc.text('Datos de la Marca:', 20, 80);
+      doc.text(`Nombre: ${marca.marca || ''}`, 20, 90);
+      doc.text(`Clases: ${marcaClases}`, 20, 100);
+      doc.text(`Renovación: ${marca.renovar ? new Date(marca.renovar).toLocaleDateString('es-AR') : 'No especificada'}`, 20, 110);
+      doc.text(`Vencimiento: ${marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString('es-AR') : 'No especificada'}`, 20, 120);
+      doc.text(`Estado: ${marca.djumt ? (marca.djumt instanceof Date ? marca.djumt.toLocaleDateString('es-AR') : String(marca.djumt)) : 'No especificado'}`, 20, 130);
       
-      yPosition += (resumenLines.length * 8) + 20;
-      console.log('Resumen completed, yPosition:', yPosition);
-      
-      // Datos de la Marca
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Datos de la Marca', margin, yPosition);
-      
-      doc.setDrawColor(37, 99, 235);
-      doc.setLineWidth(2);
-      doc.line(margin, yPosition + 2, margin + 100, yPosition + 2);
-      
-      yPosition += 20;
-      doc.setTextColor(34, 34, 34);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      
-      // Información de la marca
-      const marcaInfo = [
-        { label: 'Nombre:', value: marca.marca || '' },
-        { label: 'Clases:', value: marcaClases },
-        { label: 'Renovación:', value: marca.renovar ? new Date(marca.renovar).toLocaleDateString('es-AR') : 'No especificada' },
-        { label: 'Vencimiento:', value: marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString('es-AR') : 'No especificada' },
-        { label: 'Estado:', value: marca.djumt || 'No especificado' }
-      ];
-      
-      console.log('Processing marca info:', marcaInfo);
-      
-      for (const info of marcaInfo) {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(35, 64, 153);
-        doc.text(info.label, margin, yPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(34, 34, 34);
-        const valueX = margin + doc.getTextWidth(info.label) + 5;
-        doc.text(info.value, valueX, yPosition);
-        
-        yPosition += 12;
-      }
-      
-      yPosition += 10;
-      console.log('Marca info completed, yPosition:', yPosition);
-      
-      // Titulares
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Titulares', margin, yPosition);
-      
-      doc.setDrawColor(37, 99, 235);
-      doc.setLineWidth(2);
-      doc.line(margin, yPosition + 2, margin + 60, yPosition + 2);
-      
-      yPosition += 20;
-      
-      console.log('Processing titulares:', titulares);
-      
+      // Add titulares
+      doc.text('Titulares:', 20, 140);
+      let yPos = 150;
       for (const titular of titulares) {
         if (!titular || (!titular.fullName && !titular.email && !titular.phone)) continue;
         
-        if (yPosition > 220) {
-          console.log('Adding new page for titular');
-          doc.addPage();
-          yPosition = 32;
-        }
-        
-        // Línea vertical azul para titular
-        doc.setDrawColor(37, 99, 235);
-        doc.setLineWidth(3);
-        doc.line(margin, yPosition - 5, margin, yPosition + 15);
-        
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(35, 64, 153);
-        doc.text('Nombre:', margin + 10, yPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(34, 34, 34);
-        doc.text(titular.fullName || '', margin + 35, yPosition);
-        yPosition += 8;
-        
+        doc.text(`Nombre: ${titular.fullName || ''}`, 20, yPos);
+        yPos += 10;
         if (titular.email) {
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(35, 64, 153);
-          doc.text('Email:', margin + 10, yPosition);
-          
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(34, 34, 34);
-          doc.text(titular.email, margin + 35, yPosition);
-          yPosition += 8;
+          doc.text(`Email: ${titular.email}`, 20, yPos);
+          yPos += 10;
         }
-        
         if (titular.phone) {
-          doc.setFont('helvetica', 'bold');
-          doc.setTextColor(35, 64, 153);
-          doc.text('Teléfono:', margin + 10, yPosition);
-          
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(34, 34, 34);
-          doc.text(titular.phone, margin + 35, yPosition);
-          yPosition += 8;
+          doc.text(`Teléfono: ${titular.phone}`, 20, yPos);
+          yPos += 10;
         }
-        
-        yPosition += 10;
+        yPos += 5;
       }
       
-      console.log('Titulares completed, yPosition:', yPosition);
+      console.log('Simple PDF content added');
       
-      // Datos del Agente
-      if (yPosition > 180) {
-        console.log('Adding new page for agent data');
-        doc.addPage();
-        yPosition = 32;
-      }
-      
-      doc.setTextColor(37, 99, 235);
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Datos del Agente', margin, yPosition);
-      
-      doc.setDrawColor(37, 99, 235);
-      doc.setLineWidth(2);
-      doc.line(margin, yPosition + 2, margin + 100, yPosition + 2);
-      
-      yPosition += 20;
-      doc.setTextColor(34, 34, 34);
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      
-      const agenteInfo = [
-        { label: 'Nombre:', value: user.name || '' },
-        { label: 'Teléfono:', value: user.contact_number || '' },
-        { label: 'Matrícula:', value: user.agent_number || '' },
-        { label: 'Provincia:', value: user.province || '' },
-        { label: 'CP:', value: user.zip_code || '' }
-      ];
-      
-      console.log('Processing agent info:', agenteInfo);
-      
-      for (const info of agenteInfo) {
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(35, 64, 153);
-        doc.text(info.label, margin, yPosition);
-        
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(34, 34, 34);
-        const valueX = margin + doc.getTextWidth(info.label) + 5;
-        doc.text(info.value, valueX, yPosition);
-        
-        yPosition += 12;
-      }
-      
-      console.log('Agent info completed, yPosition:', yPosition);
-      
-      // Footer profesional
-      console.log('Creating footer...');
-      doc.setFillColor(35, 64, 153); // #234099
-      doc.rect(0, pageHeight - 40, pageWidth, 40, 'F');
-      
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Informe generado por Gestionatusmarcas.com', margin, pageHeight - 25);
-      
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(9);
-      doc.text(`Fecha de generación: ${fechaGeneracion} | Este documento es confidencial y sólo para uso informativo.`, margin, pageHeight - 15);
-      doc.text('Gestión inteligente de tu cartera marcaria. Protección con visión profesional.', margin, pageHeight - 8);
-      
-      console.log('Generating PDF buffer...');
       const pdfBuffer = doc.output('arraybuffer');
       console.log('PDF buffer generated, size:', pdfBuffer.byteLength);
       
