@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
 import path from 'path';
 import fs from 'fs/promises';
-import puppeteer from 'puppeteer';
+import { jsPDF } from 'jspdf';
 
 const pool = createPool();
 
@@ -74,82 +74,103 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Leer plantilla HTML
-    const templatePath = path.resolve(process.cwd(), 'src/templates/informe-template.html');
-    console.log('Template path:', templatePath);
-    let html;
-    try {
-      html = await fs.readFile(templatePath, 'utf8');
-    } catch (error) {
-      console.error('Error reading template file:', error);
-      return NextResponse.json({ error: 'Error al leer la plantilla del informe' }, { status: 500 });
-    }
-
-    // Leer logo real y convertir a base64
-    const logoPath = path.resolve(process.cwd(), 'public/logo.png');
-    console.log('Logo path:', logoPath);
-    let logoUrl;
-    try {
-      const logoBuffer = await fs.readFile(logoPath);
-      const logoBase64 = logoBuffer.toString('base64');
-      logoUrl = `data:image/png;base64,${logoBase64}`;
-    } catch (error) {
-      console.error('Error reading logo file:', error);
-      // Use a fallback logo or continue without logo
-      logoUrl = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
-    }
-
-    // Datos para la plantilla
+    // Datos para el informe
     const fechaGeneracion = new Date().toLocaleDateString('es-AR');
-    const resumenEjecutivo = `Este informe contiene un resumen profesional de la marca seleccionada, sus titulares y los datos clave para la gestión y protección de tu cartera marcaria.`;
     const marcaClases = Array.isArray(marca.clases) ? marca.clases.join(', ') : 'No especificadas';
     const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
       ? marca.titulares
       : [{ fullName: marca.titular_nombre, email: marca.titular_email, phone: marca.titular_telefono }];
 
-    // Rellenar plantilla
-    html = html
-      .replace(/{{logoUrl}}/g, logoUrl)
-      .replace(/{{agenteNombre}}/g, user.name || '')
-      .replace(/{{agenteTelefono}}/g, user.contact_number || '')
-      .replace(/{{agenteMatricula}}/g, user.agent_number || '')
-      .replace(/{{agenteProvincia}}/g, user.province || '')
-      .replace(/{{agenteCP}}/g, user.zip_code || '')
-      .replace(/{{fechaGeneracion}}/g, fechaGeneracion)
-      .replace(/{{marcaNombre}}/g, marca.marca || '')
-      .replace(/{{marcaClases}}/g, marcaClases)
-      .replace(/{{marcaRenovar}}/g, marca.renovar ? new Date(marca.renovar).toLocaleDateString('es-AR') : 'No especificada')
-      .replace(/{{marcaVencimiento}}/g, marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString('es-AR') : 'No especificada')
-      .replace(/{{marcaEstado}}/g, marca.djumt || 'No especificado')
-      .replace(/{{resumenEjecutivo}}/g, resumenEjecutivo)
-      .replace(/{{classDetailsTable}}/g, classDetailsTable);
-
-    // Renderizar titulares (simple, sin handlebars)
-    let titularesHtml = '';
-    for (const t of titulares) {
-      if (!t || (!t.fullName && !t.email && !t.phone)) continue;
-      titularesHtml += `<div class="titular">
-        <span class="info-label">Nombre:</span>${t.fullName || ''}<br/>
-        ${t.email ? `<span class="info-label">Email:</span>${t.email}<br/>` : ''}
-        ${t.phone ? `<span class="info-label">Teléfono:</span>${t.phone}` : ''}
-      </div>`;
-    }
-    html = html.replace(/{{#each titulares}}([\s\S]*?){{\/each}}/, titularesHtml);
-
-    // Generar PDF con Puppeteer
-    let browser;
+    // Generar PDF con jsPDF
     try {
-      browser = await puppeteer.launch({ 
-        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--font-render-hinting=none'] 
-      });
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      const pdfBuffer = await page.pdf({ 
-        format: 'A4', 
-        printBackground: true, 
-        margin: { top: 0, bottom: 0, left: 0, right: 0 } 
-      });
-      await browser.close();
+      const doc = new jsPDF();
+      
+      // Configurar fuente y tamaño
+      doc.setFont('helvetica');
+      doc.setFontSize(12);
+      
+      let yPosition = 20;
+      const margin = 20;
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const contentWidth = pageWidth - (margin * 2);
+      
+      // Título
+      doc.setFontSize(18);
+      doc.setTextColor(35, 64, 153); // #234099
+      doc.text('Informe de Marca', margin, yPosition);
+      yPosition += 15;
+      
+      // Información del agente
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Agente: ${user.name || ''}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Teléfono: ${user.contact_number || ''}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Matrícula: ${user.agent_number || ''}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Provincia: ${user.province || ''}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`CP: ${user.zip_code || ''}`, margin, yPosition);
+      yPosition += 15;
+      
+      // Datos de la marca
+      doc.setFontSize(14);
+      doc.setTextColor(35, 64, 153);
+      doc.text('Datos de la Marca', margin, yPosition);
+      yPosition += 10;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`Nombre: ${marca.marca || ''}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Clases: ${marcaClases}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Renovación: ${marca.renovar ? new Date(marca.renovar).toLocaleDateString('es-AR') : 'No especificada'}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Vencimiento: ${marca.vencimiento ? new Date(marca.vencimiento).toLocaleDateString('es-AR') : 'No especificada'}`, margin, yPosition);
+      yPosition += 8;
+      doc.text(`Estado: ${marca.djumt || 'No especificado'}`, margin, yPosition);
+      yPosition += 15;
+      
+      // Titulares
+      doc.setFontSize(14);
+      doc.setTextColor(35, 64, 153);
+      doc.text('Titulares', margin, yPosition);
+      yPosition += 10;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      for (const titular of titulares) {
+        if (!titular || (!titular.fullName && !titular.email && !titular.phone)) continue;
+        
+        if (yPosition > 250) {
+          doc.addPage();
+          yPosition = 20;
+        }
+        
+        doc.text(`Nombre: ${titular.fullName || ''}`, margin, yPosition);
+        yPosition += 8;
+        if (titular.email) {
+          doc.text(`Email: ${titular.email}`, margin, yPosition);
+          yPosition += 8;
+        }
+        if (titular.phone) {
+          doc.text(`Teléfono: ${titular.phone}`, margin, yPosition);
+          yPosition += 8;
+        }
+        yPosition += 5;
+      }
+      
+      // Footer
+      doc.setFontSize(10);
+      doc.setTextColor(128, 128, 128);
+      const footerText = `Informe generado por Gestionatusmarcas.com | Fecha: ${fechaGeneracion}`;
+      const footerWidth = doc.getTextWidth(footerText);
+      const footerX = (pageWidth - footerWidth) / 2;
+      doc.text(footerText, footerX, 280);
+      
+      const pdfBuffer = doc.output('arraybuffer');
       
       return new NextResponse(pdfBuffer, {
         headers: {
@@ -159,9 +180,6 @@ export async function POST(request: NextRequest) {
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
-      if (browser) {
-        await browser.close();
-      }
       return NextResponse.json({ error: 'Error al generar el PDF' }, { status: 500 });
     }
 
