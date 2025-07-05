@@ -61,19 +61,6 @@ export default function DashboardClient() {
   const [selectedMarcaForInforme, setSelectedMarcaForInforme] = useState<string>('');
   const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
   const [includeOposiciones, setIncludeOposiciones] = useState(false);
-  const [profileComplete, setProfileComplete] = useState(false);
-  const [profileData, setProfileData] = useState<{
-    nombre?: string;
-    apellido?: string;
-    email?: string;
-    telefono?: string;
-    direccion?: string;
-    ciudad?: string;
-    provincia?: string;
-    codigoPostal?: string;
-    cuit?: string;
-    matricula?: string;
-  } | null>(null);
 
   // Subscription state
   const [isPremium, setIsPremium] = useState(false);
@@ -730,10 +717,8 @@ export default function DashboardClient() {
         const data = await res.json();
         if (data && data.profile) {
           const profile = data.profile;
-          setProfileData(profile);
           const requiredFields = ['name', 'contact_number', 'agent_number', 'province', 'zip_code'];
           const isComplete = requiredFields.every(field => profile[field] && profile[field].trim() !== '');
-          setProfileComplete(isComplete);
           return isComplete;
         }
       }
