@@ -130,23 +130,24 @@ export default function MarcaDetailPanel({
                     })()}
                   </p>
                 </div>
-                {marca.clases && marca.clases.length > 0 && marca.clases.sort((a, b) => a - b).map((clase) => (
-                  <React.Fragment key={clase}>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Clase {clase}</label>
-                      <p className="text-lg font-semibold text-blue-600">{clase}</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Acta n.º</label>
-                      <p className="text-lg font-medium text-gray-800">{marca.classDetails?.[clase]?.acta || '-'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Resolución</label>
-                      <p className="text-lg font-medium text-gray-800">{marca.classDetails?.[clase]?.resolucion || '-'}</p>
-                    </div>
-                  </React.Fragment>
-                ))}
               </div>
+              {/* 3-column row for Clase, Acta, Resolucion under basic info */}
+              {marca.clases && marca.clases.length > 0 && (
+                <div className="mt-6">
+                  <div className="grid grid-cols-3 gap-4 font-semibold text-xs text-gray-500 uppercase tracking-wide mb-2">
+                    <div>Clase</div>
+                    <div>ACTA N.º</div>
+                    <div>RESOLUCIÓN</div>
+                  </div>
+                  {marca.clases.sort((a, b) => a - b).map((clase) => (
+                    <div key={clase} className="grid grid-cols-3 gap-4 py-2 border-b border-gray-100 last:border-b-0 text-base text-gray-800">
+                      <div className="font-bold text-blue-700">{clase}</div>
+                      <div>{marca.classDetails?.[clase]?.acta || '-'}</div>
+                      <div>{marca.classDetails?.[clase]?.resolucion || '-'}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Titulares Information */}
