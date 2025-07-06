@@ -105,7 +105,7 @@ export default function MarcaDetailPanel({
                 </div>
                 <h3 className="text-xl font-bold text-gray-900">Información Básica</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-6 gap-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nombre de Marca</label>
                   <p className="text-lg font-semibold text-gray-900 leading-tight">{marca.marca}</p>
@@ -173,7 +173,7 @@ export default function MarcaDetailPanel({
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nombre Completo</label>
                           <p className="text-lg font-semibold text-gray-900">{titular.fullName}</p>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 gap-y-2">
                           <div>
                             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
                             <p className="text-base text-gray-800">{titular.email}</p>
@@ -183,7 +183,7 @@ export default function MarcaDetailPanel({
                             <p className="text-base text-gray-800">{titular.phone || 'No especificado'}</p>
                           </div>
                         </div>
-                        <div className="flex space-x-3 pt-2">
+                        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2 w-full">
                           {titular.phone && (
                             <button
                               onClick={() => window.open(`https://wa.me/${titular.phone}`, '_blank')}
@@ -218,7 +218,7 @@ export default function MarcaDetailPanel({
                         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Nombre Completo</label>
                         <p className="text-lg font-semibold text-gray-900">{titular.fullName}</p>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-4 gap-y-2">
                         <div>
                           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
                           <p className="text-base text-gray-800">{titular.email}</p>
@@ -228,7 +228,7 @@ export default function MarcaDetailPanel({
                           <p className="text-base text-gray-800">{titular.phone || 'No especificado'}</p>
                         </div>
                       </div>
-                      <div className="flex space-x-3 pt-2">
+                      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 pt-2 w-full">
                         {titular.phone && (
                           <button
                             onClick={() => window.open(`https://wa.me/${titular.phone}`, '_blank')}

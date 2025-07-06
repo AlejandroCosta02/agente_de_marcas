@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
+import { getPlanById, getFreePlan } from '@/lib/subscription-plans';
 
 export async function GET() {
   try {
@@ -279,6 +280,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
+    const pool = createPool();
+
+    // Fetch user id
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [session.user.email]);
+    if (userResult.rows.length === 0) {
+      return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 404 });
+    }
+    const userId = userResult.rows[0].id;
+
+    // Fetch subscription tier
+    const subResult = await pool.query('SELECT tier FROM "UserSubscription" WHERE "userId" = $1', [userId]);
+    const tier = subResult.rows.length > 0 ? subResult.rows[0].tier : 'free';
+    const plan = getPlanById(tier) || getFreePlan();
+
+    // Count current marcas for this user
+    const countResult = await pool.query('SELECT COUNT(*) FROM marcas WHERE user_email = $1', [session.user.email]);
+    const marcaCount = parseInt(countResult.rows[0].count, 10);
+    if (plan.marcaLimit !== -1 && marcaCount >= plan.marcaLimit) {
+      return NextResponse.json({ message: 'Has alcanzado el límite de marcas para tu plan. Actualiza tu suscripción para agregar más.' }, { status: 403 });
+    }
+
     const { 
       marca, 
       renovar, 
@@ -323,8 +345,6 @@ export async function POST(request: Request) {
           };
         }).filter(op => op.text !== '')
       : [];
-
-    const pool = createPool();
 
     // Insert the new marca - store first titular in legacy fields, all titulares as JSON
     const result = await pool.query(`

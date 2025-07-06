@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload, FaCog, FaFilePdf } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog, FaLock, FaFileAlt } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,6 +18,8 @@ import WelcomeModal from '../WelcomeModal';
 import { useSession } from 'next-auth/react';
 import DateFilterModal, { DateType, TimeRange } from './DateFilterModal';
 import GrowthBanner from '../GrowthBanner';
+import { getPlanById, getFreePlan } from '@/lib/subscription-plans';
+import type { UserSubscription } from '@/types/subscription';
 
 
 interface ViewTextModalState {
@@ -26,169 +28,7 @@ interface ViewTextModalState {
   content: string;
 }
 
-// New: Modal for boletin scan
-function BoletinScanModal({ isOpen, onClose, isPremium, onFileChange, loading, scanResults }: {
-  isOpen: boolean;
-  onClose: () => void;
-  isPremium: boolean;
-  onFileChange: (file: File) => void;
-  loading: boolean;
-  scanResults?: {
-    denominativas: { count: number; matches: number; pdf: string };
-    mixtas: { count: number; pdf: string };
-  } | null;
-}) {
-  if (!isOpen) return null;
-
-  const handleDownloadPdf = (pdfData: string, filename: string) => {
-    const link = document.createElement('a');
-    link.href = pdfData;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Blur background */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all duration-300"
-        onClick={onClose}
-      />
-      {/* Modal content */}
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-20 flex flex-col items-center"
-      >
-        <button
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
-          onClick={onClose}
-          aria-label="Cerrar"
-        >
-          ×
-        </button>
-
-        {!scanResults ? (
-          <>
-            <div className="flex flex-col items-center gap-2 mb-4">
-              <div className="bg-indigo-100 rounded-full p-4 mb-2">
-                <FaFilePdf className="text-indigo-600 text-3xl" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">Escanear boletín</h2>
-              <p className="text-gray-600 text-center max-w-xs">
-                Subí el PDF del boletín oficial del INPI y detectá automáticamente posibles conflictos con tus marcas.
-              </p>
-            </div>
-            <label className="w-full flex flex-col items-center gap-2 cursor-pointer">
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                disabled={!isPremium || loading}
-                onChange={e => {
-                  if (e.target.files && e.target.files[0]) onFileChange(e.target.files[0]);
-                }}
-              />
-              <div className={`w-full border-2 border-dashed rounded-lg p-6 flex flex-col items-center justify-center transition-colors duration-200 ${isPremium ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100' : 'border-gray-200 bg-gray-50'}`}>
-                <FaFilePdf className="text-indigo-400 text-4xl mb-2" />
-                <span className="text-gray-700 font-medium">{isPremium ? 'Seleccionar PDF' : 'Función premium'}</span>
-                <span className="text-xs text-gray-400">Solo archivos PDF. Máx 4MB.</span>
-              </div>
-            </label>
-            {/* Loading animation placeholder */}
-            {loading && (
-              <div className="flex flex-col items-center mt-6">
-                <div className="w-10 h-10 border-4 border-indigo-300 border-t-indigo-600 rounded-full animate-spin mb-2" />
-                <span className="text-indigo-600 text-sm">Analizando boletín...</span>
-              </div>
-            )}
-            {/* Orientative text */}
-            <div className="mt-6 text-sm text-gray-500 text-center">
-              Esta herramienta premium compara automáticamente las marcas nuevas del boletín con las marcas que custodiás.<br />
-              Detectá conflictos fonéticos o visuales, y actuá a tiempo.
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Success Results */}
-            <div className="flex flex-col items-center gap-4 mb-6">
-              <div className="bg-green-100 rounded-full p-4">
-                <div className="text-green-600 text-3xl">🧠</div>
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 text-center">Análisis completado con éxito</h2>
-              <div className="text-gray-600 text-center max-w-sm">
-                <p className="mb-3">
-                  El boletín fue escaneado y se detectaron posibles coincidencias con tus marcas custodiadas. 
-                  Consultá el informe detallado para conocer las similitudes fonéticas o visuales encontradas.
-                </p>
-                <p className="mb-3">
-                  📄 También generamos un segundo informe con las marcas mixtas (tipo M) que requieren revisión manual. 
-                  Estas marcas incluyen elementos visuales que no pueden ser analizados automáticamente.
-                </p>
-                <p className="font-medium">
-                  👉 Descargá ambos archivos desde los botones a continuación:
-                </p>
-              </div>
-            </div>
-
-            {/* Statistics */}
-            <div className="w-full bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-indigo-600">{scanResults.denominativas.count}</div>
-                  <div className="text-sm text-gray-600">Marcas denominativas</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-orange-600">{scanResults.mixtas.count}</div>
-                  <div className="text-sm text-gray-600">Marcas mixtas</div>
-                </div>
-              </div>
-              {scanResults.denominativas.matches > 0 && (
-                <div className="mt-3 text-center">
-                  <div className="text-lg font-semibold text-red-600">
-                    ⚠️ {scanResults.denominativas.matches} posibles coincidencias detectadas
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Download Buttons */}
-            <div className="w-full space-y-3">
-              <button
-                onClick={() => handleDownloadPdf(scanResults.denominativas.pdf, 'informe-denominativas.pdf')}
-                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <FaDownload />
-                Informe de coincidencias (denominativas)
-              </button>
-              <button
-                onClick={() => alert('Nuestro equipo está trabajando para mejorar la experiencia en la búsqueda y análisis de marcas mixtas, debido a que el INPI no proporciona una base de datos clara y concisa.')}
-                className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <FaDownload />
-                Listado de marcas mixtas (revisión manual)
-              </button>
-            </div>
-
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="mt-4 text-gray-500 hover:text-gray-700 text-sm font-medium"
-            >
-              Cerrar
-            </button>
-          </>
-        )}
-      </motion.div>
-    </div>
-  );
-}
+// BoletinScanModal component removed as it's not being used
 
 export default function DashboardClient() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -217,16 +57,16 @@ export default function DashboardClient() {
   const [selectedDateType, setSelectedDateType] = useState<DateType>('fechaDeRenovacion');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30');
 
-  // New: Modal for boletin scan
-  const [boletinScanModalOpen, setBoletinScanModalOpen] = useState(false);
-  const [boletinScanLoading, setBoletinScanLoading] = useState(false);
-  const [boletinScanResults, setBoletinScanResults] = useState<{
-    denominativas: { count: number; matches: number; pdf: string };
-    mixtas: { count: number; pdf: string };
-  } | null>(null);
+  // Informe modal state
+  const [informeModalOpen, setInformeModalOpen] = useState(false);
+  const [informeLoading, setInformeLoading] = useState(false);
+  const [selectedMarcaForInforme, setSelectedMarcaForInforme] = useState<string>('');
+  const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
+  const [includeOposiciones, setIncludeOposiciones] = useState(false);
 
   // Subscription state
   const [isPremium, setIsPremium] = useState(false);
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null);
 
   // console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
   
@@ -242,6 +82,7 @@ export default function DashboardClient() {
         const response = await fetch('/api/subscription/status');
         if (response.ok) {
           const data = await response.json();
+          setSubscription(data.subscription);
           setIsPremium(['essential', 'pro', 'master'].includes(data.subscription?.tier));
         }
       } catch {
@@ -824,6 +665,14 @@ export default function DashboardClient() {
   };
 
   const handleAddMarca = () => {
+    // Determine current plan and marca limit
+    const currentPlan = subscription ? getPlanById(subscription.tier) : getFreePlan();
+    if (!currentPlan) return;
+    const isUnlimitedMarcas = currentPlan.marcaLimit === -1;
+    if (!isUnlimitedMarcas && marcas.length >= currentPlan.marcaLimit) {
+      setUpgradeModalOpen(true);
+      return;
+    }
     setIsModalOpen(true);
   };
 
@@ -872,6 +721,86 @@ export default function DashboardClient() {
     }
   };
 
+  // Check if user profile is complete
+  const checkProfileComplete = async () => {
+    try {
+      const res = await fetch('/api/profile');
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.profile) {
+          const profile = data.profile;
+          const requiredFields = ['name', 'contact_number', 'agent_number', 'province', 'zip_code'];
+          const isComplete = requiredFields.every(field => profile[field] && profile[field].trim() !== '');
+          return isComplete;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Error checking profile:', error);
+      return false;
+    }
+  };
+
+  // Handle informe generation
+  const handleGenerateInforme = async () => {
+    if (!isPremium) {
+      handleUpgradeClick();
+      return;
+    }
+
+    const isProfileComplete = await checkProfileComplete();
+    if (!isProfileComplete) {
+      toast.error('Antes de generar un informe, completá tu perfil profesional.');
+      return;
+    }
+
+    setInformeModalOpen(true);
+  };
+
+  const handleSubmitInforme = async () => {
+    if (!selectedMarcaForInforme) {
+      toast.error('Seleccioná una marca para generar el informe.');
+      return;
+    }
+
+    setInformeLoading(true);
+    try {
+      const res = await fetch('/api/marcas/generate-informe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          marcaId: selectedMarcaForInforme,
+          includeAnotaciones,
+          includeOposiciones,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error('Error al generar el informe');
+      }
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `informe-marca-${selectedMarcaForInforme}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('Informe generado exitosamente');
+      setInformeModalOpen(false);
+    } catch (error) {
+      console.error('Error generating informe:', error);
+      toast.error('Error al generar el informe');
+    } finally {
+      setInformeLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -893,27 +822,26 @@ export default function DashboardClient() {
                   <FaDownload />
                   {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
                 </button>
-                {/*
                 <button
-                  className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2
-                    ${isPremium ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2 ${
+                    isPremium 
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-400' 
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
                   type="button"
-                  onClick={isPremium ? () => setBoletinScanModalOpen(true) : undefined}
+                  onClick={handleGenerateInforme}
                   disabled={!isPremium}
                 >
-                  {isPremium ? <FaSearch /> : <FaLock />}
-                  Escanear boletín
+                  {isPremium ? <FaFileAlt /> : <FaLock />}
+                  {isPremium ? 'Generar informe' : 'Generar informe'}
                 </button>
-                */}
               </div>
-              {/*
               {!isPremium && (
                 <p className="text-xs text-gray-500 italic mt-2">
-                  Esta función está disponible en el plan Premium.{' '}
+                  La generación de informes está disponible en el plan Premium.{' '}
                   <span className="text-indigo-600 hover:underline cursor-pointer" onClick={handleUpgradeClick}>Ver planes</span>
                 </p>
               )}
-              */}
             </div>
             <div className="flex md:justify-end justify-start items-center gap-4 mt-4 md:mt-0">
               <SubscriptionStatus marcaCount={totalMarcas} onUpgradeClick={handleUpgradeClick} />
@@ -1037,7 +965,28 @@ export default function DashboardClient() {
                     Agregar Marca
                   </motion.button>
                 </div>
-                <div className="flow-root">
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-4">
+                  {getFilteredMarcas().map((marca) => {
+                    const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
+                      ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
+                      : (marca.titular?.fullName || '');
+                    return (
+                      <div
+                        key={marca.id}
+                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        onClick={() => handleRowClick(marca)}
+                      >
+                        <div className="text-sm font-semibold text-gray-900">Marca</div>
+                        <div className="text-base text-gray-900 break-words">{truncateText(marca.marca, 30)}</div>
+                        <div className="text-sm font-semibold text-gray-500 mt-2">Titular</div>
+                        <div className="text-base text-gray-700 break-words">{titulares}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Desktop Table */}
+                <div className="hidden sm:block flow-root">
                   <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
                     <div className="inline-block min-w-full align-middle">
                       <table className="min-w-full divide-y divide-gray-200">
@@ -1053,7 +1002,6 @@ export default function DashboardClient() {
                         </thead>
                         <tbody className="divide-y divide-gray-200 bg-white">
                           {getFilteredMarcas().map((marca) => {
-                            // Show all titulares' full names, comma separated
                             const titulares = Array.isArray(marca.titulares) && marca.titulares.length > 0
                               ? marca.titulares.map(t => t.fullName).filter(Boolean).join(', ')
                               : (marca.titular?.fullName || '');
@@ -1201,7 +1149,8 @@ export default function DashboardClient() {
       {/* Growth Banner */}
       <GrowthBanner />
 
-      {/* Modal for boletin scan */}
+      {/* Modal for boletin scan - DEBE PERMANECER COMENTADO */}
+      {/*
       <AnimatePresence>
         {boletinScanModalOpen && (
           <BoletinScanModal
@@ -1270,6 +1219,142 @@ export default function DashboardClient() {
             loading={boletinScanLoading}
             scanResults={boletinScanResults}
           />
+        )}
+      </AnimatePresence>
+      */}
+
+      {/* Modal for informe generation */}
+      <AnimatePresence>
+        {informeModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center">
+            {/* Blur background */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-md transition-all duration-300"
+              onClick={() => setInformeModalOpen(false)}
+            />
+            {/* Modal content */}
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="relative bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 p-8 z-20"
+            >
+              <button
+                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
+                onClick={() => setInformeModalOpen(false)}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+
+              <div className="flex flex-col items-center gap-2 mb-6">
+                <div className="bg-indigo-100 rounded-full p-4 mb-2">
+                  <FaFileAlt className="text-indigo-600 text-3xl" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900">Generar informe de marca</h2>
+                <p className="text-gray-600 text-center max-w-xs">
+                  Seleccioná una marca y configurá qué información incluir en el informe.
+                </p>
+              </div>
+
+              {/* Marca selector */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar marca
+                </label>
+                <select
+                  value={selectedMarcaForInforme}
+                  onChange={(e) => setSelectedMarcaForInforme(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
+                >
+                  <option value="">Seleccioná una marca</option>
+                  {marcas.map((marca) => (
+                    <option key={marca.id} value={marca.id}>
+                      {marca.marca}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Selected marca info */}
+              {selectedMarcaForInforme && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-gray-900 mb-2">Información de la marca</h3>
+                  {(() => {
+                    const marca = marcas.find(m => m.id === selectedMarcaForInforme);
+                    if (!marca) return null;
+                    
+                                         return (
+                       <div className="space-y-2 text-sm text-gray-600">
+                         <div><strong>📝 Marca:</strong> {marca.marca}</div>
+                         <div><strong>🏛️ Clases:</strong> {marca.clases?.join(', ') || 'No especificadas'}</div>
+                         <div><strong>🔄 Fecha de renovación:</strong> {marca.renovar || 'No especificada'}</div>
+                         <div><strong>⏰ Fecha de vencimiento:</strong> {marca.vencimiento || 'No especificada'}</div>
+                         <div><strong>👥 Titulares:</strong> {
+                           Array.isArray(marca.titulares) && marca.titulares.length > 0
+                             ? marca.titulares.map(t => {
+                                 const contactInfo = [];
+                                 if (t.fullName) contactInfo.push(t.fullName);
+                                 if (t.email) contactInfo.push(`📧 ${t.email}`);
+                                 if (t.phone) contactInfo.push(`📞 ${t.phone}`);
+                                 return contactInfo.join(' | ');
+                               }).join(', ')
+                             : marca.titular?.fullName || 'No especificados'
+                         }</div>
+                       </div>
+                     );
+                  })()}
+                </div>
+              )}
+
+              {/* Optional sections */}
+              <div className="mb-6 space-y-4">
+                <h3 className="font-semibold text-gray-900">Secciones opcionales</h3>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={includeAnotaciones}
+                    onChange={(e) => setIncludeAnotaciones(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Incluir anotaciones del agente</span>
+                </label>
+                
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={includeOposiciones}
+                    onChange={(e) => setIncludeOposiciones(e.target.checked)}
+                    className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">Incluir oposiciones registradas</span>
+                </label>
+              </div>
+
+              {/* Generate button */}
+              <button
+                onClick={handleSubmitInforme}
+                disabled={!selectedMarcaForInforme || informeLoading}
+                className="w-full bg-indigo-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {informeLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Generando informe...
+                  </>
+                ) : (
+                  <>
+                    <FaFileAlt />
+                    Confirmar y generar informe
+                  </>
+                )}
+              </button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

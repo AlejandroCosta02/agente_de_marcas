@@ -100,7 +100,7 @@ export default function ContactClient() {
 
             <div className="bg-white/10 backdrop-blur-sm shadow-2xl rounded-lg overflow-hidden lg:grid lg:grid-cols-2 lg:gap-4 border border-white/20">
               {/* Contact Form */}
-              <div className="px-6 py-8 sm:p-10 lg:p-12">
+              <div className="p-4 sm:p-8 lg:p-12">
                 <h3 className="text-2xl font-heading text-white">Enviar un Mensaje</h3>
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                   <div>
@@ -190,7 +190,7 @@ export default function ContactClient() {
               </div>
 
               {/* Contact Info */}
-              <div className="px-6 py-8 bg-blue-900/30 sm:p-10 lg:p-12">
+              <div className="p-4 sm:p-8 lg:p-12 bg-blue-900/30">
                 <h3 className="text-2xl font-heading text-white">Información de Contacto</h3>
                 <p className="mt-3 text-base text-gray-300 font-body">
                   También puede contactarnos a través de los siguientes medios.

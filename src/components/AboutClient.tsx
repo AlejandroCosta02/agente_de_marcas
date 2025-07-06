@@ -90,7 +90,7 @@ export default function AboutClient() {
               </div>
 
               <div className="mt-12 relative text-base max-w-prose mx-auto lg:max-w-none lg:mt-0">
-                <div className="relative bg-white/10 backdrop-blur-sm rounded-lg shadow-2xl p-8 border border-white/20">
+                <div className="relative bg-white/10 backdrop-blur-sm rounded-lg shadow-2xl p-4 sm:p-8 border border-white/20">
                    <h4 className="text-xl font-heading text-white">Nuestro Compromiso</h4>
                    <p className="mt-4 text-gray-300 font-body">
                     Nos comprometemos a ser tu socio tecnológico de confianza. Desarrollamos cada 

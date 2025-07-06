@@ -32,7 +32,7 @@ export default function RegisterClient() {
   // Show register form for unauthenticated users
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue-800 to-black flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-8">
+      <div className="max-w-md w-full bg-white/10 backdrop-blur-sm rounded-xl shadow-2xl border border-white/20 p-4 sm:p-8">
         <h2 className="text-3xl font-heading text-center text-white mb-8">
           Crear Cuenta
         </h2>
