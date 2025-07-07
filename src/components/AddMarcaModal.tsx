@@ -381,7 +381,8 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30"
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-md"
+            onClick={initialData ? undefined : onClose}
           >
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
@@ -389,6 +390,7 @@ export default function AddMarcaModal({ isOpen, onClose, onSubmit, initialData }
               exit={{ scale: 0.95, opacity: 0 }}
               className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] mx-auto p-8 border border-gray-200 flex flex-col"
               style={{ minWidth: '350px', width: '100%', maxWidth: '520px', maxHeight: '90vh' }}
+              onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={onClose}
