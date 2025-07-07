@@ -6,7 +6,7 @@ import AddMarcaModal from '../AddMarcaModal';
 import { Marca, MarcaSubmissionData, Oposicion, Anotacion } from '@/types/marca';
 import OposicionModal from '@/components/OposicionModal';
 import UploadFileModal from '@/components/modals/UploadFileModal';
-import { FaPlus, FaDownload, FaCog, FaLock, FaFileAlt } from 'react-icons/fa';
+import { FaPlus, FaDownload, FaCog, FaLock, FaFileAlt, FaEye, FaEyeSlash } from 'react-icons/fa';
 import ViewTextModal from '../ViewTextModal';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -31,42 +31,38 @@ interface ViewTextModalState {
 // BoletinScanModal component removed as it's not being used
 
 export default function DashboardClient() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: session, status } = useSession();
   const [marcas, setMarcas] = useState<Marca[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
   const [oposicionModalOpen, setOposicionModalOpen] = useState(false);
+  const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
+  const [selectedMarcaForOposicion, setSelectedMarcaForOposicion] = useState<Marca | null>(null);
   const [fileModalOpen, setFileModalOpen] = useState(false);
   const [selectedMarcaForFiles, setSelectedMarcaForFiles] = useState<string | null>(null);
   const [anotacionModalOpen, setAnotacionModalOpen] = useState(false);
   const [selectedMarcaForAnotacion, setSelectedMarcaForAnotacion] = useState<Marca | null>(null);
-  const [selectedMarcaForOposicion, setSelectedMarcaForOposicion] = useState<Marca | null>(null);
-  const [selectedOposicion, setSelectedOposicion] = useState<{ marcaId: string; index: number; oposicion: Oposicion } | null>(null);
   const [viewTextModal, setViewTextModal] = useState<ViewTextModalState>({ isOpen: false, title: '', content: '' });
-  const [needsMigration, setNeedsMigration] = useState(false);
-  const router = useRouter();
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [detailPanelOpen, setDetailPanelOpen] = useState(false);
   const [selectedMarcaForDetail, setSelectedMarcaForDetail] = useState<Marca | null>(null);
-  const [showBlur, setShowBlur] = useState(false);
-  const [boletinLoading, setBoletinLoading] = useState(false);
   const [welcomeModalOpen, setWelcomeModalOpen] = useState(false);
-  const { data: session } = useSession();
-
-  // Date filtering state
   const [dateFilterModalOpen, setDateFilterModalOpen] = useState(false);
   const [selectedDateType, setSelectedDateType] = useState<DateType>('fechaDeRenovacion');
   const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('30');
-
-  // Informe modal state
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [boletinLoading, setBoletinLoading] = useState(false);
   const [informeModalOpen, setInformeModalOpen] = useState(false);
-  const [informeLoading, setInformeLoading] = useState(false);
   const [selectedMarcaForInforme, setSelectedMarcaForInforme] = useState<string>('');
-  const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
-  const [includeOposiciones, setIncludeOposiciones] = useState(false);
-
-  // Subscription state
+  const [showBlur, setShowBlur] = useState(false);
+  const [hiddenMarcas, setHiddenMarcas] = useState<Set<string>>(new Set());
+  const [showHiddenMarcas, setShowHiddenMarcas] = useState(false);
+  const [needsMigration, setNeedsMigration] = useState(false);
+  const router = useRouter();
   const [isPremium, setIsPremium] = useState(false);
   const [subscription, setSubscription] = useState<UserSubscription | null>(null);
+  const [informeLoading, setInformeLoading] = useState(false);
+  const [includeAnotaciones, setIncludeAnotaciones] = useState(false);
+  const [includeOposiciones, setIncludeOposiciones] = useState(false);
 
   // console.log('🎯 DashboardClient component rendering, current marcas:', marcas.length);
   
@@ -340,6 +336,38 @@ export default function DashboardClient() {
     return filteredCount;
   };
 
+  // Function to check if a marca is urgent (in the orange button range)
+  const isMarcaUrgent = (marca: Marca) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysFromNow = parseInt(selectedTimeRange);
+    const futureDate = new Date(today.getTime() + (daysFromNow * 24 * 60 * 60 * 1000));
+    
+    let dateToCheck: string;
+    
+    switch (selectedDateType) {
+      case 'fechaDeRenovacion':
+        dateToCheck = marca.renovar;
+        break;
+      case 'fechaDeVencimiento':
+        dateToCheck = marca.vencimiento;
+        break;
+      case 'DJUMT':
+        dateToCheck = marca.djumt;
+        break;
+      default:
+        dateToCheck = marca.renovar;
+    }
+    
+    const checkDate = parseDateString(dateToCheck);
+    if (!checkDate) return false;
+    
+    const normalizedCheckDate = new Date(checkDate);
+    normalizedCheckDate.setHours(0, 0, 0, 0);
+    
+    return normalizedCheckDate <= futureDate && normalizedCheckDate >= today;
+  };
+
   const getCardTitle = () => {
     switch (selectedDateType) {
       case 'fechaDeRenovacion':
@@ -366,8 +394,14 @@ export default function DashboardClient() {
     //   }))
     // });
     
-    // Return ALL marcas, sorted by the selected date type (closest to farthest)
-    const sortedMarcas = [...marcas].sort((a, b) => {
+    // Filter out hidden marcas unless showHiddenMarcas is true
+    const visibleMarcas = marcas.filter(marca => {
+      const isHidden = hiddenMarcas.has(marca.id);
+      return showHiddenMarcas ? true : !isHidden;
+    });
+    
+    // Return filtered marcas, sorted by the selected date type (closest to farthest)
+    const sortedMarcas = [...visibleMarcas].sort((a, b) => {
       let dateA: string;
       let dateB: string;
       
@@ -816,6 +850,37 @@ export default function DashboardClient() {
     }
   };
 
+  // Function to hide a marca
+  const handleHideMarca = (marcaId: string) => {
+    setHiddenMarcas(prev => new Set([...prev, marcaId]));
+    toast.success('Marca ocultada');
+  };
+
+  // Function to show a marca
+  const handleShowMarca = (marcaId: string) => {
+    setHiddenMarcas(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(marcaId);
+      return newSet;
+    });
+    toast.success('Marca mostrada');
+  };
+
+  // Function to toggle hidden marcas visibility
+  const toggleHiddenMarcas = () => {
+    setShowHiddenMarcas(prev => !prev);
+  };
+
+  // Calculate visible marcas count (total - hidden)
+  const getVisibleMarcasCount = () => {
+    return marcas.length - hiddenMarcas.size;
+  };
+
+  // Calculate hidden marcas count
+  const getHiddenMarcasCount = () => {
+    return hiddenMarcas.size;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -913,7 +978,7 @@ export default function DashboardClient() {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-white uppercase">Marcas Activas</p>
-                      <p className="text-3xl font-bold text-white">{totalMarcas}</p>
+                      <p className="text-3xl font-bold text-white">{getVisibleMarcasCount()}</p>
                     </div>
                   </div>
                 </div>
@@ -970,15 +1035,43 @@ export default function DashboardClient() {
               <div className="mt-8">
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-lg font-medium text-gray-900">Lista de Marcas</h2>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleAddMarca}
-                    className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                  >
-                    <FaPlus className="h-4 w-4 mr-2" />
-                    Agregar Marca
-                  </motion.button>
+                  <div className="flex items-center space-x-3">
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={toggleHiddenMarcas}
+                      className={`inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md transition-colors duration-200 ${
+                        showHiddenMarcas 
+                          ? 'text-white bg-green-600 hover:bg-green-700 focus:ring-green-500' 
+                          : 'text-gray-700 bg-gray-100 hover:bg-gray-200 focus:ring-gray-500'
+                      } focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                      title={showHiddenMarcas ? 'Ocultar marcas ocultas' : 'Mostrar marcas ocultas'}
+                    >
+                      {showHiddenMarcas ? (
+                        <FaEye className="h-4 w-4" />
+                      ) : (
+                        <FaEyeSlash className="h-4 w-4" />
+                      )}
+                      {getHiddenMarcasCount() > 0 && (
+                        <span className={`ml-1 text-xs font-bold rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center ${
+                          showHiddenMarcas 
+                            ? 'bg-white/20 text-white' 
+                            : 'bg-gray-600 text-white'
+                        }`}>
+                          {getHiddenMarcasCount()}
+                        </span>
+                      )}
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleAddMarca}
+                      className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+                    >
+                      <FaPlus className="h-4 w-4 mr-2" />
+                      Agregar Marca
+                    </motion.button>
+                  </div>
                 </div>
                 {/* Mobile Cards */}
                 <div className="sm:hidden space-y-4">
@@ -989,11 +1082,20 @@ export default function DashboardClient() {
                     return (
                       <div
                         key={marca.id}
-                        className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col gap-2 cursor-pointer hover:bg-gray-50 transition-colors duration-200"
+                        className={`rounded-lg shadow-sm border border-gray-200 p-4 flex flex-col gap-2 cursor-pointer transition-colors duration-200 ${
+                          isMarcaUrgent(marca) 
+                            ? 'bg-yellow-50 hover:bg-yellow-100 border-yellow-200' 
+                            : 'bg-white hover:bg-gray-50'
+                        }`}
                         onClick={() => handleRowClick(marca)}
                       >
                         <div className="text-sm font-semibold text-gray-900">Marca</div>
-                        <div className="text-base text-gray-900 break-words">{truncateText(marca.marca, 30)}</div>
+                        <div className="text-base text-gray-900 break-words flex items-center gap-2">
+                          <span>{truncateText(marca.marca, 30)}</span>
+                          {hiddenMarcas.has(marca.id) && (
+                            <FaEyeSlash className="h-3 w-3 text-gray-400" title="Marca oculta" />
+                          )}
+                        </div>
                         <div className="text-sm font-semibold text-gray-500 mt-2">Titular</div>
                         <div className="text-base text-gray-700 break-words">{titulares}</div>
                       </div>
@@ -1023,12 +1125,15 @@ export default function DashboardClient() {
                             return (
                               <tr 
                                 key={marca.id}
-                                className="hover:bg-gray-50 transition-colors duration-200 cursor-pointer"
+                                className={`hover:bg-gray-50 transition-colors duration-200 cursor-pointer ${isMarcaUrgent(marca) ? 'bg-yellow-50' : ''}`}
                                 onClick={() => handleRowClick(marca)}
                               >
                                 <td className="py-4 pl-4 pr-3 text-sm text-gray-900 sm:pl-6">
-                                  <div className="min-w-[200px]">
-                                    {truncateText(marca.marca, 30)}
+                                  <div className="min-w-[200px] flex items-center gap-2">
+                                    <span>{truncateText(marca.marca, 30)}</span>
+                                    {hiddenMarcas.has(marca.id) && (
+                                      <FaEyeSlash className="h-3 w-3 text-gray-400" title="Marca oculta" />
+                                    )}
                                   </div>
                                 </td>
                                 <td className="px-3 py-4 text-sm text-gray-500">
@@ -1137,6 +1242,7 @@ export default function DashboardClient() {
             isOpen={detailPanelOpen}
             marca={selectedMarcaForDetail}
             onClose={handleDetailPanelClose}
+            onHide={handleHideMarca}
             onEdit={handleEdit}
             onDelete={handleDelete}
             onAddOposicion={handleAddOposicion}

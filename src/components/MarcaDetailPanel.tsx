@@ -1,12 +1,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile, FaUser, FaCalendarAlt, FaStickyNote, FaGavel, FaFolder, FaRegIdCard, FaInfoCircle } from 'react-icons/fa';
+import { FaTimes, FaEdit, FaTrash, FaWhatsapp, FaEnvelope, FaCalendarPlus, FaPlus, FaFile, FaUser, FaCalendarAlt, FaStickyNote, FaGavel, FaFolder, FaRegIdCard, FaInfoCircle, FaEyeSlash } from 'react-icons/fa';
 import type { Marca } from '../types/marca';
 
 interface MarcaDetailPanelProps {
   isOpen: boolean;
   marca: Marca | null;
   onClose: () => void;
+  onHide: (marcaId: string) => void;
   onEdit: (marca: Marca) => void;
   onDelete: (marca: Marca) => void;
   onAddOposicion: (marca: Marca) => void;
@@ -23,6 +24,7 @@ export default function MarcaDetailPanel({
   isOpen,
   marca,
   onClose,
+  onHide,
   onEdit,
   onDelete,
   onAddOposicion,
@@ -451,6 +453,13 @@ export default function MarcaDetailPanel({
               Cerrar
             </button>
             <div className="flex space-x-3">
+              <button
+                onClick={() => onHide(marca.id)}
+                className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all duration-200 shadow-sm"
+              >
+                <FaEyeSlash className="w-4 h-4 mr-2" />
+                Ocultar
+              </button>
               <button
                 onClick={() => onEdit(marca)}
                 className="inline-flex items-center px-6 py-3 border border-transparent text-sm font-semibold rounded-xl text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 shadow-sm"
