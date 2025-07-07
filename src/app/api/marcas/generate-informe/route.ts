@@ -5,9 +5,6 @@ import { createPool } from '@vercel/postgres';
 
 const pool = createPool();
 
-const TOTALUM_API_URL = 'https://api.totalum.app/api/v1/pdf-template/generatePdfByTemplate/686ac5faa7c0e346e22c8e21';
-const TOTALUM_API_KEY = process.env.TOTALUM_API_KEY;
-
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -60,15 +57,20 @@ export async function POST(request: NextRequest) {
     };
 
     // Build marca object for PDF template
+    type ClassDetails = { acta?: string; resolucion?: string };
+    type Titular = { nombre?: string; fullName?: string; mail?: string; email?: string; telefono?: string; phone?: string };
     const marcaForPdf = {
       nombre: marca.marca || '',
       tipo: marca.tipo_marca || 'Desconocido',
-      clases: marca.class_details ? Object.entries(marca.class_details).map(([clase, details]: [string, any]) => ({
-        clase,
-        acta: details.acta || '',
-        resolucion: details.resolucion || ''
-      })) : [],
-      titulares: Array.isArray(marca.titulares) ? marca.titulares.map((titular: any) => ({
+      clases: marca.class_details ? Object.entries(marca.class_details).map(([clase, details]: [string, unknown]) => {
+        const d = details as ClassDetails;
+        return {
+          clase,
+          acta: d.acta || '',
+          resolucion: d.resolucion || ''
+        };
+      }) : [],
+      titulares: Array.isArray(marca.titulares) ? marca.titulares.map((titular: Titular) => ({
         nombre: titular.nombre || titular.fullName || '',
         mail: titular.mail || titular.email || '',
         telefono: titular.telefono || titular.phone || ''
