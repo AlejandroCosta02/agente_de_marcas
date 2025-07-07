@@ -151,6 +151,12 @@ export default function DashboardClient() {
   useEffect(() => {
     // console.log('🚀 Dashboard component mounted, fetching marcas...');
     fetchMarcas();
+    // Listen for marcas-imported event
+    const handleImported = () => fetchMarcas();
+    window.addEventListener('marcas-imported', handleImported);
+    return () => {
+      window.removeEventListener('marcas-imported', handleImported);
+    };
   }, [fetchMarcas]);
 
   // Debug marcas state changes
@@ -607,6 +613,14 @@ export default function DashboardClient() {
 
       toast.success('Marca eliminada exitosamente');
       fetchMarcas();
+      // Close detail panel if it is open and showing the deleted marca
+      if (detailPanelOpen && selectedMarcaForDetail && selectedMarcaForDetail.id === marca.id) {
+        setDetailPanelOpen(false);
+        setTimeout(() => {
+          setShowBlur(false);
+          setSelectedMarcaForDetail(null);
+        }, 400);
+      }
     } catch (error) {
       console.error('Error deleting marca:', error);
       toast.error('Error al eliminar la marca');
@@ -781,11 +795,12 @@ export default function DashboardClient() {
         throw new Error('Error al generar el informe');
       }
 
+      // Handle PDF as blob
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `informe-marca-${selectedMarcaForInforme}.pdf`;
+      link.download = 'informe-marca.pdf';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

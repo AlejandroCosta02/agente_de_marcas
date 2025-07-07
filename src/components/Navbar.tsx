@@ -130,11 +130,11 @@ export default function Navbar() {
                     <div className="fixed inset-0 z-50 flex justify-end menu-overlay">
                       <div className={`w-full sm:w-96 bg-white shadow-xl h-full flex flex-col menu-panel${menuClosing ? ' menu-closing' : ''}`}
                         onAnimationEnd={() => { if (menuClosing) { setMenuOpen(false); setMenuClosing(false); } }}>
-                        <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                          <span className="text-lg font-semibold text-gray-900">Opciones</span>
-                          <button onClick={() => setMenuClosing(true)} className="text-gray-400 hover:text-gray-600 transition-colors text-2xl">&times;</button>
+                        <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gradient-to-r from-blue-900 to-blue-700 rounded-t-xl">
+                          <span className="text-lg font-semibold text-white tracking-wide">Opciones</span>
+                          <button onClick={() => setMenuClosing(true)} className="text-gray-300 hover:text-white transition-colors text-2xl font-bold">&times;</button>
                         </div>
-                        <div className="flex-1 flex flex-col p-6 space-y-4 bg-[#f8f9fa] rounded-xl">
+                        <div className="flex-1 flex flex-col p-6 space-y-4 bg-[#181f2a] rounded-b-xl shadow-inner">
                           <button
                             onClick={async () => {
                               setMenuClosing(true);
@@ -153,13 +153,13 @@ export default function Navbar() {
                                 alert('Error al descargar el JSON');
                               }
                             }}
-                            className="w-full px-4 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-md hover:bg-blue-700 transition-colors text-center"
+                            className="w-full px-4 py-3 bg-blue-700 text-white rounded-lg font-semibold shadow-md hover:bg-blue-800 transition-colors text-center border border-blue-900/40 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
                           >
                             Descargar JSON
                           </button>
                           <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-full px-4 py-3 bg-green-600 text-white rounded-lg font-semibold shadow-md hover:bg-green-700 transition-colors text-center"
+                            className="w-full px-4 py-3 bg-green-700 text-white rounded-lg font-semibold shadow-md hover:bg-green-800 transition-colors text-center border border-green-900/40 focus:outline-none focus:ring-2 focus:ring-green-400/60"
                           >
                             Subir JSON
                           </button>
@@ -234,7 +234,10 @@ export default function Navbar() {
         }
         .menu-panel {
           animation: slideInRightMenu 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
-          background: #f8f9fa;
+          background: #181f2a;
+          border-radius: 1rem;
+          box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+          border: 1px solid rgba(255,255,255,0.08);
         }
         .menu-panel.menu-closing {
           animation: slideOutRightMenu 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
