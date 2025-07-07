@@ -20,11 +20,13 @@
     }
     
     .page {
+      display: flex;
+      flex-direction: column;
+      min-height: 297mm;
       max-width: 210mm;
       margin: 0 auto;
       background: #ffffff;
       position: relative;
-      min-height: 297mm;
     }
     
     /* Header Section */
@@ -116,6 +118,7 @@
     
     /* Content Section */
     .content {
+      flex: 1 0 auto;
       padding: 40px 50px 80px 50px;
     }
     
@@ -258,8 +261,8 @@
     
     /* Footer */
     .footer {
-      position: absolute;
-      bottom: 0;
+      position: relative;
+      margin-top: auto;
       left: 0;
       right: 0;
       background: linear-gradient(135deg, #234099 0%, #1e40af 100%);
