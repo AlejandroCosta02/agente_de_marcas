@@ -185,7 +185,7 @@ export default function Navbar() {
                                 } else {
                                   alert(result.error || 'Error al importar el JSON');
                                 }
-                              } catch (err) {
+                              } catch {
                                 alert('Error al leer o importar el archivo JSON');
                               } finally {
                                 e.target.value = '';
