@@ -31,7 +31,7 @@ interface ViewTextModalState {
 // BoletinScanModal component removed as it's not being used
 
 export default function DashboardClient() {
-  const { data: session, status } = useSession();
+  const { data: session } = useSession();
   const [marcas, setMarcas] = useState<Marca[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState<Marca | null>(null);
@@ -856,15 +856,7 @@ export default function DashboardClient() {
     toast.success('Marca ocultada');
   };
 
-  // Function to show a marca
-  const handleShowMarca = (marcaId: string) => {
-    setHiddenMarcas(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(marcaId);
-      return newSet;
-    });
-    toast.success('Marca mostrada');
-  };
+
 
   // Function to toggle hidden marcas visibility
   const toggleHiddenMarcas = () => {
