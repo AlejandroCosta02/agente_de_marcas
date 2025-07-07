@@ -7,6 +7,27 @@ import { randomUUID } from 'crypto';
 
 const pool = createPool();
 
+interface ImportMarca {
+  id?: string;
+  marca: string;
+  renovar?: string;
+  vencimiento?: string;
+  djumt?: string;
+  titulares?: Array<{
+    fullName?: string;
+    email?: string;
+    phone?: string;
+    nombre?: string;
+    mail?: string;
+    telefono?: string;
+  }>;
+  anotaciones?: unknown[];
+  oposicion?: unknown[];
+  tipo_marca?: string;
+  clases?: number[];
+  class_details?: Record<string, unknown>;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -28,11 +49,11 @@ export async function POST(request: NextRequest) {
     let marcaCount = parseInt(countResult.rows[0].count, 10);
 
     // Parse JSON body
-    let marcas: any[] = [];
+    let marcas: ImportMarca[] = [];
     try {
       marcas = await request.json();
       if (!Array.isArray(marcas)) throw new Error('El JSON debe ser un array de marcas');
-    } catch (err) {
+    } catch {
       return NextResponse.json({ error: 'JSON inválido o malformado' }, { status: 400 });
     }
 
@@ -41,7 +62,7 @@ export async function POST(request: NextRequest) {
     const updated: string[] = [];
     const invalid: string[] = [];
     const skipped: string[] = [];
-    const failed: { id: string, error: string }[] = [];
+    const failed: { id: string; error: string }[] = [];
 
     for (const marca of marcas) {
       try {
@@ -139,9 +160,10 @@ export async function POST(request: NextRequest) {
           added.push(idToUse);
           marcaCount++;
         }
-      } catch (err: any) {
-        console.error('Error importing marca:', marca.id, err);
-        failed.push({ id: marca.id || '(sin id)', error: err.message || String(err) });
+      } catch (error: unknown) {
+        console.error('Error importing marca:', marca.id, error);
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        failed.push({ id: marca.id || '(sin id)', error: errorMessage });
       }
     }
     return NextResponse.json({ added, updated, invalid, skipped, failed });
