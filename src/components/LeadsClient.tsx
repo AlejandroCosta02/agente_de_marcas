@@ -28,6 +28,7 @@ async function fetchWithTimeout(resource: RequestInfo, options: RequestInit = {}
 
 export default function LeadsClient() {
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { data: _session } = useSession();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -153,6 +154,7 @@ export default function LeadsClient() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleToggleContacted = async (lead: Lead) => {
     try {
       const response = await fetch('/api/leads', {
@@ -184,6 +186,7 @@ export default function LeadsClient() {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _handleToggleMeetingSet = async (lead: Lead) => {
     try {
       const response = await fetch('/api/leads', {

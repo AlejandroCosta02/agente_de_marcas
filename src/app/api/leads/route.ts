@@ -56,7 +56,7 @@ export async function GET() {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 15000)
       )
-    ]) as { rows: any[] };
+    ]) as { rows: unknown[] };
 
     console.log('GET /api/leads - Found', leadsResult.rows.length, 'leads');
     await client.end();
