@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { createClient } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
 
 export async function GET() {
   let client;
@@ -15,7 +15,7 @@ export async function GET() {
     }
 
     console.log('GET /api/leads - Creating database client');
-    client = createClient({
+    client = createPool({
       connectionString: process.env.POSTGRES_URL
     });
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El nombre es obligatorio' }, { status: 400 });
     }
 
-    client = createClient({
+    client = createPool({
       connectionString: process.env.POSTGRES_URL
     });
     console.log('POST /api/leads - Connecting to database');
@@ -158,7 +158,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Lead ID is required' }, { status: 400 });
     }
 
-    client = createClient({
+    client = createPool({
       connectionString: process.env.POSTGRES_URL
     });
     console.log('PUT /api/leads - Connecting to database');
@@ -243,7 +243,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Lead ID is required' }, { status: 400 });
     }
 
-    client = createClient({
+    client = createPool({
       connectionString: process.env.POSTGRES_URL
     });
     console.log('DELETE /api/leads - Connecting to database');
