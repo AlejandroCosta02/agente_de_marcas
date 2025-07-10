@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   let client;
   try {
     console.log('GET /api/leads - Starting request');
@@ -38,7 +38,6 @@ export async function GET() {
 
     if (userResult.rows.length === 0) {
       console.log('GET /api/leads - User not found');
-      await client.end();
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -59,17 +58,9 @@ export async function GET() {
     ]) as { rows: unknown[] };
 
     console.log('GET /api/leads - Found', leadsResult.rows.length, 'leads');
-    await client.end();
     return NextResponse.json(leadsResult.rows);
   } catch (error) {
     console.error('GET /api/leads - Error:', error);
-    if (client) {
-      try {
-        await client.end();
-      } catch (endError) {
-        console.error('Error ending client:', endError);
-      }
-    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -127,11 +118,9 @@ export async function POST(request: NextRequest) {
       ]
     );
     console.log('POST /api/leads - Lead inserted:', insertResult.rows[0]);
-    await client.end();
     return NextResponse.json(insertResult.rows[0]);
   } catch (error: unknown) {
     console.error('POST /api/leads - Error:', error);
-    if (client) await client.end();
     return NextResponse.json({ 
       error: 'Error al crear el lead', 
       details: error instanceof Error ? error.message : 'Error desconocido' 
@@ -209,17 +198,9 @@ export async function PUT(request: NextRequest) {
       ]
     );
     console.log('PUT /api/leads - Lead updated:', updateResult.rows);
-    await client.end();
     return NextResponse.json(updateResult.rows[0]);
   } catch (error) {
     console.error('PUT /api/leads - Error:', error);
-    if (client) {
-      try {
-        await client.end();
-      } catch (endError) {
-        console.error('PUT /api/leads - Error ending client:', endError);
-      }
-    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -258,7 +239,6 @@ export async function DELETE(request: NextRequest) {
 
     if (userResult.rows.length === 0) {
       console.log('DELETE /api/leads - User not found');
-      await client.end();
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
@@ -274,7 +254,6 @@ export async function DELETE(request: NextRequest) {
 
     if (existingLeadResult.rows.length === 0) {
       console.log('DELETE /api/leads - Lead not found');
-      await client.end();
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 });
     }
 
@@ -283,17 +262,9 @@ export async function DELETE(request: NextRequest) {
     await client.query('DELETE FROM "Lead" WHERE id = $1', [id]);
     console.log('DELETE /api/leads - Lead deleted');
 
-    await client.end();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('DELETE /api/leads - Error:', error);
-    if (client) {
-      try {
-        await client.end();
-      } catch (endError) {
-        console.error('DELETE /api/leads - Error ending client:', endError);
-      }
-    }
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 
