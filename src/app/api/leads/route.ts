@@ -16,7 +16,7 @@ export async function GET() {
 
     console.log('GET /api/leads - Creating database client');
     client = createClient({
-      connectionString: process.env.POSTGRES_URL_NON_POOLING
+      connectionString: process.env.POSTGRES_URL
     });
 
     console.log('GET /api/leads - Connecting to database');
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     client = createClient({
-      connectionString: process.env.POSTGRES_URL_NON_POOLING
+      connectionString: process.env.POSTGRES_URL
     });
     console.log('POST /api/leads - Connecting to database');
     await client.connect();
@@ -159,7 +159,7 @@ export async function PUT(request: NextRequest) {
     }
 
     client = createClient({
-      connectionString: process.env.POSTGRES_URL_NON_POOLING
+      connectionString: process.env.POSTGRES_URL
     });
     console.log('PUT /api/leads - Connecting to database');
     await client.connect();
@@ -244,7 +244,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     client = createClient({
-      connectionString: process.env.POSTGRES_URL_NON_POOLING
+      connectionString: process.env.POSTGRES_URL
     });
     console.log('DELETE /api/leads - Connecting to database');
     await client.connect();
