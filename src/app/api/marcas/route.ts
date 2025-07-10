@@ -275,32 +275,42 @@ export async function PUT(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    console.log('POST /api/marcas - Handler started');
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
+      console.log('POST /api/marcas - No autorizado');
       return NextResponse.json({ message: 'No autorizado' }, { status: 401 });
     }
 
     const pool = createPool();
+    console.log('POST /api/marcas - Pool created');
 
     // Fetch user id
     const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [session.user.email]);
+    console.log('POST /api/marcas - User query result:', userResult.rows);
     if (userResult.rows.length === 0) {
+      console.log('POST /api/marcas - Usuario no encontrado');
       return NextResponse.json({ message: 'Usuario no encontrado' }, { status: 404 });
     }
     const userId = userResult.rows[0].id;
 
     // Fetch subscription tier
     const subResult = await pool.query('SELECT tier FROM "UserSubscription" WHERE "userId" = $1', [userId]);
+    console.log('POST /api/marcas - Subscription query result:', subResult.rows);
     const tier = subResult.rows.length > 0 ? subResult.rows[0].tier : 'free';
     const plan = getPlanById(tier) || getFreePlan();
 
     // Count current marcas for this user
     const countResult = await pool.query('SELECT COUNT(*) FROM marcas WHERE user_email = $1', [session.user.email]);
+    console.log('POST /api/marcas - Marca count:', countResult.rows[0].count);
     const marcaCount = parseInt(countResult.rows[0].count, 10);
     if (plan.marcaLimit !== -1 && marcaCount >= plan.marcaLimit) {
+      console.log('POST /api/marcas - Límite de marcas alcanzado');
       return NextResponse.json({ message: 'Has alcanzado el límite de marcas para tu plan. Actualiza tu suscripción para agregar más.' }, { status: 403 });
     }
 
+    const body = await request.json();
+    console.log('POST /api/marcas - Request body:', body);
     const { 
       marca, 
       renovar, 
@@ -312,16 +322,18 @@ export async function POST(request: Request) {
       clases = [],
       tipoMarca,
       classDetails = {}
-    } = await request.json();
+    } = body;
 
     // Validate titulares
     if (!titulares || !Array.isArray(titulares) || titulares.length === 0) {
+      console.log('POST /api/marcas - Titulares inválidos');
       return NextResponse.json({ message: 'Debe proporcionar al menos un titular' }, { status: 400 });
     }
 
     // Validate first titular (required)
     const firstTitular = titulares[0];
     if (!firstTitular.fullName || !firstTitular.email) {
+      console.log('POST /api/marcas - Primer titular inválido:', firstTitular);
       return NextResponse.json({ message: 'El primer titular debe tener nombre y email' }, { status: 400 });
     }
 
@@ -332,6 +344,7 @@ export async function POST(request: Request) {
           return note.text.trim();
         }).filter(note => note !== '')
       : [];
+    console.log('POST /api/marcas - Cleaned anotaciones:', cleanedAnotaciones);
 
     // Clean and validate oposiciones
     const cleanedOposicion = Array.isArray(oposicion) 
@@ -345,6 +358,7 @@ export async function POST(request: Request) {
           };
         }).filter(op => op.text !== '')
       : [];
+    console.log('POST /api/marcas - Cleaned oposicion:', cleanedOposicion);
 
     // Insert the new marca - store first titular in legacy fields, all titulares as JSON
     const result = await pool.query(`
@@ -383,13 +397,14 @@ export async function POST(request: Request) {
       JSON.stringify(titulares),
       session.user.email
     ]);
+    console.log('POST /api/marcas - Marca insert result:', result.rows);
 
     return NextResponse.json({ 
       message: 'Marca creada exitosamente',
       id: result.rows[0].id
     });
   } catch (error) {
-    console.error('Error creating marca:', error);
+    console.error('POST /api/marcas - Error:', error);
     const message = error instanceof Error ? error.message : 'Error interno del servidor';
     return NextResponse.json({ message }, { status: 500 });
   }

@@ -136,6 +136,15 @@ export default function Navbar() {
                         </div>
                         <div className="flex-1 flex flex-col p-6 space-y-4 bg-[#181f2a] rounded-b-xl shadow-inner">
                           <button
+                            onClick={() => {
+                              setMenuClosing(true);
+                              router.push('/leads');
+                            }}
+                            className="w-full px-4 py-3 bg-orange-600 text-white rounded-lg font-semibold shadow-md hover:bg-orange-700 transition-colors text-center border border-orange-900/40 focus:outline-none focus:ring-2 focus:ring-orange-400/60"
+                          >
+                            🔥 Gestionar Leads
+                          </button>
+                          <button
                             onClick={async () => {
                               setMenuClosing(true);
                               const res = await fetch('/api/marcas/export-json');

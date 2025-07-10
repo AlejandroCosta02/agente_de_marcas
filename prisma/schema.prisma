@@ -136,6 +136,28 @@ model user {
   subscription   UserSubscription?
   accounts       accounts[]
   sessions       sessions[]
+  leads          Lead[]
 
   @@map("users")
+}
+
+model Lead {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nombre      String   @db.VarChar(50)
+  direccion   String?  @db.VarChar(255)
+  website     String?  @db.VarChar(255)
+  socialMedia String?  @db.VarChar(255)
+  whatsapp    String?  @db.VarChar(20)
+  email       String?  @db.VarChar(255)
+  contacted   Boolean  @default(false)
+  estado      String   @default("nuevo") @db.VarChar(50)
+  meetingSet  Boolean  @default(false)
+  contactMethods Json?    @db.JsonB
+  futureContactDate DateTime? @db.Timestamptz(6)
+  userId      Int
+  user        user     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(6)
+
+  @@index([userId], map: "lead_user_id_idx")
 }

@@ -895,6 +895,14 @@ export default function DashboardClient() {
                   {boletinLoading ? 'Descargando...' : 'Descargar Boletin'}
                 </button>
                 <button
+                  className="px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold shadow-md transition-transform duration-200 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-400 flex items-center gap-2"
+                  type="button"
+                  onClick={() => router.push('/leads')}
+                >
+                  🔥
+                  Leads
+                </button>
+                <button
                   className={`px-6 py-3 rounded-lg font-semibold shadow-md transition-transform duration-200 flex items-center gap-2 ${
                     isPremium 
                       ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-indigo-400' 
