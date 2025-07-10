@@ -56,7 +56,7 @@ export async function GET() {
       new Promise((_, reject) => 
         setTimeout(() => reject(new Error('Query timeout')), 15000)
       )
-    ]) as any;
+    ]) as { rows: any[] };
 
     console.log('GET /api/leads - Found', leadsResult.rows.length, 'leads');
     await client.end();
@@ -129,12 +129,12 @@ export async function POST(request: NextRequest) {
     console.log('POST /api/leads - Lead inserted:', insertResult.rows[0]);
     await client.end();
     return NextResponse.json(insertResult.rows[0]);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('POST /api/leads - Error:', error);
     if (client) await client.end();
     return NextResponse.json({ 
       error: 'Error al crear el lead', 
-      details: error.message || 'Error desconocido' 
+      details: error instanceof Error ? error.message : 'Error desconocido' 
     }, { status: 500 });
   }
 }

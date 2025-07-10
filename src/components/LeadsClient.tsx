@@ -28,7 +28,7 @@ async function fetchWithTimeout(resource: RequestInfo, options: RequestInit = {}
 
 export default function LeadsClient() {
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: _session } = useSession();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
@@ -76,7 +76,7 @@ export default function LeadsClient() {
       }
 
       // Process website field - auto-prepend https:// if missing
-      let processedData = { ...data };
+      const processedData = { ...data };
       if (processedData.website && processedData.website.trim() !== '') {
         const website = processedData.website.trim();
         if (!website.startsWith('http://') && !website.startsWith('https://')) {
@@ -115,7 +115,7 @@ export default function LeadsClient() {
         throw new Error(errorMessage);
       }
 
-      const updatedLead = await response.json();
+      await response.json();
       toast.success(selectedLead ? 'Lead actualizado exitosamente' : 'Lead agregado exitosamente');
       setIsModalOpen(false);
       setSelectedLead(null);
@@ -153,7 +153,7 @@ export default function LeadsClient() {
     }
   };
 
-  const handleToggleContacted = async (lead: Lead) => {
+  const _handleToggleContacted = async (lead: Lead) => {
     try {
       const response = await fetch('/api/leads', {
         method: 'PUT',
@@ -184,7 +184,7 @@ export default function LeadsClient() {
     }
   };
 
-  const handleToggleMeetingSet = async (lead: Lead) => {
+  const _handleToggleMeetingSet = async (lead: Lead) => {
     try {
       const response = await fetch('/api/leads', {
         method: 'PUT',
@@ -273,7 +273,7 @@ export default function LeadsClient() {
         console.log('Marca response received');
 
         if (!marcaResponse.ok) {
-          let errorData: any = {};
+          let errorData: { message?: string } = {};
           try { errorData = await marcaResponse.json(); } catch {}
           throw new Error(errorData.message || 'Error al crear la marca');
         }
