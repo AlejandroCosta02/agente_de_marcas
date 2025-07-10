@@ -3,7 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { createPool } from '@vercel/postgres';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   let client;
   try {
     console.log('GET /api/leads - Starting request');
@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   let client;
   try {
     console.log('POST /api/leads - Handler started');
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await _request.json();
     console.log('POST /api/leads - Request body:', body);
     const { nombre, direccion, website, socialMedia, whatsapp, email, futureContactDate } = body;
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function PUT(request: NextRequest) {
+export async function PUT(_request: NextRequest) {
   let client;
   try {
     console.log('PUT /api/leads - Handler started');
@@ -138,7 +138,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await _request.json();
     console.log('PUT /api/leads - Request body:', body);
     const { id, nombre, direccion, website, socialMedia, whatsapp, email, contacted, estado, meetingSet, contactMethods, futureContactDate } = body;
 
@@ -205,7 +205,7 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   let client;
   try {
     console.log('DELETE /api/leads - Handler started');
@@ -215,7 +215,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await _request.json();
     console.log('DELETE /api/leads - Request body:', body);
     const { id } = body;
 
