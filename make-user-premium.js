@@ -1,6 +1,6 @@
 const { createPool } = require('@vercel/postgres');
 
-async function makeUserPremium(userEmail, tier = 'master') {
+async function makeUserPremium(userEmail, tier = 'premium') {
   const pool = createPool();
   
   try {

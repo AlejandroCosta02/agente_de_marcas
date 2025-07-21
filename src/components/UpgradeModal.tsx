@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCreditCard, FaCrown, FaCheck, FaCopy } from 'react-icons/fa';
 import { getPaidPlans } from '@/lib/subscription-plans';
@@ -41,7 +41,19 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
   const [paymentMethod, setPaymentMethod] = useState<'mercadopago' | 'transfer' | 'crypto'>('mercadopago');
   const [copied, setCopied] = useState<string | null>(null);
 
-  const paidPlans = getPaidPlans();
+  const paidPlans = getPaidPlans(); // This will now only return the premium plan
+
+  // Debug logging
+  console.log('paidPlans:', paidPlans);
+  console.log('selectedPlan:', selectedPlan);
+  console.log('billingCycle:', billingCycle);
+
+  // Always select the first plan by default
+  useEffect(() => {
+    if (!selectedPlan && paidPlans.length > 0) {
+      setSelectedPlan(paidPlans[0]);
+    }
+  }, [selectedPlan, paidPlans]);
 
   const handlePlanSelect = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
@@ -185,76 +197,64 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
 
             {/* Plans Grid */}
             <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {paidPlans.map((plan) => {
-                  const price = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
-                  const isSelected = selectedPlan?.id === plan.id;
-                  const isConfigured = isPaymentLinkConfigured(plan.id, billingCycle);
-                  
-                  return (
-                    <motion.div
-                      key={plan.id}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-                        isSelected
-                          ? 'border-blue-500 bg-blue-50 shadow-lg'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      } ${!isConfigured ? 'opacity-60' : ''}`}
-                      onClick={() => handlePlanSelect(plan)}
-                    >
-                      {plan.popular && (
-                        <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                          <span className="bg-blue-600 text-white text-xs px-3 py-1 rounded-full font-medium">
-                            Más Popular
-                          </span>
-                        </div>
-                      )}
+              <div className="flex justify-center">
+                <div className="w-full max-w-md">
+                  {paidPlans.length > 0 ? (
+                    paidPlans.map((plan) => {
+                      const price = billingCycle === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+                      const isSelected = selectedPlan?.id === plan.id;
+                      console.log('Rendering plan:', plan.id, 'price:', price, 'billingCycle:', billingCycle);
+                      console.log('Plan object:', plan);
+                      console.log('monthlyPrice:', plan.monthlyPrice, 'yearlyPrice:', plan.yearlyPrice);
                       
-                      {!isConfigured && (
-                        <div className="absolute -top-3 right-2">
-                          <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full font-medium">
-                            Configurar
-                          </span>
-                        </div>
-                      )}
+                      // Fallback to hardcoded price if needed
+                      const displayPrice = price > 0 ? price : (billingCycle === 'monthly' ? 25000 : 250000);
                       
-                      <div className="text-center">
-                        <div className="flex items-center justify-center mb-4">
-                          <FaCrown className={`text-2xl ${getPlanIconClasses(plan)}`} />
-                        </div>
-                        
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">
-                          {plan.name}
-                        </h3>
-                        
-                        <div className="mb-4">
-                          <span className="text-3xl font-bold text-gray-900">
-                            {formatPrice(price)}
-                          </span>
-                          <span className="text-gray-600">/{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
-                        </div>
-                        
-                        <div className="space-y-3 mb-6">
-                          {plan.features.map((feature, index) => (
-                            <div key={index} className="flex items-center text-sm text-gray-600">
-                              <FaCheck className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                              <span>{feature}</span>
+                      return (
+                        <motion.div
+                          key={plan.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={`relative p-6 rounded-xl border-2 cursor-pointer transition-all duration-200 text-black ${
+                            isSelected
+                              ? 'border-blue-500 bg-blue-50 shadow-lg'
+                              : 'border-gray-200 hover:border-gray-300 bg-white'
+                          }`}
+                          onClick={() => handlePlanSelect(plan)}
+                        >
+                          {billingCycle === 'yearly' && (
+                            <div className="absolute -top-3 right-2">
+                              <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+                                2 meses gratis
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                        
-                        <div className={`w-6 h-6 rounded-full border-2 mx-auto ${
-                          isSelected ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
-                        }`}>
-                          {isSelected && (
-                            <div className="w-2 h-2 bg-white rounded-full mx-auto mt-1"></div>
                           )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                          {/* Plan details here */}
+                          <div className="text-black text-center">
+                            <div className="mb-4">
+                              <span className="block text-2xl font-bold mb-2">{plan.name}</span>
+                              <span className="block text-xl font-semibold text-blue-600">
+                                {formatPrice(displayPrice)} / {billingCycle === 'monthly' ? 'mes' : 'año'}
+                              </span>
+                            </div>
+                            <ul className="text-left space-y-2">
+                              {plan.features.map((feature, idx) => (
+                                <li key={idx} className="text-base text-black flex items-start">
+                                  <FaCheck className="text-green-500 mr-2 mt-1 flex-shrink-0" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  ) : (
+                    <div className="p-6 rounded-xl border-2 border-gray-200 bg-white text-center">
+                      <p className="text-gray-500">Cargando planes...</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -267,7 +267,11 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       Plan seleccionado: {selectedPlan.name}
                     </h3>
                     <p className="text-gray-600 text-sm">
-                      {formatPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice)}/{billingCycle === 'monthly' ? 'mes' : 'año'}
+                      {(() => {
+                        const price = billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice;
+                        const displayPrice = price > 0 ? price : (billingCycle === 'monthly' ? 25000 : 250000);
+                        return `${formatPrice(displayPrice)}/${billingCycle === 'monthly' ? 'mes' : 'año'}`;
+                      })()}
                     </p>
                   </div>
                 </div>
@@ -320,7 +324,13 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   <div className="mt-8">
                     <div className="mb-4">
                       <span className="block text-lg font-bold text-green-700">Precio final con 15% OFF:</span>
-                      <span className="block text-2xl font-bold text-green-900">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
+                      <span className="block text-2xl font-bold text-green-900">
+                        {(() => {
+                          const price = billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice;
+                          const displayPrice = price > 0 ? price : (billingCycle === 'monthly' ? 25000 : 250000);
+                          return formatPrice(getDiscountedPrice(displayPrice));
+                        })()} /{billingCycle === 'monthly' ? 'mes' : 'año'}
+                      </span>
                     </div>
                     <div className="mb-4">
                       <div className="flex items-center gap-2">
@@ -340,7 +350,7 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                       <ol className="list-decimal ml-5 space-y-1">
                         <li>Realizá la transferencia al alias o CBU.</li>
                         <li>Tomá una captura del comprobante.</li>
-                        <li>Enviá el comprobante a <b>contacto@agendatusmarcas.com</b>.</li>
+                        <li>Enviá el comprobante a <b>consultas@gestionatusmarcas.com</b>.</li>
                         <li>El acceso premium puede demorar hasta <b>5hs</b> en activarse por alta demanda.</li>
                       </ol>
                     </div>
@@ -364,10 +374,20 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
                   <div className="mt-8">
                     <div className="mb-6">
                       <span className="block text-xl font-extrabold text-yellow-700 tracking-tight">Precio final con 15% OFF:</span>
-                      <span className="block text-3xl font-extrabold text-yellow-900 mb-2">{formatPrice(getDiscountedPrice(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} /{billingCycle === 'monthly' ? 'mes' : 'año'}</span>
+                      <span className="block text-3xl font-extrabold text-yellow-900 mb-2">
+                        {(() => {
+                          const price = billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice;
+                          const displayPrice = price > 0 ? price : (billingCycle === 'monthly' ? 25000 : 250000);
+                          return formatPrice(getDiscountedPrice(displayPrice));
+                        })()} /{billingCycle === 'monthly' ? 'mes' : 'año'}
+                      </span>
                       <span className="block text-base font-semibold text-gray-800 mt-4">Equivalente en USDT/USDC:</span>
                       <span className="block text-2xl font-bold text-yellow-900">
-                        {formatCrypto(getCryptoAmount(billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice))} USDT/USDC
+                        {(() => {
+                          const price = billingCycle === 'monthly' ? selectedPlan.monthlyPrice : selectedPlan.yearlyPrice;
+                          const displayPrice = price > 0 ? price : (billingCycle === 'monthly' ? 25000 : 250000);
+                          return formatCrypto(getCryptoAmount(displayPrice));
+                        })()} USDT/USDC
                       </span>
                       <span className="block text-xs text-gray-600 mt-1">(Tasa fija: $1.300 ARS = 1 USDT/USDC)</span>
                     </div>

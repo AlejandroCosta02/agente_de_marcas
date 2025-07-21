@@ -1,45 +1,19 @@
 # 🔗 Configuración de Links de Pago - Guía Rápida
 
 ## ✅ **Ya tienes configurado:**
-- **Essential Mensual**: `574639139-3ee1d428-9325-4e41-b605-52165c1e5dce` ($40,000 ARS)
+- **Premium Mensual**: `YOUR_MERCADOPAGO_LINK_ID_FOR_25000_ARS` ($25,000 ARS)
+- **Premium Anual**: `YOUR_ANNUAL_LINK_ID` ($250,000 ARS, 2 meses gratis)
 
-## 🔧 **Necesitas crear estos Links de Pago:**
-
-### **1. Essential Anual**
-- **Monto**: $400,000 ARS
-- **Título**: "Plan Essential - año"
-- **Descripción**: "Suscripción anual al plan Essential - Hasta 10 marcas"
-
-### **2. Pro Mensual**
-- **Monto**: $60,000 ARS
-- **Título**: "Plan Trademark Pro - mes"
-- **Descripción**: "Suscripción mensual al plan Trademark Pro - Hasta 25 marcas"
-
-### **3. Pro Anual**
-- **Monto**: $600,000 ARS
-- **Título**: "Plan Trademark Pro - año"
-- **Descripción**: "Suscripción anual al plan Trademark Pro - Hasta 25 marcas"
-
-### **4. Master Mensual**
-- **Monto**: $90,000 ARS
-- **Título**: "Plan Master Brand - mes"
-- **Descripción**: "Suscripción mensual al plan Master Brand - Marcas ilimitadas"
-
-### **5. Master Anual**
-- **Monto**: $900,000 ARS
-- **Título**: "Plan Master Brand - año"
-- **Descripción**: "Suscripción anual al plan Master Brand - Marcas ilimitadas"
-
-## 🚀 **Pasos para crear cada Link:**
+## 🚀 **Pasos para crear el Link:**
 
 1. **Ve a MercadoPago Developers**: https://www.mercadopago.com/developers
 2. **Accede a tu aplicación**
 3. **Ve a "Herramientas" → "Link de Pago"**
 4. **Click "Crear Link de Pago"**
 5. **Configura:**
-   - **Título**: (como se indica arriba)
-   - **Precio**: (monto exacto en ARS)
-   - **Descripción**: (como se indica arriba)
+   - **Título**: "Plan Premium - mes" o "Plan Premium - año"
+   - **Precio**: $25,000 ARS (mensual) o $250,000 ARS (anual)
+   - **Descripción**: "Suscripción mensual/anual al plan Premium - Marcas ilimitadas"
    - **Cantidad**: 1
    - **Moneda**: ARS
 6. **Click "Crear"**
@@ -47,21 +21,13 @@
 
 ## 📝 **Actualiza el archivo de configuración:**
 
-Una vez que tengas todos los IDs, actualiza `src/lib/payment-links.ts`:
+Una vez que tengas el ID, actualiza `src/lib/payment-links.ts`:
 
 ```typescript
-export const PAYMENT_LINKS: Record<string, PaymentLinkConfig> = {
-  essential: {
-    monthly: '574639139-3ee1d428-9325-4e41-b605-52165c1e5dce', // ✅ Ya configurado
-    yearly: 'TU_ID_ESSENTIAL_ANUAL', // 🔧 Reemplazar
-  },
-  pro: {
-    monthly: 'TU_ID_PRO_MENSUAL', // 🔧 Reemplazar
-    yearly: 'TU_ID_PRO_ANUAL', // 🔧 Reemplazar
-  },
-  master: {
-    monthly: 'TU_ID_MASTER_MENSUAL', // 🔧 Reemplazar
-    yearly: 'TU_ID_MASTER_ANUAL', // 🔧 Reemplazar
+export const PAYMENT_LINKS = {
+  premium: {
+    monthly: 'YOUR_MERCADOPAGO_LINK_ID_FOR_25000_ARS',
+    yearly: 'YOUR_ANNUAL_LINK_ID',
   },
 };
 ```

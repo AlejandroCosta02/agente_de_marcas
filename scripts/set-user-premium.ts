@@ -4,7 +4,7 @@ import { getPlanById } from '../src/lib/subscription-plans';
 async function main() {
   // Hardcode the user email and plan for manual upgrade
   const userEmail = 'lucianadinoto@gmail.com';
-  const planId = 'master';
+  const planId = 'premium';
   const billingCycle = 'yearly';
 
   if (!userEmail) {

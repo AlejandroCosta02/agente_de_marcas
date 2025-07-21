@@ -42,8 +42,11 @@ export default function LeadsClient() {
     if (typeof window === 'undefined') return;
     
     try {
+      console.log('fetchLeads: Starting to fetch leads');
       setLoading(true);
       const response = await fetch('/api/leads');
+      
+      console.log('fetchLeads: Response status:', response.status);
       
       if (response.status === 401) {
         window.location.href = '/?error=Unauthorized';
@@ -55,11 +58,15 @@ export default function LeadsClient() {
       }
       
       const data = await response.json();
+      console.log('fetchLeads: Data received:', data);
+      console.log('fetchLeads: Data length:', data.length);
       setLeads(data);
+      console.log('fetchLeads: Leads state updated');
     } catch (error) {
       console.error('Error fetching leads:', error);
       toast.error('Error al cargar los leads');
     } finally {
+      console.log('fetchLeads: Setting loading to false');
       setLoading(false);
     }
   }, []);
@@ -444,6 +451,8 @@ export default function LeadsClient() {
     }
   };
 
+  console.log('Component render: loading =', loading, 'leads.length =', leads.length);
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

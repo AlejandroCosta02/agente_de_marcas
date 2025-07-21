@@ -7,17 +7,9 @@ export interface PaymentLinkConfig {
 }
 
 export const PAYMENT_LINKS: Record<string, PaymentLinkConfig> = {
-  essential: {
-    monthly: '574639139-3ee1d428-9325-4e41-b605-52165c1e5dce', // $40,000 ARS
-    yearly: '574639139-1788a8ab-dcb3-4ff5-a22d-316ee00316c1', // $400,000 ARS
-  },
-  pro: {
-    monthly: '574639139-7c3df6a6-35a8-4208-80b5-21118caf9f68', // $60,000 ARS
-    yearly: '574639139-9a02c0ef-fed4-442e-ac3c-9d235009e37b', // $600,000 ARS
-  },
-  master: {
-    monthly: '574639139-34f52e86-9535-4189-b75f-29440eec7da4', // $90,000 ARS
-    yearly: '574639139-e1ca578c-adb1-4249-80b5-4fd0e00d9c18', // $900,000 ARS
+  premium: {
+    monthly: 'https://mpago.li/1mjPZFn', // $25,000 ARS
+    yearly: 'https://mpago.li/1tn4cBK', // $250,000 ARS (2 meses gratis)
   },
 };
 
@@ -62,9 +54,7 @@ export const getMissingPaymentLinks = (): Array<{planId: string, billingCycle: '
   const missing: Array<{planId: string, billingCycle: 'monthly' | 'yearly', expectedAmount: number}> = [];
   
   const expectedAmounts = {
-    essential: { monthly: 40000, yearly: 400000 },
-    pro: { monthly: 60000, yearly: 600000 },
-    master: { monthly: 90000, yearly: 900000 },
+    premium: { monthly: 25000, yearly: 0 }, // Assuming yearly is 0 or not applicable
   };
   
   Object.entries(PAYMENT_LINKS).forEach(([planId, config]) => {

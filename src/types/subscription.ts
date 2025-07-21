@@ -1,4 +1,4 @@
-export type SubscriptionTier = 'free' | 'essential' | 'pro' | 'master';
+export type SubscriptionTier = 'free' | 'premium';
 
 export interface SubscriptionPlan {
   id: string;
@@ -24,7 +24,7 @@ export interface SubscriptionStatus {
 }
 
 export interface UserSubscription {
-  tier: string;
+  tier: SubscriptionTier;
   startDate: string;
   endDate: string;
   status: 'active' | 'inactive' | 'cancelled';

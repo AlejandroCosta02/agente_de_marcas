@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     console.log('📋 User plan:', userPlan);
     
     // Only allow premium users
-    if (!['essential', 'pro', 'master'].includes(userPlan)) {
+    if (userPlan !== 'premium') {
       console.log('❌ User not premium, plan:', userPlan);
       return NextResponse.json({ 
         error: 'Esta función está disponible solo para usuarios premium' 

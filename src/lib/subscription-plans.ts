@@ -18,52 +18,20 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
     ]
   },
   {
-    id: 'essential',
-    name: 'Essential',
-    description: 'Ideal para pequeños negocios y emprendedores.',
-    color: 'green',
-    marcaLimit: 10,
-    pdfLimit: 10,
-    monthlyPrice: 32000,
-    yearlyPrice: 320000,
-    features: [
-      'Hasta 10 marcas',
-      'Hasta 10 PDFs por marca',
-      'Gestión completa de marcas',
-      'Notificaciones avanzadas'
-    ]
-  },
-  {
-    id: 'pro',
-    name: 'Trademark Pro',
-    description: 'Perfecto para agencias y profesionales con múltiples clientes.',
-    popular: true,
+    id: 'premium',
+    name: 'Premium',
+    description: 'Custodia ilimitada de marcas y soporte premium. 2 meses gratis pagando anual.',
     color: 'blue',
-    marcaLimit: 25,
-    pdfLimit: 15,
-    monthlyPrice: 48000,
-    yearlyPrice: 480000,
-    features: [
-      'Hasta 25 marcas',
-      'Hasta 15 PDFs por marca',
-      'Gestión profesional',
-      'Soporte prioritario'
-    ]
-  },
-  {
-    id: 'master',
-    name: 'Master Brand',
-    description: 'La solución definitiva para grandes empresas y corporaciones.',
-    color: 'purple',
     marcaLimit: -1, // Unlimited
     pdfLimit: 20,
-    monthlyPrice: 72000,
-    yearlyPrice: 720000,
+    monthlyPrice: 25000,
+    yearlyPrice: 250000,
     features: [
       'Marcas ilimitadas',
       'Hasta 20 PDFs por marca',
-      'Gestión empresarial',
-      'Soporte premium'
+      'Gestión profesional',
+      'Soporte premium',
+      '2 meses gratis pagando anual'
     ]
   }
 ];

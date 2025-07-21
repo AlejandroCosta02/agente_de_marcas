@@ -79,7 +79,7 @@ export default function DashboardClient() {
         if (response.ok) {
           const data = await response.json();
           setSubscription(data.subscription);
-          setIsPremium(['essential', 'pro', 'master'].includes(data.subscription?.tier));
+          setIsPremium(data.subscription?.tier === 'premium');
         }
       } catch {
         setIsPremium(false);
