@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FaTimes, FaCreditCard, FaCrown, FaCheck, FaCopy } from 'react-icons/fa';
 import { getPaidPlans } from '@/lib/subscription-plans';
 import { SubscriptionPlan } from '@/types/subscription';
-import { getPaymentLinkUrl, isPaymentLinkConfigured } from '@/lib/payment-links';
+import { getPaymentLinkUrl } from '@/lib/payment-links';
 import Image from 'next/image';
 
 interface UpgradeModalProps {
@@ -93,21 +93,6 @@ export default function UpgradeModal({ isOpen, onClose }: UpgradeModalProps) {
       alert('Error al procesar el pago. Inténtalo de nuevo.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getPlanIconClasses = (plan: SubscriptionPlan) => {
-    if (plan.id === 'free') return 'text-gray-500';
-    
-    switch (plan.color) {
-      case 'green':
-        return 'text-green-500';
-      case 'blue':
-        return 'text-blue-500';
-      case 'purple':
-        return 'text-purple-500';
-      default:
-        return 'text-gray-500';
     }
   };
 
